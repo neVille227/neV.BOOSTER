@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cartes neV.BOOSTER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="logo">neV<span>.</span>BOOSTER</div>
+      <div class="slogan">Booste ton quotidien · Exercices à faire à la maison</div>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-cartes" aria-selected="true" aria-controls="view-cartes">Cartes de combos</button>
+    <button class="tab" role="tab" id="tab-biblio" aria-selected="false" aria-controls="view-biblio">Bibliothèque <span id="count"></span></button>
+  </nav>
+
+  <section class="view" id="view-cartes" role="tabpanel" aria-labelledby="tab-cartes">
+    <div class="control">
+      <div>
+        <label for="max">Ton maximum de pompes</label>
+        <div class="stepper">
+          <button type="button" id="minus" aria-label="Moins une pompe">−</button>
+          <input id="max" type="number" min="1" max="100" value="10" inputmode="numeric">
+          <button type="button" id="plus" aria-label="Plus une pompe">+</button>
+        </div>
+      </div>
+      <ul class="ratios" id="ratios" aria-live="polite"></ul>
+    </div>
+    <div class="actions">
+      <button class="btn" type="button" id="draw">Tirer une carte</button>
+      <p class="note">Chaque carte est une combinaison différente, calculée sur ton maximum. Touche une ligne pour voir la fiche.</p>
+    </div>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section class="view" id="view-biblio" role="tabpanel" aria-labelledby="tab-biblio" hidden>
+    <div class="actions" style="margin-top:0">
+      <div class="filters" id="filters"></div>
+      <button class="btn ghost" type="button" id="shuffle">Mélanger</button>
+    </div>
+    <p class="note">Illustrations de profil simplifiées : le mouvement montre la trajectoire, pas la position exacte des deux bras ou des deux jambes.</p>
+    <div class="lib" id="lib"></div>
+  </section>
+</div>
+
+<div class="sheet-bg" id="bg" aria-hidden="true">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" id="sheet"></div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
