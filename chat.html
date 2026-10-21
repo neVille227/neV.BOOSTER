@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0507">
+<title>neV.BOOSTER — Chat</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="css/nev.css">
+<link rel="stylesheet" href="css/card.css">
+<link rel="stylesheet" href="css/exercice.css">
+<link rel="stylesheet" href="css/content.css">
+<link rel="stylesheet" href="css/lib.css">
+<link rel="stylesheet" href="css/chat.css">
+</head>
+<body>
+<div class="page"><div class="wrap">
+  <div class="eyebrow">Chat</div>
+  <h1 class="big">Parle à la <em>communauté</em></h1>
+  <p class="lead">Échange avec les autres joueurs ou écris directement au coach. Sois respectueux : pas d'insultes, pas d'informations personnelles (numéro, adresse, photo).</p>
+  <div class="fchips" role="tablist" aria-label="Salons"><button type="button" role="tab" class="fchip on" data-room="global">Communauté</button><button type="button" role="tab" class="fchip" data-room="coach">Mon coach</button></div>
+  <section class="panel chat">
+    <div class="msgs" id="msgs" translate="no" role="log" aria-live="polite" tabindex="0"></div>
+    <form id="f" class="send" autocomplete="off"><input id="t" maxlength="280" placeholder="Écris ton message…" aria-label="Message"><button class="btn" type="submit">Envoyer</button></form>
+    <p class="muted err" id="err" role="alert"></p>
+  </section>
+  <p class="muted" style="font-size:.82rem" id="note"></p>
+</div></div>
+<script src="js/core.js"></script>
+<script src="js/policy.js"></script>
+<script src="js/cloud.js"></script>
+<script src="js/rewards.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/p-chat.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

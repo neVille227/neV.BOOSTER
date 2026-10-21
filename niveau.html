@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0507">
+<title>neV.BOOSTER — Ton niveau</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="css/nev.css">
+<style>
+  .setup{min-height:100vh;display:grid;place-items:center;padding:28px 0 40px}
+  .setup .box{width:min(640px,92%)}
+  .step{display:none}.step.on{display:block;animation:stepIn .6s cubic-bezier(.2,.7,.2,1) both}
+  @keyframes stepIn{from{opacity:0;filter:blur(12px);transform:translateY(10px)}to{opacity:1;filter:none;transform:none}}
+  .dots{display:flex;gap:8px;justify-content:center;margin-bottom:18px}
+  .dots i{width:34px;height:5px;border-radius:9px;background:#ffffff1f}.dots i.on{background:var(--grad-btn)}
+  .q{font-size:clamp(1.5rem,4.4vw,2.1rem);font-weight:900;text-align:center;letter-spacing:-.03em}
+  .q em{font-style:normal;color:var(--gold)}
+  .sub{text-align:center;color:var(--muted);margin:8px 0 22px}
+  .counter{display:flex;align-items:center;justify-content:center;gap:16px;margin:10px 0 6px}
+  .counter button{width:54px;height:54px;border-radius:50%;border:1px solid #ffffff2a;background:#ffffff0d;font-size:1.6rem;font-weight:800;line-height:1}
+  .counter button:hover{background:#e0455f33;border-color:var(--red)}
+  .counter input{width:150px;text-align:center;font-size:3.6rem;font-weight:900;background:none;border:0;border-bottom:3px solid var(--red);outline:none;color:var(--cream);padding:0 0 4px;-moz-appearance:textfield}
+  .counter input::-webkit-outer-spin-button,.counter input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  input[type=range]{width:100%;accent-color:var(--red);margin:14px 0 6px}
+  .lvl{display:flex;gap:14px;align-items:center;padding:14px 16px;border-radius:16px;background:#e0455f14;border:1px solid #e0455f44;margin-top:14px}
+  .lvl .n{width:46px;height:46px;border-radius:14px;background:var(--grad-btn);display:grid;place-items:center;font-weight:900;font-size:1.25rem;flex:none}
+  .lvl b{font-size:1.08rem}.lvl span{display:block;color:var(--muted);font-size:.84rem}
+  .opts{display:flex;flex-wrap:wrap;gap:8px}
+  .opts label{cursor:pointer}
+  .opts input{position:absolute;opacity:0;pointer-events:none}
+  .opts span{display:inline-flex;padding:9px 15px;border-radius:99px;border:1px solid #ffffff26;background:#ffffff0a;font-weight:700;font-size:.84rem;transition:.2s}
+  .opts input:checked+span{background:var(--grad-btn);border-color:transparent;box-shadow:0 6px 18px #e0455f40}
+  .opts input:focus-visible+span{outline:2px solid var(--gold);outline-offset:2px}
+  .cfg h3{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--rose);margin:20px 0 10px}
+  .prob{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:6px}
+  .prob div{text-align:center;padding:10px 4px;border-radius:12px;background:#ffffff0a;border:1px solid var(--c,#fff3);font-size:.72rem;font-weight:700}
+  .prob b{display:block;font-size:1.05rem;color:var(--c,#fff)}
+  .nav{display:flex;gap:10px;margin-top:24px}.nav .btn{flex:1}
+  @media(max-width:480px){.prob{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<main class="setup">
+  <div class="box">
+    <div class="dots"><i class="on" id="d1"></i><i id="d2"></i></div>
+    <div class="panel glow">
+
+      <section class="step on" id="s1">
+        <h1 class="q">Ton maximum de <em>pompes</em> ?</h1>
+        <p class="sub">Le plus que tu puisses faire d'affilée, proprement, sans t'arrêter. Entre un nombre de 1 à 200.</p>
+        <div class="counter">
+          <button type="button" id="minus" aria-label="Moins un">−</button>
+          <input id="maxIn" type="number" inputmode="numeric" min="1" max="200" value="10" aria-label="Maximum de pompes">
+          <button type="button" id="plus" aria-label="Plus un">+</button>
+        </div>
+        <input type="range" id="maxRange" min="1" max="200" value="10" aria-label="Curseur du maximum de pompes">
+        <div class="lvl"><div class="n" id="lvN">2</div><div><b id="lvName">Initié</b><span id="lvDesc"></span></div></div>
+        <div class="err" id="err1" role="alert" style="margin-top:12px"></div>
+        <div class="nav"><button class="btn block" id="to2" type="button">Continuer</button></div>
+      </section>
+
+      <section class="step cfg" id="s2">
+        <h1 class="q">Règle ton <em>gacha</em> du jour</h1>
+        <p class="sub">Chaque jour, une seule carte. Dis-nous avec quoi tu t'entraînes.</p>
+
+        <h3>Ta priorité</h3>
+        <div class="opts" id="optFocus">
+          <label><input type="radio" name="focus" value="equilibre" checked><span>Équilibré</span></label>
+          <label><input type="radio" name="focus" value="haut"><span>Haut du corps</span></label>
+          <label><input type="radio" name="focus" value="jambes"><span>Jambes</span></label>
+          <label><input type="radio" name="focus" value="gainage"><span>Abdos et gainage</span></label>
+        </div>
+
+        <h3>Matériel à la maison</h3>
+        <div class="opts" id="optEquip">
+          <label><input type="checkbox" data-eq="chair"><span>Une chaise</span></label>
+          <label><input type="checkbox" data-eq="wall"><span>Un mur libre</span></label>
+          <label><input type="checkbox" data-eq="step"><span>Une marche basse</span></label>
+          <label><input type="checkbox" data-eq="bag"><span>Un sac à dos lesté</span></label>
+          <label><input type="checkbox" data-eq="bottle"><span>Bouteilles d'eau</span></label>
+          <label><input type="checkbox" data-eq="towel"><span>Une serviette</span></label>
+          <label><input type="checkbox" data-eq="bar"><span>Une barre de traction solide</span></label>
+          <label><input type="checkbox" data-eq="table"><span>Une grosse table très stable</span></label>
+        </div>
+
+        <h3>Séries par exercice</h3>
+        <div class="opts" id="optSets">
+          <label><input type="radio" name="sets" value="2"><span>2 séries</span></label>
+          <label><input type="radio" name="sets" value="3" checked><span>3 séries</span></label>
+          <label><input type="radio" name="sets" value="4"><span>4 séries</span></label>
+        </div>
+
+        <h3>Validation</h3>
+        <div class="opts" id="optCam">
+          <label><input type="radio" name="cam" value="1" checked><span>Par la caméra</span></label>
+          <label><input type="radio" name="cam" value="0"><span>Sans caméra (je valide moi-même)</span></label>
+        </div>
+
+        <h3>Tes chances de tirage <span class="muted" id="probLvl" style="text-transform:none;letter-spacing:0"></span></h3>
+        <div class="prob" id="prob"></div>
+        <p class="muted" style="font-size:.78rem;margin:10px 0 0">Plus ton niveau est élevé, plus les cartes fortes sortent. Après 7 jours sans carte Épique ou mieux, la suivante est garantie. Deux cartes spéciales très rares existent aussi : <b>Repos</b> et <b>Tractions</b> (les tractions demandent une barre ou une table solide).</p>
+
+        <div class="err" id="err2" role="alert" style="margin-top:12px"></div>
+        <div class="nav"><button class="btn ghost" id="back1" type="button" style="flex:.5">Retour</button><button class="btn" id="save" type="button">Lancer mon aventure</button></div>
+      </section>
+
+    </div>
+  </div>
+</main>
+<script src="js/core.js"></script>
+<script src="js/cloud.js"></script>
+<script src="js/rewards.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/ex-data.js"></script>
+<script src="js/ex-anim.js"></script>
+<script src="js/ex-more.js"></script>
+<script src="js/exercises.js"></script>
+<script src="js/zones.js"></script>
+<script src="js/gachaengine.js"></script>
+<script src="js/p-niveau.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

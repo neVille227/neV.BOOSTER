@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0507">
+<title>neV.BOOSTER — Booste ton quotidien</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="reveil.css">
+<link rel="stylesheet" href="intro.css">
+</head>
+<body>
+<div id="ember" aria-hidden="true"></div>
+<button id="skip" type="button">Passer ›</button>
+<div id="rot" role="status">↻ Tourne ton téléphone pour voir l’animation en grand</div>
+
+<section class="stage" id="s-logo" aria-label="Logo neV.BOOSTER">
+  <svg class="logo" viewBox="0 0 400 270" role="img" aria-label="Logo nVB">
+    <defs>
+      <linearGradient id="gn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f08a98"/><stop offset="1" stop-color="#b8243f"/></linearGradient>
+      <linearGradient id="gb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0455f"/><stop offset="1" stop-color="#7a0f26"/></linearGradient>
+      <linearGradient id="go" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e0455f"/><stop offset="1" stop-color="#f0b24a"/></linearGradient>
+      <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <circle class="l-ring" cx="200" cy="120" r="88" fill="none" stroke="#ffd6dc" stroke-opacity=".55" stroke-width="2"/>
+    <text class="l-n" x="62" y="168" font-family="Montserrat,sans-serif" font-style="italic" font-weight="900" font-size="150" fill="url(#gn)" filter="url(#glow)">n</text>
+    <text class="l-b" x="214" y="168" font-family="Montserrat,sans-serif" font-style="italic" font-weight="900" font-size="150" fill="url(#gb)" filter="url(#glow)">B</text>
+    <polygon class="l-v" points="132,52 168,52 200,128 232,52 268,52 214,172 186,172" fill="#fff1f2" filter="url(#glow)"/>
+    <ellipse class="l-orbit" cx="200" cy="150" rx="150" ry="30" transform="rotate(-9 200 150)" fill="none" stroke="url(#go)" stroke-width="4" pathLength="100"/>
+    <path class="l-star" d="M240 22 l5 14 14 5 -14 5 -5 14 -5 -14 -14 -5 14 -5z" fill="#f0b24a"/>
+    <path class="l-star s2" d="M330 52 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z" fill="#ffd6dc"/>
+  </svg>
+  <div class="wordmark"><span class="w1">neV.</span> <span class="w2">BOOSTER</span></div>
+  <p class="tag">Booste ton quotidien</p>
+  <div class="bar"><i></i></div>
+</section>
+
+<section class="stage" id="s-vision" aria-label="Notre vision">
+  <div class="vision">
+    <h2>Notre vision</h2>
+    <p>Notre vision avec neV.BOOSTER est de transformer l’entraînement physique en une expérience interactive, motivante et ludique, inspirée des systèmes de Gacha des jeux vidéo.</p>
+    <p>Nous voulons aider chacun à construire une routine régulière grâce aux tirages aléatoires, aux défis et à la progression visible, symbolisée par la transformation progressive du jeune homme.</p>
+    <p>L’objectif est de rendre le fitness plus accessible, moins monotone et plus engageant, en faisant de chaque séance une nouvelle étape de son évolution.</p>
+    <button class="next" id="visionNext" type="button">Voir son histoire</button>
+  </div>
+</section>
+
+<section class="stage" id="s-film" aria-label="Animation : le réveil"><div id="film"></div></section>
+
+<section class="stage" id="s-go" aria-label="Commencer">
+  <button id="goBtn" type="button" aria-label="GO : commencer le tirage"><span>GO</span></button>
+  <p class="go-sub">Ton premier tirage t’attend.</p>
+</section>
+
+<script src="reveil.js"></script>
+<script src="intro.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

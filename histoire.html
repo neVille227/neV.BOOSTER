@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12040b">
+<title>neV.BOOSTER — Son histoire</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="css/histoire.css">
+</head>
+<body>
+<main class="hi">
+  <div class="hi-stage" id="stage" aria-label="Animation 3D : l'histoire de neV.BOOSTER">
+    <canvas id="cv" role="img" aria-label="Scène en 3D"></canvas>
+    <div id="hud" aria-hidden="true">
+      <div id="logo">nVB · neV. <b>BOOSTER</b></div>
+      <div id="cap"></div><div id="side"></div><div id="bot"></div><div id="bub"></div><div id="stamp">REFUSÉ ✕</div>
+    </div>
+    <a id="btn" href="connexion.html">TIRE TA PREMIÈRE CARTE</a>
+    <div id="fade"></div>
+    <div id="nogl" hidden>
+      <p><b>La 3D n'est pas disponible sur cet appareil.</b></p>
+      <p>Pas de souci : lis l'histoire ci-dessous, ou regarde le film d'accueil.</p>
+      <p><a class="b" href="index.html">Voir le film</a></p>
+    </div>
+  </div>
+  <div class="hi-ctl" role="group" aria-label="Contrôles de l'animation">
+    <button type="button" id="bPrev" aria-label="Scène précédente">⏮</button>
+    <button type="button" id="bPlay" aria-label="Pause">⏸</button>
+    <button type="button" id="bNext" aria-label="Scène suivante">⏭</button>
+    <span id="bCount" aria-live="off">1 / 9</span>
+    <a class="skip" href="connexion.html">Passer →</a>
+  </div>
+  <details class="hi-txt"><summary>Lire l'histoire</summary>
+    <ol>
+      <li>Il se réveille à 6 h du matin, maigre et fatigué.</li>
+      <li>Devant le miroir, son reflet lui dit tout : épaules étroites, bras fins. Il n'aime pas ce qu'il voit.</li>
+      <li>Il ose aborder des filles : elles ne le remarquent pas. « Pas mon genre. » Refusé, il rentre sous la pluie.</li>
+      <li>Alors il décide de changer. Chaque matin, le gacha tire 4 cartes d'exercices au hasard.</li>
+      <li>Une carte, un exercice : squats, pompes, abdos, épaules. Il gagne de l'XP chaque jour, sans excuse.</li>
+      <li>Jour après jour, sur 90 jours, la force, les muscles et la confiance montent.</li>
+      <li>Devant le miroir, son corps a changé : épaules larges, pecs dessinés, bras puissants.</li>
+      <li>90 jours plus tard, les regards se retournent. Il est devenu une référence, et d'autres veulent faire comme lui.</li>
+      <li>Et toi ? Tire ta première carte.</li>
+    </ol>
+    <p class="hi-note">Histoire illustrée : les résultats dépendent de chacun, de la régularité, de l'alimentation et du sommeil.</p>
+  </details>
+</main>
+<script src="js/core.js"></script>
+<script src="js/figure3d.js"></script>
+<script src="js/histoire3d.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

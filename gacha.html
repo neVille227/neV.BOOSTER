@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0507">
+<title>neV.BOOSTER — Gacha du jour</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="css/nev.css">
+<link rel="stylesheet" href="css/card.css">
+<link rel="stylesheet" href="css/gacha.css">
+</head>
+<body>
+<div class="page"><div class="wrap">
+  <div class="eyebrow">Gacha du jour</div>
+  <h1 class="big" id="gTitle">Ton tirage du <em>jour</em></h1>
+  <p class="lead" id="gLead">Cinq cartes, une seule pour toi. Le doigt choisit, le hasard décide de ton entraînement.</p>
+  <div id="gAlert" style="margin-top:16px"></div>
+
+  <section class="gstage" id="gstage" aria-label="Zone de tirage">
+    <button type="button" class="snd" id="snd" aria-pressed="false">Son : oui</button>
+    <div id="board">
+      <div class="gtable" id="gtable"></div>
+      <p class="gmsg" id="gmsg" role="status"></p>
+      <div class="gactions" id="gactions"><button type="button" class="btn big" id="btnDraw">Tirer ma carte</button></div>
+    </div>
+    <div class="reveal" id="reveal" hidden></div>
+  </section>
+
+  <details class="odds panel" style="margin-top:22px">
+    <summary>Tes chances de tirage (transparence totale)</summary>
+    <p class="muted" id="oddsTxt" style="margin:10px 0 0"></p>
+    <div class="prob" id="prob"></div>
+    <p class="muted" id="spTxt" style="margin:12px 0 0;font-size:.88rem"></p>
+  </details>
+</div></div>
+<script src="js/core.js"></script>
+<script src="js/cloud.js"></script>
+<script src="js/rewards.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/ex-data.js"></script>
+<script src="js/ex-anim.js"></script>
+<script src="js/ex-more.js"></script>
+<script src="js/exercises.js"></script>
+<script src="js/zones.js"></script>
+<script src="js/gachaengine.js"></script>
+<script src="js/figure.js"></script>
+<script src="js/card.js"></script>
+<script src="js/sfx.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/p-gacha.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>
