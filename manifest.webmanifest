@@ -3,7 +3,13 @@
   "short_name": "neV.BOOSTER",
   "description": "Booste ton quotidien : séances de musculation, cartes à tirer, flammes et classement entre amis.",
   "lang": "fr",
-  "start_url": "accueil.html",
+  "id": "/accueil.html",
+  "start_url": "accueil.html?utm=app",
+  "categories": ["health", "fitness", "lifestyle"],
+  "shortcuts": [
+    { "name": "Quête du jour", "url": "quete.html", "icons": [{ "src": "img/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Tirage gacha", "url": "gacha.html", "icons": [{ "src": "img/icon-192.png", "sizes": "192x192" }] }
+  ],
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

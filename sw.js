@@ -3,7 +3,7 @@
    - /api/ n'est JAMAIS mis en cache (données personnelles, toujours fraîches) ;
    - gros fichiers (vendor/, media/) : non mis en cache d'office. */
 'use strict';
-const V = 'nev-v1';
+const V = 'nev-v2';
 const CORE = ['offline.html', 'accueil.html', 'css/nev.css', 'fonts/fonts.css', 'js/core.js', 'js/ui.js', 'img/icon-192.png'];
 
 self.addEventListener('install', (e) => {
