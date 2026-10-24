@@ -1,0 +1,16 @@
+neV.BOOSTER — version AUTONOME (hébergement statique)
+=====================================================
+Chaque page contient déjà son propre style et son propre code : il suffit d'envoyer
+les fichiers à la RACINE de ton hébergeur (même sans dossiers css/js).
+
+À ENVOYER (obligatoire) : tous les fichiers .html  →  index.html, connexion.html, niveau.html,
+accueil.html, gacha.html, exercice.html, quete.html, specialisation.html, bibliotheque.html,
+programmes.html, conseils.html, alimentation.html, recompenses.html, chat.html, tuto.html, admin.html.
+Le site démarre sur index.html.
+
+FACULTATIF : dossier vendor (détection par caméra), dossier media (vidéo), dossier img (bannière).
+
+Pour vérifier : ouvre  ton-site/verifier.html  → chaque fichier est testé (✅ / ❌).
+Admin : ton-site/admin.html (au premier passage, tu choisis ton mot de passe admin).
+Ici le site est en MODE DÉMO : chaque visiteur a ses données dans son propre navigateur.
+Pour de vrais comptes partagés entre joueurs, il faut le serveur (README du projet).

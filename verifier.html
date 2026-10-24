@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex">
+<title>neV.BOOSTER — Vérifier l'hébergement</title>
+<style>body{margin:0;background:#0a0507;color:#f6e6e9;font-family:system-ui,sans-serif;padding:24px}main{max-width:720px;margin:auto}h1{margin:0 0 6px}p{color:#c2a3aa}li{list-style:none;display:flex;gap:10px;padding:9px 12px;margin:6px 0;border-radius:10px;background:#ffffff0d;align-items:center}li b{flex:1;word-break:break-all}li small{color:#c2a3aa}.ok{color:#7ff0b0}.ko{color:#ff8aa0}ul{padding:0}#sum{padding:14px;border-radius:12px;margin:14px 0;background:#ffffff0d;font-weight:700}a{color:#ffd45e}</style></head>
+<body><main><h1>Vérifier l'hébergement</h1><p>Cette page teste que chaque fichier du site est bien accessible sur ton hébergeur.</p><div id="sum">Test en cours…</div><ul id="l"></ul>
+<p>Les pages sont obligatoires. Les fichiers « caméra » et « vidéo » sont facultatifs : sans eux le site marche, seule la détection par caméra et la vidéo de présentation manquent.</p><p><a href="index.html">← Retour au site</a></p></main>
+<script>
+(async function(){
+var F=[
+["accueil.html","page"],
+["alimentation.html","page"],
+["bibliotheque.html","page"],
+["chat.html","page"],
+["classement.html","page"],
+["compte.html","page"],
+["conditions.html","page"],
+["confidentialite.html","page"],
+["connexion.html","page"],
+["conseils.html","page"],
+["exercice.html","page"],
+["gacha.html","page"],
+["histoire.html","page"],
+["index.html","page"],
+["mentions-legales.html","page"],
+["mot-de-passe.html","page"],
+["niveau.html","page"],
+["offline.html","page"],
+["programmes.html","page"],
+["quete.html","page"],
+["recompenses.html","page"],
+["specialisation.html","page"],
+["tuto.html","page"],
+["verifier-email.html","page"],
+["admin.html","page"],
+["vendor/mediapipe/pose.js","caméra"],
+["vendor/mediapipe/pose_solution_simd_wasm_bin.wasm","caméra"],
+["vendor/mediapipe/pose_solution_packed_assets.data","caméra"],
+["vendor/mediapipe/pose_landmark_lite.tflite","caméra"],
+["media/neVBOOSTER-video.mp4","vidéo"]
+],ul=document.getElementById('l'),sum=document.getElementById('sum'),okp=0,kop=0,oko=0;
+for(var i=0;i<F.length;i++){
+  var f=F[i][0],t=F[i][1],li=document.createElement('li'),st='❌',good=false,info='';
+  try{
+    var r=await fetch(f,{headers:{Range:'bytes=0-0'},cache:'no-store'}),ct=(r.headers.get('content-type')||'');
+    good=(r.status===200||r.status===206);
+    if(good&&t!=='page'&&/text\/html/.test(ct)){good=false;info='l\u2019h\u00e9bergeur renvoie une page HTML \u00e0 la place du fichier';}
+    if(!good&&!info)info='introuvable ('+r.status+')';
+  }catch(e){info='erreur r\u00e9seau';}
+  if(good){st='✅';if(t==='page')okp++;}else{if(t==='page')kop++;else oko++;}
+  li.innerHTML='<span class="'+(good?'ok':'ko')+'">'+st+'</span><b>'+f+'</b><small>'+(good?t:info)+'</small>';ul.appendChild(li);
+}
+sum.innerHTML=kop?'<span class="ko">⚠️ '+kop+' page(s) manquante(s).</span> Envoie bien TOUS les fichiers .html à la racine de ton site.':(oko?'<span class="ok">✅ Toutes les pages sont là.</span> Il manque seulement des fichiers facultatifs (caméra/vidéo) : envoie aussi les dossiers <b>vendor</b> et <b>media</b> si tu les veux.':'<span class="ok">✅ Tout est en place !</span>');
+})();
+</script></body></html>
