@@ -20,6 +20,7 @@ const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.resolve(process.env.NEV_DATA || path.join(__dirname, 'data'));
 const PORT = Number(process.env.PORT || 8080), HOST = process.env.HOST || '0.0.0.0';
 const PUBLIC_HOST = (() => { try { return new URL(process.env.NEV_BASE_URL || '').host; } catch (e) { return null; } })(); // adresse publique (ex. site Netlify qui relaie /api vers ce serveur)
+const DEFAULT_BASE = 'https://nevbooster.onrender.com', PUBLIC_BASE = (process.env.NEV_BASE_URL || '').replace(/\/+$/, '');
 const SECURE = process.env.NEV_SECURE === '1', TRUST_PROXY = process.env.NEV_TRUST_PROXY === '1';
 const SESSION_MS = 30 * 86400000, ADMIN_MS = 2 * 3600000;
 const STARTED = Date.now();
@@ -407,6 +408,13 @@ function stream(req, res, file, st) {
   const long = /\/(vendor|img|fonts)\//.test(file.split(path.sep).join('/'));
   const h = { 'Content-Type': type, 'Content-Length': st.size, 'Cache-Control': long ? 'public, max-age=604800' : 'no-cache', 'Last-Modified': st.mtime.toUTCString() };
   const ims = req.headers['if-modified-since']; if (ims && new Date(ims) >= new Date(Math.floor(st.mtimeMs / 1000) * 1000)) { res.writeHead(304); return res.end(); }
+  // Aperçu des liens (WhatsApp, Facebook…) : les pages d'entrée portent l'adresse par défaut, remplacée par NEV_BASE_URL si elle est définie.
+  if (ext === '.html' && PUBLIC_BASE && PUBLIC_BASE !== DEFAULT_BASE && /(^|[\\/])(index|connexion)\.html$/.test(file)) {
+    return fs.readFile(file, 'utf8', (e, txt) => {
+      if (e) return notFound(res);
+      const body = Buffer.from(txt.split(DEFAULT_BASE).join(PUBLIC_BASE), 'utf8'); h['Content-Length'] = body.length; delete h['Last-Modified']; res.writeHead(200, h); res.end(req.method === 'HEAD' ? undefined : body);
+    });
+  }
   res.writeHead(200, h);
   if (req.method === 'HEAD') return res.end();
   fs.createReadStream(file).on('error', () => res.destroy()).pipe(res);
