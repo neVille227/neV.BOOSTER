@@ -1,0 +1,18 @@
+.stp{margin:14px 0;border-radius:20px;background:var(--panel);border:1px solid var(--line);overflow:hidden}
+.stp .ill{background:linear-gradient(160deg,#2a0a14,#12060a);padding:14px;display:grid;place-items:center;min-height:210px}
+.stp .ill svg{width:100%;max-width:420px;height:auto}
+.stp .txt{padding:16px 18px}
+.stp .txt h3{margin:0 0 6px!important}
+.stp .nav{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 18px 16px}
+.dots{display:flex;gap:7px}
+.dots button{width:11px;height:11px;border-radius:50%;border:0;padding:0;background:#ffffff2a;cursor:pointer}
+.dots button.on{background:var(--red);transform:scale(1.25)}
+.want{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:20px;margin:12px 0}
+.want a{display:block;padding:14px 16px;border-radius:16px;background:var(--panel);border:1px solid var(--line);text-decoration:none;color:var(--cream)}
+.want a b{display:block;color:#fff;margin-bottom:2px}
+.want a span{font-size:.85rem;color:var(--muted)}
+.want a:hover{border-color:#e0455f88}
+.gl{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin:12px 0}
+.gl div{padding:12px 14px;border-radius:14px;background:#ffffff08;border:1px solid #ffffff14;font-size:.88rem;color:#e8cdd2}
+.gl b{display:block;color:var(--gold);margin-bottom:2px}
+.vid{width:100%;max-height:70vh;border-radius:18px;background:#000;border:1px solid var(--line);display:block}

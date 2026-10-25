@@ -1,0 +1,24 @@
+.tipbox{margin:20px 0 6px;display:flex;gap:16px;align-items:center}
+.tipbox .tip-ico{flex:none;width:52px;height:52px;border-radius:16px;background:var(--grad-btn);display:grid;place-items:center;font-size:1.6rem;box-shadow:0 8px 22px #e0455f44}
+.tipbox b{display:block;color:var(--gold);font-size:.72rem;text-transform:uppercase;letter-spacing:.14em;margin-bottom:2px}
+.tipbox p{margin:0;font-size:1.05rem;font-weight:600}
+.tool{margin:16px 0;padding:18px;border-radius:18px;background:var(--panel);border:1px solid var(--line)}
+.tool h3{margin:0 0 10px!important}
+.tool .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.tool input[type=time],.tool input[type=number]{background:#1c0b11;border:1px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--cream);font:inherit}
+.bed{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:12px}
+.bed div{padding:12px;border-radius:14px;background:#ffffff0a;border:1px solid #ffffff14;text-align:center}
+.bed b{display:block;font-size:1.5rem;font-weight:900;color:var(--gold)}
+.bed span{font-size:.74rem;color:var(--muted);font-weight:700}
+.bed .best{border-color:#3ddc8466;background:#3ddc8412}
+.glasses{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.glass{width:42px;height:54px;border-radius:6px 6px 12px 12px;border:2px solid #6aa8ff88;background:#6aa8ff14;position:relative;overflow:hidden;padding:0}
+.glass:after{content:"";position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(#6aa8ff,#3d7be0);transition:height .3s}
+.glass.on:after{height:86%}
+.chk{display:grid;gap:8px;margin:10px 0}
+.chk label{display:flex;gap:10px;align-items:center;padding:11px 14px;border-radius:12px;background:#ffffff08;border:1px solid #ffffff14;cursor:pointer;font-weight:600}
+.chk input{accent-color:#3ddc84;width:19px;height:19px}
+.chk label:has(input:checked){border-color:#3ddc8466;background:#3ddc8412;text-decoration:line-through;text-decoration-color:#3ddc8499}
+.tbl{width:100%;border-collapse:collapse;font-size:.88rem}
+.tbl th,.tbl td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left}
+.tbl th{color:var(--gold);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em}

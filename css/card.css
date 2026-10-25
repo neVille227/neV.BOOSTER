@@ -1,0 +1,51 @@
+/* ---------- cartes neV.BOOSTER ---------- */
+.tcard{--c:#c9ccd2;--c2:#6b707a;--g:#b4b8c0;--rx:0deg;--ry:0deg;--mx:50%;--my:30%;
+  position:relative;width:100%;aspect-ratio:5/7.4;container-type:inline-size;border-radius:6.5%/4.4%;padding:2.6%;
+  background:linear-gradient(150deg,var(--c),var(--c2) 55%,var(--c));
+  box-shadow:0 0 0 1px #000a,0 10px 28px #000a,0 0 30px color-mix(in srgb,var(--g) 38%,transparent);
+  transform:perspective(800px) rotateX(var(--rx)) rotateY(var(--ry));transition:transform .25s ease,box-shadow .3s;user-select:none}
+.tcard.tilting{transition:transform .06s linear}
+.tc-in{position:relative;height:100%;border-radius:4.6cqw;padding:4cqw;display:flex;flex-direction:column;gap:2.4cqw;overflow:hidden;
+  background:linear-gradient(170deg,#2f1019,#12070b 70%)}
+.tc-top{display:flex;justify-content:space-between;align-items:center;font-weight:900}
+.tc-code{font-size:7.4cqw;padding:.4cqw 3.4cqw;border-radius:2.6cqw;background:linear-gradient(135deg,var(--c),var(--c2));color:#1a0508;letter-spacing:.04em}
+.tc-stars{font-size:6.6cqw;color:var(--c);letter-spacing:.1em;text-shadow:0 0 3cqw var(--g)}
+.tc-stars s{text-decoration:none;color:#ffffff22;text-shadow:none}
+.tc-art{flex:1 1 auto;min-height:0;position:relative;border-radius:3.4cqw;overflow:hidden;display:grid;place-items:center;
+  background:radial-gradient(120% 90% at 50% 105%,color-mix(in srgb,var(--c) 38%,#22090f),#130609 70%);
+  border:1px solid color-mix(in srgb,var(--c) 35%,transparent)}
+.tc-fig{width:118%;margin-bottom:-4%}
+.tc-fig svg{display:block}
+.tc-name{font-weight:900;font-size:8.6cqw;line-height:1.1;text-align:center;letter-spacing:-.01em;text-wrap:balance}
+.tc-tags{display:flex;flex-wrap:wrap;gap:1.6cqw;justify-content:center;min-height:6cqw}
+.tc-tags span{font-size:5.1cqw;font-weight:700;padding:.5cqw 2.4cqw;border-radius:99px;background:#ffffff10;color:#f6d0d6;border:1px solid #ffffff18}
+.tc-plan{text-align:center;font-size:6cqw;color:#ffe1e5;background:#00000040;border-radius:2.6cqw;padding:1.4cqw 2cqw}
+.tc-plan b{color:var(--c)}.tc-plan em{font-style:normal;color:#ff8a3d;font-weight:900}
+.tc-foot{display:flex;justify-content:space-between;font-size:4.2cqw;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--c) 75%,#fff)}
+.tc-foot span+span{opacity:.55}
+.tc-glare{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .25s;
+  background:radial-gradient(circle at var(--mx) var(--my),#ffffff55,transparent 45%)}
+.tcard.tilting .tc-glare{opacity:1}
+.tcard.foil .tc-in::after{content:"";position:absolute;inset:0;pointer-events:none;mix-blend-mode:color-dodge;opacity:.28;
+  background:linear-gradient(115deg,transparent 25%,#ffffff88 50%,transparent 75%);background-size:260% 260%;animation:foil 5s linear infinite}
+.tcard.r-mythique.foil .tc-in::after{opacity:.45}
+@keyframes foil{0%{background-position:120% 0}100%{background-position:-120% 100%}}
+.tcard.r-commun{--g:#b4b8c0}
+.tcard.r-mythique{background:conic-gradient(from 0deg,#ff4040,#8a0a16,#ff1f2d,#ffb3b3,#ff4040)}
+/* dos */
+.tcard.back{--c:#f0b24a;--c2:#7a0f26;--g:#e0455f;background:linear-gradient(150deg,#f6d58a,#8e1b3c 40%,#f0b24a)}
+.tcard.back .tc-in{padding:0;background:linear-gradient(160deg,#5a0f22,#220710)}
+.tcard.back svg{position:absolute;inset:0;width:100%;height:100%}
+.tc-sheen{position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 35%,#ffffff2e 50%,transparent 65%);background-size:250% 100%;animation:sheen 4.6s ease-in-out infinite}
+@keyframes sheen{0%{background-position:160% 0}60%,100%{background-position:-60% 0}}
+@media(prefers-reduced-motion:reduce){.tcard.foil .tc-in::after,.tc-sheen{animation:none}}
+/* cartes spéciales : Repos et Tractions */
+.tcard.special{background:conic-gradient(from 20deg,#ffffff,#ff2400,#ffffff,#ff2400,#ffffff);animation:spBorder 6s linear infinite}
+@keyframes spBorder{to{filter:brightness(1.18)}}
+.tcard.special .tc-in{background:linear-gradient(170deg,color-mix(in srgb,var(--c2) 55%,#12070b),#0b0507 72%)}
+.tcard.special .tc-stars b{font-weight:900;letter-spacing:.18em;font-size:6cqw}
+.tcard.special .tc-name{color:#fff;text-shadow:0 0 3cqw var(--g)}
+.tcard.special::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;mix-blend-mode:screen;opacity:.5;
+  background:radial-gradient(60% 40% at 80% 10%,#fff6,transparent 70%)}
+.tcard.r-repos,.tcard.r-tractions{--g:#ff2400}
+@media(prefers-reduced-motion:reduce){.tcard.special{animation:none}}
