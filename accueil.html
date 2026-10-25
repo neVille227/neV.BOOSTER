@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0507">
+<title>neV.BOOSTER — Accueil</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="css/nev.css">
+<link rel="stylesheet" href="css/tour.css">
+<style>
+  .top{display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:stretch;margin-top:36px}
+  @media(max-width:900px){.top{grid-template-columns:1fr}}
+  .today h2{font-size:1.3rem;font-weight:800;margin:6px 0 8px}
+  .today .big{font-size:clamp(1.8rem,4.6vw,2.7rem);font-weight:900;letter-spacing:-.03em;line-height:1.05}
+  .miniCard{display:flex;gap:16px;align-items:center;margin:16px 0;padding:14px;border-radius:16px;border:1px solid var(--c,#fff3);background:linear-gradient(135deg,#ffffff0a,#00000033)}
+  .miniCard .tier{width:62px;height:84px;border-radius:10px;background:linear-gradient(160deg,var(--c),var(--c2));display:grid;place-items:center;font-weight:900;font-size:1.3rem;color:#1a0508;box-shadow:0 0 22px var(--g)}
+  .miniCard b{font-size:1.1rem}.miniCard span{display:block;color:var(--muted);font-size:.84rem}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:36px}
+  @media(max-width:620px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{padding:22px;border-radius:16px;background:var(--panel);border:1px solid var(--line)}
+  .stat b{display:block;font-size:1.8rem;font-weight:900;letter-spacing:-.02em}
+  .stat span{color:var(--muted);font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:36px}
+  @media(max-width:900px){.tiles{grid-template-columns:repeat(2,1fr)}}
+  .tile{display:block;padding:26px;border-radius:16px;background:var(--panel);border:1px solid var(--line);text-decoration:none;transition:.2s}
+  .tile:hover{border-color:var(--red);transform:translateY(-2px);box-shadow:0 14px 34px #e0455f26}
+  .tile svg{width:26px;height:26px;color:var(--red);margin-bottom:10px}
+  .tile b{display:block;margin-bottom:4px}.tile span{color:var(--muted);font-size:.8rem}
+  .heroBox{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:340px;position:relative;overflow:hidden}
+  .heroBox .stage{width:100%;max-width:300px}
+  .heroBox .name{font-weight:800;margin-top:6px}
+  .heroBox .bar{width:80%;margin:10px auto 4px}
+  .heroBox small{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="page"><div class="wrap">
+  <div class="eyebrow" id="date">Aujourd'hui</div>
+  <h1 class="big" id="hello">Salut, prêt à <em>booster</em> ?</h1>
+
+  <div id="alert" style="margin-top:18px"></div>
+
+  <div class="top">
+    <section class="panel glow today" id="today"></section>
+    <section class="panel heroBox" id="heroBox"><div class="stage" id="hero"></div><div class="name" id="heroName"></div><div class="bar"><i id="heroBar" style="width:0"></i></div><small id="heroXp"></small></section>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tiles" id="tiles"></div>
+</div></div>
+<script src="js/core.js"></script>
+<script src="js/cloud.js"></script>
+<script src="js/rewards.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/ex-data.js"></script>
+<script src="js/ex-anim.js"></script>
+<script src="js/ex-more.js"></script>
+<script src="js/exercises.js"></script>
+<script src="js/zones.js"></script>
+<script src="js/gachaengine.js"></script>
+<script src="js/figure.js"></script>
+<script src="js/hero.js"></script>
+<script src="js/figure3d.js"></script>
+<script src="js/hero3d.js"></script>
+<script src="js/p-accueil.js"></script>
+<script src="js/tour.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

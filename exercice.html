@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0507">
+<title>neV.BOOSTER — Ton exercice</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="css/nev.css">
+<link rel="stylesheet" href="css/card.css">
+<link rel="stylesheet" href="css/exercice.css">
+</head>
+<body>
+<div class="page"><div class="wrap xr">
+
+  <div class="xr-top">
+    <div>
+      <div class="eyebrow" id="xSrc">Ton exercice</div>
+      <h1 class="big" id="xTitle">…</h1>
+    </div>
+    <div class="xr-prog" id="xProg" hidden>
+      <span id="xProgTxt"></span>
+      <div class="bar"><i id="xProgBar" style="width:0"></i></div>
+    </div>
+  </div>
+  <div id="xAlert"></div>
+
+  <!-- 1. Avant de commencer -->
+  <section class="panel xr-brief" id="phBrief" hidden>
+    <div class="xr-brief-grid">
+      <div class="xr-demo" id="bDemo" aria-label="Démonstration animée"></div>
+      <div>
+        <div class="xr-chips" id="bChips"></div>
+        <p class="xr-exec" id="bExec"></p>
+        <ol class="xr-steps" id="bSteps"></ol>
+        <div class="xr-warn" id="bWarn" hidden></div>
+        <label class="check xr-solid" id="bSolidWrap" hidden><input type="checkbox" id="bSolid"><span>Je confirme que mon support (barre ou table) est <b>très solide</b>, fixé ou calé, et qu'il ne bougera pas.</span></label>
+        <div class="xr-cam" id="bCam"></div>
+        <div class="xr-actions">
+          <button type="button" class="btn ok big" id="bStartCam">Démarrer avec la caméra</button>
+          <button type="button" class="btn ghost" id="bStartManual">Sans caméra <small>(XP ÷ 2)</small></button>
+        </div>
+        <div class="xr-auto" id="bAuto" hidden><span id="bAutoTxt"></span> <button type="button" class="btn ghost sm" id="bAutoStop">Annuler</button></div>
+        <p class="muted xr-priv">🔒 La vidéo reste dans ton navigateur : elle n'est jamais envoyée ni enregistrée.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. En cours -->
+  <section class="xr-run" id="phRun" hidden>
+    <div class="xr-stage" id="rStage">
+      <div class="xr-cambox" id="rCamBox">
+        <div class="xr-mirror"><video id="rVideo" playsinline muted></video><canvas id="rCanvas"></canvas></div>
+        <div class="xr-nocam" id="rNoCam" hidden><div><div class="xr-demo" id="rNoDemo"></div><p class="muted" style="margin:10px 0 0;font-weight:700">Mode sans caméra : tu comptes toi-même avec les boutons.</p></div></div>
+        <div class="xr-demo-mini" id="rDemo" aria-hidden="true"></div>
+        <div class="xr-setpill" id="rSet"></div>
+        <div class="xr-status" id="rStatus"></div>
+        <div class="xr-count" id="rCountWrap"><b id="rCount">0</b><span id="rOf"></span></div>
+        <div class="xr-hint" id="rHint" role="status"></div>
+        <div class="xr-go" id="rGo" hidden></div>
+        <div class="xr-okflash" id="rOkFlash" aria-hidden="true">OK</div>
+      </div>
+      <div class="xr-side">
+        <div class="panel xr-ctl">
+          <div class="xr-name" id="rName"></div>
+          <div class="muted" id="rPlan"></div>
+          <div class="xr-ring" id="rRingWrap" hidden>
+            <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="bg"/><circle cx="60" cy="60" r="52" class="fg" id="rRing"/></svg>
+            <div><b id="rRingN">0</b><span id="rRingT"></span></div>
+          </div>
+          <div class="xr-actions col">
+            <button type="button" class="btn ghost big" id="rPlus" hidden>+1 répétition</button>
+            <button type="button" class="btn ghost big" id="rTimer" hidden>Lancer le chrono</button>
+            <button type="button" class="btn ok big" id="rOk">OK — série terminée</button>
+            <button type="button" class="btn ghost sm" id="rQuit">Quitter la séance</button>
+          </div>
+          <p class="muted xr-tip" id="rTip"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Repos entre les séries / exercice suivant -->
+  <section class="panel xr-rest" id="phRest" hidden>
+    <div class="eyebrow" id="tKick">Repos</div>
+    <h2 id="tTitle">Respire</h2>
+    <div class="xr-ring big" id="tRingWrap">
+      <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="bg"/><circle cx="60" cy="60" r="52" class="fg" id="tRing"/></svg>
+      <div><b id="tN">0</b><span>secondes</span></div>
+    </div>
+    <p class="muted" id="tNext"></p>
+    <div class="xr-next-demo" id="tDemo" hidden></div>
+    <div class="xr-actions"><button type="button" class="btn" id="tSkip">C'est reparti</button></div>
+  </section>
+
+  <!-- 4. Le grand OK vert -->
+  <section class="xr-okscreen" id="phOk" hidden>
+    <p class="eyebrow">Tout est fait</p>
+    <h2 id="oTitle">Séance terminée !</h2>
+    <p class="muted" id="oTxt"></p>
+    <button type="button" class="xr-bigok" id="oBtn" aria-label="OK, valider la séance"><span>OK</span></button>
+    <p class="muted" style="font-size:.84rem">Appuie sur OK pour valider et gagner ton XP.</p>
+  </section>
+
+  <!-- 5. Bilan -->
+  <section class="panel glow xr-done" id="phDone" hidden>
+    <div class="eyebrow" id="dKick">Séance validée</div>
+    <h2 id="dTitle">Bravo !</h2>
+    <div class="xr-done-grid">
+      <div class="xr-hero" id="dHero"></div>
+      <div>
+        <div class="xr-stats" id="dStats"></div>
+        <div id="dHeroLine" class="muted"></div>
+        <div class="bar" style="margin:8px 0 16px"><i id="dBar" style="width:0"></i></div>
+        <div class="xr-actions" id="dActions"></div>
+      </div>
+    </div>
+  </section>
+
+</div></div>
+
+<script src="js/core.js"></script>
+<script src="js/cloud.js"></script>
+<script src="js/rewards.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/ex-data.js"></script>
+<script src="js/ex-anim.js"></script>
+<script src="js/ex-more.js"></script>
+<script src="js/exercises.js"></script>
+<script src="js/zones.js"></script>
+<script src="js/combos.js"></script>
+<script src="js/gachaengine.js"></script>
+<script src="js/figure.js"></script>
+<script src="js/hero.js"></script>
+<script src="js/card.js"></script>
+<script src="js/sfx.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/vision.js"></script>
+<script src="js/p-exercice.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

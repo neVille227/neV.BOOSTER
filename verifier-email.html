@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0507">
+<meta name="robots" content="noindex">
+<title>neV.BOOSTER — Vérification</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="css/nev.css">
+<style>
+  .auth{min-height:100vh;display:grid;place-items:center;padding:40px 0}
+  .auth .box{width:min(480px,92%)}
+  .auth .mark{display:block;width:min(220px,60%);margin:0 auto 18px;filter:drop-shadow(0 0 24px #e0455f55)}
+  .auth h1{text-align:center;font-size:1.5rem;font-weight:900;margin:0 0 10px}
+  .auth .sub{text-align:center;color:var(--muted);font-size:.95rem;margin:0 0 28px}
+  .ok{color:var(--ok);font-weight:700;text-align:center}
+  .note{font-size:.8rem;color:var(--muted);text-align:center;margin:22px 0 0}
+</style>
+</head>
+<body>
+<main class="auth"><div class="box">
+  <a href="connexion.html"><img class="mark" src="img/mark.svg" alt="neV.BOOSTER"></a>
+  <div class="panel glow">
+    <h1 id="ttl">Vérification…</h1>
+    <p class="sub" id="sub">Un instant, nous confirmons ton adresse e-mail.</p>
+    <p><a class="btn block" id="go" href="connexion.html" hidden>Continuer</a></p>
+  </div>
+  <p class="note"><a href="connexion.html">← Retour à la connexion</a></p>
+</div></main>
+<script src="js/core.js"></script>
+<script src="js/cloud.js"></script>
+<script src="js/p-verif.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

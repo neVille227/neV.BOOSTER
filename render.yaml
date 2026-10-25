@@ -1,0 +1,24 @@
+# Schéma Render (« Blueprint ») : crée le serveur neV.BOOSTER depuis ce dépôt GitHub.
+# Le disque persistant garde la base SQLite (sans lui, les comptes disparaissent à chaque redémarrage).
+services:
+  - type: web
+    name: nevbooster
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    autoDeploy: true
+    disk:
+      name: nevdata
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NEV_ADMIN_PASSWORD
+        sync: false        # tu le saisis toi-même sur Render, jamais dans GitHub
+      - key: NEV_BASE_URL
+        sync: false        # ex. https://nevbooster.onrender.com
+      - key: NEV_DATA
+        value: /var/data   # la base SQLite vit sur le disque persistant (même chemin que mountPath)
+      - key: NEV_SECURE
+        value: "1"
+      - key: NEV_TRUST_PROXY
+        value: "1"

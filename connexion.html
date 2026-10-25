@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0507">
+<title>neV.BOOSTER — Connexion</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="css/nev.css">
+<style>
+  .auth{min-height:100vh;display:grid;place-items:center;padding:28px 0}
+  .auth .box{width:min(460px,92%)}
+  .auth .mark{display:block;width:min(260px,70%);margin:0 auto 6px;filter:drop-shadow(0 0 24px #e0455f55)}
+  .auth h1{text-align:center;font-size:1.5rem;font-weight:900;margin:6px 0 4px}
+  .auth .sub{text-align:center;color:var(--muted);font-size:.9rem;margin:0 0 22px}
+  .auth .row{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .auth form[hidden]{display:none}
+  .note{font-size:.76rem;color:var(--muted);text-align:center;margin:16px 0 0}
+</style>
+</head>
+<body>
+<main class="auth">
+  <div class="box">
+    <img class="mark" src="img/mark.svg" alt="neV.BOOSTER">
+    <div class="panel glow">
+      <h1>Bienvenue dans l'arène</h1>
+      <p class="sub">Crée ton compte ou reconnecte-toi pour retrouver ton tirage du jour.</p>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" id="tabSignup" class="on" aria-selected="true">Créer un compte</button>
+        <button type="button" role="tab" id="tabLogin" aria-selected="false">Se connecter</button>
+      </div>
+
+      <form id="formSignup" novalidate autocomplete="on">
+        <div class="field"><label for="suPseudo">Pseudo</label><input id="suPseudo" name="pseudo" maxlength="20" autocomplete="nickname" placeholder="Ex. Kévin"></div>
+        <div class="field"><label for="suEmail">Email</label><input id="suEmail" name="email" type="email" autocomplete="email" placeholder="toi@mail.com"></div>
+        <div class="row">
+          <div class="field"><label for="suPw">Mot de passe</label><input id="suPw" name="password" type="password" autocomplete="new-password" placeholder="8 caractères min."></div>
+          <div class="field"><label for="suPw2">Confirmation</label><input id="suPw2" name="password2" type="password" autocomplete="new-password"></div>
+        </div>
+        <div class="field"><label for="suRef">Code de parrainage <span class="muted">(facultatif)</span></label><input id="suRef" name="ref" maxlength="12" autocomplete="off" autocapitalize="characters" placeholder="Ex. NEV4K9Z2"><span class="hint">Un ami t'a invité ? Vous gagnez tous les deux des flammes.</span></div>
+        <label class="check"><input type="checkbox" id="suConsent"><span>Je m'entraîne à mon rythme, je m'arrête en cas de douleur ou de malaise, et je sais que neV.BOOSTER n'est pas un avis médical.</span></label>
+        <label class="check"><input type="checkbox" id="suTerms"><span>J'accepte les <a href="conditions.html" target="_blank" rel="noopener">conditions d'utilisation</a> et la <a href="confidentialite.html" target="_blank" rel="noopener">politique de confidentialité</a>. Si je suis mineur, j'ai l'accord d'un parent ou tuteur.</span></label>
+        <div class="err" id="errSignup" role="alert"></div>
+        <button class="btn block" type="submit" id="btnSignup">Créer mon compte</button>
+      </form>
+
+      <form id="formLogin" novalidate hidden autocomplete="on">
+        <div class="field"><label for="liEmail">Email</label><input id="liEmail" name="email" type="email" autocomplete="email" placeholder="toi@mail.com"></div>
+        <div class="field"><label for="liPw">Mot de passe</label><input id="liPw" name="password" type="password" autocomplete="current-password"></div>
+        <div class="err" id="errLogin" role="alert"></div>
+        <button class="btn block" type="submit" id="btnLogin">Me connecter</button>
+        <p class="note"><a href="mot-de-passe.html">Mot de passe oublié ?</a></p>
+      </form>
+      <p class="note" id="storeNote">&nbsp;</p>
+      <p class="note"><a href="conditions.html">Conditions</a> · <a href="confidentialite.html">Confidentialité</a> · <a href="mentions-legales.html">Mentions légales</a> · <span id="langHost"></span></p>
+    </div>
+  </div>
+</main>
+<script src="js/core.js"></script>
+<script src="js/cloud.js"></script>
+<script src="js/rewards.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/p-connexion.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

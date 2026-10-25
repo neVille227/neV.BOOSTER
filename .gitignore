@@ -1,0 +1,6 @@
+server/data/
+node_modules/
+*.zip
+.env
+_dev/
+_original/
