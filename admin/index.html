@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0a0507">
+<title>neV.BOOSTER — Espace admin</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="../css/nev.css">
+<link rel="stylesheet" href="../css/content.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body class="adm">
+<div id="gate" class="gate" hidden>
+  <form class="panel glow gbox" id="gf" autocomplete="off">
+    <div class="eyebrow">Espace admin</div>
+    <h1 style="margin:6px 0 4px">neV.<em style="color:var(--red);font-style:normal">BOOSTER</em></h1>
+    <p class="muted" id="gtxt" style="margin:0 0 14px">Entre le mot de passe admin.</p>
+    <div class="field"><label for="gp">Mot de passe</label><input id="gp" type="password" autocomplete="current-password" required></div>
+    <p class="err" id="gerr" role="alert"></p>
+    <button class="btn block" type="submit">Entrer</button>
+  </form>
+</div>
+<div id="app" class="app" hidden>
+  <aside class="side">
+    <div class="brand">neV<span>.</span>BOOSTER <small>admin</small></div>
+    <nav id="nav" aria-label="Sections admin"></nav>
+    <div class="sidefoot"><span class="chip" id="mode"></span><a class="btn ghost sm" href="../accueil.html">Voir le site</a><button type="button" class="btn ghost sm" id="out">Quitter</button></div>
+  </aside>
+  <main class="main" id="main" tabindex="-1"></main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="../js/core.js"></script>
+<script src="../js/cloud.js"></script>
+<script src="../js/rewards.js"></script>
+<script src="../js/ex-data.js"></script>
+<script src="../js/ex-anim.js"></script>
+<script src="../js/ex-more.js"></script>
+<script src="../js/exercises.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
