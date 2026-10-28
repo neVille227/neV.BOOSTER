@@ -415,6 +415,17 @@ function stream(req, res, file, st) {
       const body = Buffer.from(txt.split(DEFAULT_BASE).join(PUBLIC_BASE), 'utf8'); h['Content-Length'] = body.length; delete h['Last-Modified']; res.writeHead(200, h); res.end(req.method === 'HEAD' ? undefined : body);
     });
   }
+  h['Accept-Ranges'] = 'bytes';
+  /* Lecture partielle (Range) : indispensable pour avancer/reculer dans une vidéo ou une voix off, et pour Safari / iPhone. */
+  const rg = req.headers.range, rm = rg && /^bytes=(\d*)-(\d*)$/.exec(rg);
+  if (rm && (rm[1] !== '' || rm[2] !== '')) {
+    let start, end;
+    if (rm[1] === '') { start = Math.max(0, st.size - parseInt(rm[2], 10)); end = st.size - 1; } else { start = parseInt(rm[1], 10); end = rm[2] === '' ? st.size - 1 : Math.min(parseInt(rm[2], 10), st.size - 1); }
+    if (!(start <= end) || start >= st.size) { res.writeHead(416, { 'Content-Range': 'bytes */' + st.size }); return res.end(); }
+    h['Content-Length'] = end - start + 1; h['Content-Range'] = 'bytes ' + start + '-' + end + '/' + st.size; res.writeHead(206, h);
+    if (req.method === 'HEAD') return res.end();
+    return fs.createReadStream(file, { start, end }).on('error', () => res.destroy()).pipe(res);
+  }
   res.writeHead(200, h);
   if (req.method === 'HEAD') return res.end();
   fs.createReadStream(file).on('error', () => res.destroy()).pipe(res);

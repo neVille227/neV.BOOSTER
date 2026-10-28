@@ -34,8 +34,8 @@
   sec('video', '🎬', 'La vidéo en 85 secondes',
     '<video class="vid" controls preload="none" playsinline poster="img/banner-small.jpg" aria-label="Présentation de neV.BOOSTER (85 secondes, avec musique)"><source src="media/neVBOOSTER-video.mp4" type="video/mp4">Ton navigateur ne lit pas cette vidéo.</video><p class="muted" style="font-size:.84rem">Intro, tirage de la carte, séance filmée, quête, spécialisation, bibliothèque, programmes et récompenses. Avec le son !</p>');
 
-  sec('histoire', '🎞️', 'Son histoire en 3D',
-    '<p>Un jeune homme maigre, un miroir, un refus… puis 90 jours de séances. Neuf scènes animées en 3D, avec pause et « Passer ».</p><p><a class="btn" href="histoire.html" data-go>Voir l\'histoire</a></p>');
+  sec('histoire', '🎞️', 'Son histoire animée (avec voix)',
+    '<p>Un jeune homme maigre, un miroir, un refus… puis 90 jours de séances. Une animation 3D où les personnages bougent : <b>touche, glisse, incline ton téléphone</b>. Voix off en français, pause et « Passer ».</p><p><a class="btn" href="histoire-anime.html" data-go>Voir l\'histoire animée</a> <a class="btn ghost" href="histoire.html" data-go>Version simple</a></p><video class="vid" id="hvid" controls preload="none" playsinline poster="img/banner-small.jpg" aria-label="L\'histoire de neV.BOOSTER en vidéo, avec voix et musique (1 min 45)"></video><p class="muted" style="font-size:.84rem">La vidéo (1 min 45) s\'adapte à ton écran : <a href="media/histoire-neVBOOSTER-paysage.mp4" download>paysage 16:9</a> · <a href="media/histoire-neVBOOSTER-portrait.mp4" download>portrait 9:16</a>.</p>');
 
   sec('visite', '🧭', 'Visite en 6 étapes',
     '<p><a class="btn" href="accueil.html?tour=1" data-go id="tourBtn">🔥 Revoir la visite guidée avec Nev</a></p><div class="stp" id="stp"><div class="ill" id="stI"></div><div class="txt" id="stT" aria-live="polite"></div><div class="nav"><button type="button" class="btn ghost" id="stP">← Précédent</button><div class="dots" id="stD"></div><button type="button" class="btn" id="stN">Suivant →</button></div></div>');
@@ -101,6 +101,8 @@
   $('toc').innerHTML = S.map((s) => '<a href="#' + s.id + '">' + s.ico + ' ' + esc(s.title) + '</a>').join('');
   $('art').innerHTML = S.map((s) => '<section id="' + s.id + '"><h2><span class="ico">' + s.ico + '</span>' + esc(s.title) + '</h2>' + s.html + '</section>').join('') +
     '<div class="cta"><a class="btn" href="gacha.html" data-go>Tirer ma carte</a><a class="btn ghost" href="conseils.html" data-go>Voir les conseils</a></div>';
+  const hv = $('hvid');   /* la vidéo de l'histoire s'adapte à l'écran : portrait sur téléphone debout, paysage sinon */
+  if (hv) hv.src = (window.matchMedia && window.matchMedia('(orientation: portrait)').matches) ? 'media/histoire-neVBOOSTER-portrait.mp4' : 'media/histoire-neVBOOSTER-paysage.mp4';
   const links = Array.from($('toc').querySelectorAll('a'));
   if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) links.forEach((a) => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id)); }), { rootMargin: '-20% 0px -70% 0px' });

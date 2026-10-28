@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12040b">
+<title>neV.BOOSTER — 90 jours pour changer</title>
+<meta name="description" content="L'histoire animée de neV.BOOSTER : un jeune homme maigre, un miroir, un refus… puis 90 jours de séances. En 3D, avec voix off. Bouge la souris ou le doigt pour faire tourner la scène.">
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="css/histoire-anime.css">
+</head>
+<body>
+<main class="fk" id="fk" aria-label="Histoire animée : 90 jours pour changer">
+  <canvas id="cv" aria-hidden="true"></canvas>
+  <div class="fall" id="fall" aria-hidden="true"><div class="fall-n" id="fallN"></div></div>
+  <div class="shade" aria-hidden="true"></div>
+  <div class="hud" id="hud" aria-hidden="true">
+    <div class="hud-side" id="hSide"></div><div class="hud-bot" id="hBot"></div>
+    <div class="hud-bub" id="hBub"></div><div class="hud-stamp" id="hStamp">REFUSÉ</div>
+  </div>
+  <div class="brand"><i>N</i>neV.BOOSTER</div>
+  <div class="ctl" role="group" aria-label="Contrôles de l'animation">
+    <button type="button" id="prev" aria-label="Chapitre précédent"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg></button>
+    <button type="button" id="pp" aria-label="Pause"><svg viewBox="0 0 24 24" id="ppi"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button>
+    <button type="button" id="next" aria-label="Chapitre suivant"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z"/></svg></button>
+    <button type="button" id="snd" aria-label="Voix off" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 4V5L7 9zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg></button>
+    <button type="button" id="tilt" aria-label="Incliner le téléphone pour bouger la scène" aria-pressed="false" hidden><svg viewBox="0 0 24 24"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm5 15.5a1 1 0 1 0 0 .01z"/></svg></button>
+    <button type="button" id="full" aria-label="Plein écran"><svg viewBox="0 0 24 24"><path d="M4 9V4h5v2H6v3zM15 4h5v5h-2V6h-3zM20 15v5h-5v-2h3v-3zM9 20H4v-5h2v3h3z"/></svg></button>
+    <a class="skip" id="skip" href="connexion.html" data-go>Passer</a>
+  </div>
+
+  <section class="slide center" data-s="0" aria-label="Titre">
+    <p class="eyebrow">Une histoire neV.BOOSTER</p>
+    <h1 class="big" id="bigTitle"></h1>
+    <p class="sub" id="subTitle"></p>
+  </section>
+  <div id="slides"></div>
+  <section class="slide end" data-s="10" id="endSlide" aria-label="Conclusion">
+    <div class="txt">
+      <h2 class="big" id="bigEnd"></h2>
+      <p class="sub" id="subEnd"></p>
+      <div class="pills" id="pillsEnd"></div>
+      <a class="cta" id="cta" href="connexion.html" data-go></a>
+      <p class="note" id="note"></p>
+    </div>
+  </section>
+
+  <div class="curtain" id="curtain" aria-hidden="true"></div>
+  <div class="bars" id="bars" role="tablist" aria-label="Chapitres"></div>
+  <p class="hint" id="hint" aria-hidden="true">Glisse pour faire tourner la scène · touche le personnage</p>
+  <button type="button" class="start" id="start" aria-label="Lancer l'histoire"><span><svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg>Lancer l’histoire</span></button>
+  <audio id="voice" preload="none"></audio>
+</main>
+<section class="sr" aria-label="Texte de l'histoire" id="sr"></section>
+<noscript><p style="padding:24px;color:#fff;font-family:sans-serif">Cette page animée a besoin de JavaScript. Tu peux lire l'histoire dans <a style="color:#ff7a96" href="histoire.html">la version 3D classique</a>.</p></noscript>
+<script src="js/core.js"></script>
+<script src="js/figure3d.js"></script>
+<script src="js/story-rig.js"></script>
+<script src="js/story-scenes.js"></script>
+<script src="js/histoire-anime-data.js"></script>
+<script src="js/histoire-anime.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>
