@@ -247,6 +247,7 @@
     progress: { streak: 0, best: 0, lastDone: null, total: 0, xp: 0 },
     daily: null,
     spe: null,
+    box: null,
     pity: 0,
     history: [],
     collection: {},
@@ -291,6 +292,7 @@
     ensureDay(p, today) {
       today = today || util.todayStr();
       if (!p.spe || p.spe.date !== today) p.spe = { date: today, zone: null, card: null, status: 'none', result: null };
+      if (!p.box || p.box.date !== today) p.box = { date: today, cards: null, status: 'none', result: null };
       if (p.daily && p.daily.date === today) return p;
       const last = p.progress.lastDone;
       const gap = last ? util.daysBetween(last, today) : 0;
@@ -344,6 +346,35 @@
         p.history = p.history.slice(0, 160);
       }
       return { already: false, xpGain, p, touched };
+    },
+    /* Séance « Gacha Box » : les 4 cartes de la boîte, dans l'ordre (les combos comptent pour une carte).
+       res : { reps, sets, verified, byCard: [{ reps, sets }, …] } ; XP selon la difficulté de chaque carte. */
+    completeBox(p, res, today) {
+      today = today || util.todayStr();
+      P.ensureDay(p, today);
+      res = res || {};
+      const b = p.box, d = p.daily;
+      if (!b || !b.cards || !b.cards.length) return { already: true, xpGain: 0, p };
+      if (b.status === 'done') return { already: true, xpGain: 0, p };
+      const dayDone = d.status === 'done', dbl = !!(d.double && !dayDone), verified = res.verified !== false;
+      const base = b.cards.map((c) => (c.type === 'combo' ? 14 + 8 * c.steps.length : 18 + 10 * (c.tier || 1)));
+      const mult = (dbl ? 1.5 : 1) * (verified ? 1 : 0.5) * (dayDone ? 0.6 : 1);
+      const share = base.map((x) => Math.round(x * mult));
+      const xpGain = share.reduce((a, x) => a + x, 0);
+      P._touch(p, today, false);
+      p.progress.xp += xpGain;
+      b.status = 'done';
+      b.result = { reps: res.reps, sets: res.sets, verified: !!verified, at: Date.now(), xpGain };
+      if (!dayDone) { d.status = 'done'; d.result = Object.assign({ via: 'box' }, b.result); }
+      b.cards.forEach((c, i) => {
+        const bc = (res.byCard || [])[i] || {};
+        const tot = c.type === 'combo' ? c.steps.reduce((a, s) => a + s.plan.total, 0) : c.plan.total;
+        const sets = c.type === 'combo' ? c.steps.reduce((a, s) => a + s.plan.sets, 0) : c.plan.sets;
+        if (c.type !== 'combo') p.collection[c.id] = (p.collection[c.id] || 0) + 1;
+        p.history.unshift({ date: today, id: c.type === 'combo' ? 'combo:' + c.id : c.id, name: c.name, rarity: c.type === 'combo' ? 'combo' : c.rarity, tier: c.tier || 1, reps: bc.reps != null ? bc.reps : tot, sets: bc.sets != null ? bc.sets : sets, verified: !!verified, doubled: dbl, xpGain: share[i], src: 'box', rest: false, special: null });
+      });
+      p.history = p.history.slice(0, 160);
+      return { already: false, xpGain, p };
     },
     /* Séance « combo » (enchaînement libre) : XP selon le volume, la série avance si ce n'est pas déjà fait. */
     completeCombo(p, combo, res, today) {

@@ -37,12 +37,16 @@
   sec('histoire', '🎞️', 'Son histoire animée (avec voix)',
     '<p>Un jeune homme maigre, un miroir, un refus… puis 90 jours de séances. Une animation 3D où les personnages bougent : <b>touche, glisse, incline ton téléphone</b>. Voix off en français, pause et « Passer ».</p><p><a class="btn" href="histoire-anime.html" data-go>Voir l\'histoire animée</a> <a class="btn ghost" href="histoire.html" data-go>Version simple</a></p><video class="vid" id="hvid" controls preload="none" playsinline poster="img/banner-small.jpg" aria-label="L\'histoire de neV.BOOSTER en vidéo, avec voix et musique (1 min 45)"></video><p class="muted" style="font-size:.84rem">La vidéo (1 min 45) s\'adapte à ton écran : <a href="media/histoire-neVBOOSTER-paysage.mp4" download>paysage 16:9</a> · <a href="media/histoire-neVBOOSTER-portrait.mp4" download>portrait 9:16</a>.</p>');
 
+  sec('gacha-box', '📦', 'La Gacha Box (3D)',
+    '<p>Une boîte noire et violette apparaît sur une table. Une main l\'ouvre, plonge <b>sans regarder</b> et tire <b>4 cartes</b> au hasard. Les cartes se retournent une par une : chacune montre un exercice, son niveau de difficulté et le nombre de répétitions ou la durée. Une carte <b>Combo</b> (plus rare) enchaîne plusieurs exercices sur un seul emplacement.</p><ul><li><b>Une boîte par jour</b> : le tirage est fait avant l\'animation et ne change pas si tu quittes la page.</li><li><b>« Lancer la séance »</b> : pour chaque exercice, 3 secondes de transition, puis un compte à rebours de 7 secondes.</li><li><b>« Passer l\'animation »</b> et l\'option <b>« Passer les animations »</b> sont toujours là. Le son et la voix de motivation se coupent avec le bouton Son.</li><li>Sans WebGL, une version 2D simple s\'affiche à la place.</li></ul><p><a class="btn" href="gacha-box.html" data-go>Ouvrir la Gacha Box</a></p>');
+
   sec('visite', '🧭', 'Visite en 6 étapes',
     '<p><a class="btn" href="accueil.html?tour=1" data-go id="tourBtn">🔥 Revoir la visite guidée avec Nev</a></p><div class="stp" id="stp"><div class="ill" id="stI"></div><div class="txt" id="stT" aria-live="polite"></div><div class="nav"><button type="button" class="btn ghost" id="stP">← Précédent</button><div class="dots" id="stD"></div><button type="button" class="btn" id="stN">Suivant →</button></div></div>');
 
   sec('je-veux', '🎯', 'Je veux…',
     '<div class="want">' +
     '<a href="gacha.html" data-go><b>Tirer ma carte du jour</b><span>Le gacha : une carte, un exercice.</span></a>' +
+    '<a href="gacha-box.html" data-go><b>Ouvrir la Gacha Box</b><span>La boîte 3D : 4 cartes, une séance enchaînée.</span></a>' +
     '<a href="specialisation.html" data-go><b>Travailler une zone du corps</b><span>Cou, épaules, abdos, jambes, doigts…</span></a>' +
     '<a href="bibliotheque.html" data-go><b>Voir tous les exercices</b><span>La bibliothèque, par catégories et difficulté.</span></a>' +
     '<a href="programmes.html" data-go><b>Suivre un programme</b><span>25 programmes prêts à lancer.</span></a>' +

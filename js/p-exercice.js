@@ -1,15 +1,15 @@
 /* neV.BOOSTER — page d'exercice
    Avant → (caméra : placement, 3-2-1) → séries comptées → repos → … → grand OK vert → bilan.
-   Sources : ?src=daily (carte du jour) | ?src=spe (carte Spécialisation) | ?src=combo&id=… (enchaînement)
+   Sources : ?src=daily (carte du jour) | ?src=spe (carte Spécialisation) | ?src=combo&id=… (enchaînement) | ?src=box (Gacha Box : les 4 cartes du jour)
    Options de test : ?sim=1 (l'avatar fait l'exercice à la place de la caméra), &speed=3, &auto=1 (départ auto). */
 (async function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
   const esc = NEV.util.esc, sleep = NEV.util.sleep;
   const qs = new URLSearchParams(location.search);
-  const SRC = qs.get('src') === 'spe' ? 'spe' : qs.get('src') === 'combo' ? 'combo' : 'daily';
+  const SRC = qs.get('src') === 'spe' ? 'spe' : qs.get('src') === 'combo' ? 'combo' : qs.get('src') === 'box' ? 'box' : 'daily';
   const SIM = qs.get('sim') === '1', SPEED = Math.max(1, Number(qs.get('speed')) || 1);
-  const ctx = await NEV.boot(SRC === 'daily' ? 'gacha' : 'specialisation'); if (!ctx) return;
+  const ctx = await NEV.boot(SRC === 'daily' ? 'gacha' : SRC === 'box' ? 'gacha-box' : 'specialisation'); if (!ctx) return;
   const user = ctx.user, p = ctx.p, V = NEV.VisionCore;
   NEV.player.ensureDay(p); NEV.player.save(p);
   const cautious = false;
@@ -20,6 +20,12 @@
     combo = NEV.Combos.get(qs.get('id'));
     if (!combo || !NEV.Combos.valid(combo)) { NEV.go('specialisation.html', 0); return; }
     steps = NEV.Combos.steps(combo, p, user); title = combo.name;
+  } else if (SRC === 'box') { // Gacha Box : les cartes du jour, dans l'ordre (un combo = ses exercices à la suite)
+    slot = p.box; const bc = (slot && slot.cards) || [];
+    if (!bc.length) { NEV.go('gacha-box.html', 0); return; }
+    bc.forEach((c, ci) => { (c.type === 'combo' ? c.steps : [c]).forEach((s) => { const ex = NEV.Ex.byId(s.id); if (ex) steps.push({ ex, plan: s.plan, card: ci, combo: c.type === 'combo' ? c.name : null }); }); });
+    if (!steps.length) { NEV.go('accueil.html', 0); return; }
+    title = 'Ta Gacha Box';
   } else {
     slot = SRC === 'spe' ? p.spe : p.daily;
     card = slot.card;
@@ -27,7 +33,7 @@
     if (card.special === 'repos') { isRest = true; steps = [{ ex: NEV.Ex.byId('repos-actif'), plan: card.plan, rest: true }]; title = 'Jour de repos'; }
     else { const ex = NEV.Ex.byId(card.id); if (!ex) { NEV.go('accueil.html', 0); return; } steps = [{ ex, plan: card.plan }]; title = card.name; }
   }
-  const S = { step: 0, set: 0, mode: 'cam', phase: '', counter: null, armed: false, arming: false, finishing: false, seen: 0, presentSince: 0, tok: 0,
+  const S = { ch1: false, ch2: false, step: 0, set: 0, mode: 'cam', phase: '', counter: null, armed: false, arming: false, finishing: false, seen: 0, presentSince: 0, tok: 0,
     verifiedAll: true, totalReps: 0, setsDone: 0, sideUntil: 0, sideShown: false, timerOn: false, timerT0: 0, quit: false, sim: SIM };
   const totalSets = steps.reduce((a, s) => a + s.plan.sets, 0);
   const cur = () => steps[S.step];
@@ -46,12 +52,17 @@
   function renderBrief() {
     const st = steps[0], ex = st.ex;
     const z = SRC === 'spe' && p.spe.zone && p.spe.zone !== 'all' && NEV.Zones.get(p.spe.zone);
-    $('xSrc').textContent = SRC === 'combo' ? 'Enchaînement' : (SRC === 'spe' ? 'Spécialisation' + (z ? ' · ' + z.name : '') : (card && card.special ? 'Carte spéciale' : 'Exercice du jour'));
+    $('xSrc').textContent = SRC === 'box' ? 'Gacha Box · ' + slot.cards.length + ' cartes' : SRC === 'combo' ? 'Enchaînement' : (SRC === 'spe' ? 'Spécialisation' + (z ? ' · ' + z.name : '') : (card && card.special ? 'Carte spéciale' : 'Exercice du jour'));
     $('xTitle').textContent = title;
     document.title = 'neV.BOOSTER — ' + title;
     mountDemo($('bDemo'), ex, 'demo');
     const chips = [];
-    if (SRC === 'combo') {
+    if (SRC === 'box') {
+      chips.push('<span class="chip red">' + slot.cards.length + ' cartes</span>', '<span class="chip">' + steps.length + ' exercices</span>', '<span class="chip">≈ ' + boxMinutes() + ' min</span>');
+      if (slot.cards.some((c) => c.type === 'combo')) chips.push('<span class="chip gold">★ Carte Combo</span>');
+      $('bExec').textContent = 'Tes cartes, dans l\'ordre du tirage. Avant chaque exercice : 3 secondes de transition, puis un compte à rebours de 7 secondes.';
+      $('bSteps').innerHTML = steps.map((s) => '<li><b>' + esc(s.ex.name) + '</b> — ' + esc(s.plan.sets + ' × ' + NEV.Ex.amountText(s.plan.unit, s.plan.perSet)) + (s.combo ? ' <small>(Combo : ' + esc(s.combo) + ')</small>' : '') + '</li>').join('');
+    } else if (SRC === 'combo') {
       chips.push('<span class="chip red">' + steps.length + ' exercices</span>', '<span class="chip">≈ ' + NEV.Combos.minutes(combo, p, user) + ' min</span>');
       $('bExec').textContent = combo.blurb || 'Un enchaînement d\'exercices, dans l\'ordre.';
       $('bSteps').innerHTML = steps.map((s) => '<li><b>' + esc(s.ex.name) + '</b> — ' + esc(s.plan.sets + ' × ' + NEV.Ex.amountText(s.plan.unit, s.plan.perSet)) + '</li>').join('');
@@ -79,10 +90,15 @@
     syncStartButtons();
     setPhase('phBrief');
   }
+  function boxMinutes() {
+    let s = 0;
+    steps.forEach((st) => { const pl = st.plan, per = (pl.unit === 'sec' || pl.unit === 'secside') ? pl.perSet * (pl.unit === 'secside' ? 2 : 1) : pl.perSet * (pl.unit === 'side' ? 2 : 1) * 3.2; s += pl.sets * (per + pl.rest) + 20; });
+    return Math.max(3, Math.round(s / 60));
+  }
   const syncStartButtons = () => { const ok = !needsSolid || $('bSolid').checked; $('bStartCam').disabled = !ok; $('bStartManual').disabled = !ok; };
   $('bSolid').addEventListener('change', syncStartButtons);
 
-  if ((SRC === 'daily' || SRC === 'spe') && slot.status === 'done') { showAlready(); return; }
+  if ((SRC === 'daily' || SRC === 'spe' || SRC === 'box') && slot.status === 'done') { showAlready(); return; }
   if (p.daily.double && p.daily.status !== 'done' && SRC === 'daily') $('xAlert').innerHTML = '<div class="banner"><span style="font-size:1.4rem">⚠️</span><div>Journée ratée : les séries sont <b>doublées</b> aujourd\'hui. Courage !</div></div>';
   renderBrief();
 
@@ -102,6 +118,7 @@
     NEV.Fx.init();
     if (NEV.Sfx && NEV.Sfx.pop) NEV.Sfx.pop(); // débloque l'audio (geste utilisateur)
     NEV.track && NEV.track('start', { src: SRC, id: SRC === 'combo' ? combo.id : (card && card.id), mode });
+    if (SRC === 'box' && NEV.BoxAudio) { NEV.BoxAudio.unlock(); NEV.BoxAudio.sfx('go'); NEV.BoxAudio.say('go'); }
     beginSet(true);
     if (mode === 'cam') {
       const ok = await NEV.Vision.start({
@@ -132,6 +149,8 @@
   /* ---------- 4. Une série ---------- */
   function beginSet(first) {
     const st = cur(), ex = st.ex, pl = st.plan;
+    if (S.mode === 'sim' && first && S.step > 0) NEV.Vision.startSim(ex, { video: $('rVideo'), canvas: $('rCanvas'), onPose }, SPEED);
+    S.ch1 = false; S.ch2 = false;
     S.tok++; S.counter = V.counter(ex, pl); S.armed = false; S.arming = false; S.finishing = false; S.seen = 0; S.presentSince = 0; S.sideShown = false; S.sideUntil = 0; S.timerOn = false;
     setPhase('phRun');
     const cam = S.mode !== 'manual';
@@ -166,8 +185,16 @@
     $('xProgBar').style.width = Math.round((before / totalSets) * 100) + '%';
   }
 
+  /* Gacha Box : petites phrases de motivation (à la moitié, puis juste avant la fin) */
+  function cheer(n) {
+    if (SRC !== 'box' || !NEV.BoxAudio || !S.armed || !S.counter) return;
+    const t = S.counter.target, timed = S.counter.timed;
+    if (!S.ch1 && t >= 4 && n >= t / 2 && n < t - 0.5) { S.ch1 = true; NEV.BoxAudio.say(timed ? 'tiensbon' : 'moitie'); }
+    else if (!S.ch2 && !timed && t >= 6 && n >= t - 1 && n < t) { S.ch2 = true; NEV.BoxAudio.say('last'); }
+  }
   function setCount(n) {
     const c = S.counter, tgt = c ? c.target : 0, timed = c && c.timed;
+    cheer(n);
     $('rCount').textContent = Math.floor(n);
     $('rOf').textContent = '/ ' + tgt + (timed ? ' s' : '');
     if (timed) { $('rRingN').textContent = Math.floor(n); $('rRingT').textContent = 'sur ' + tgt + ' s'; setRing($('rRing'), Math.min(1, n / (tgt || 1))); }
@@ -181,7 +208,19 @@
     S.arming = true; const tok = ++S.tok;
     $('rStatus').textContent = '';
     const go = $('rGo');
-    for (const n of ['3', '2', '1']) {
+    const long = SRC === 'box' && S.set === 0;
+    if (long) { // transition de 3 s : « exercice suivant » …
+      const st = cur(), tr = $('rTrans');
+      $('rTransK').textContent = 'Exercice ' + (S.step + 1) + '/' + steps.length + (st.combo ? ' · Combo' : '');
+      $('rTransN').textContent = st.ex.name; $('rTransP').textContent = planText(st.plan);
+      tr.hidden = false; tr.classList.remove('on'); void tr.offsetWidth; tr.classList.add('on');
+      if (NEV.BoxAudio) { NEV.BoxAudio.sfx(S.step ? 'whoosh' : 'ui'); if (S.step) NEV.BoxAudio.say('next'); }
+      await sleep(3000);
+      tr.hidden = true;
+      if (tok !== S.tok) return;
+      if (NEV.BoxAudio) NEV.BoxAudio.say('position');
+    }
+    for (const n of (long ? ['7', '6', '5', '4', '3', '2', '1'] : ['3', '2', '1'])) {
       if (tok !== S.tok) return;
       go.hidden = false; go.textContent = n; go.style.animation = 'none'; void go.offsetWidth; go.style.animation = ''; NEV.Sfx.beep(false);
       await sleep(1000);
@@ -190,8 +229,9 @@
     go.textContent = 'GO'; go.style.animation = 'none'; void go.offsetWidth; go.style.animation = ''; NEV.Sfx.beep(true);
     await sleep(650);
     if (tok !== S.tok) return;
-    go.hidden = true;
+    go.hidden = true; $('rTrans').hidden = true;
     S.counter.reset(); S.armed = true; S.arming = false;
+    if (SRC === 'box' && NEV.BoxAudio) { NEV.BoxAudio.sfx('go'); if (!long) NEV.BoxAudio.say('allez'); }
     $('rOk').textContent = 'OK — série terminée';
     if (S.mode === 'manual' && S.counter.timed) startManualTimer();
   }
@@ -260,6 +300,7 @@
     $('rCamBox').classList.add('good');
     const f = $('rOkFlash'); f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
     NEV.Sfx.ok(); NEV.Fx.flash('#3ddc84', 500);
+    if (SRC === 'box' && NEV.BoxAudio && (S.set + 1 < cur().plan.sets || S.step + 1 < steps.length)) NEV.BoxAudio.say(S.setsDone % 2 ? 'bien' : 'super');
     setTimeout(afterSet, 1050);
   }
 
@@ -272,6 +313,7 @@
     } else if (S.step + 1 < steps.length) {
       S.step++; S.set = 0;
       const ns = cur();
+      if (SRC === 'box') { beginSet(true); return; } // la transition (3 s) et le compte à rebours (7 s) font le lien
       restScreen({ sec: 25, kick: 'Exercice suivant (' + (S.step + 1) + '/' + steps.length + ')', title: ns.ex.name, next: planText(ns.plan) + '. ' + ((ns.ex.cam && ns.ex.cam.place) || ''), demo: ns.ex, then: () => beginSet(true), btn: 'C\'est parti' });
     } else {
       NEV.Vision.stop();
@@ -318,7 +360,7 @@
   /* ---------- 6. Le grand OK vert ---------- */
   function showOk() {
     setPhase('phOk'); $('xProg').hidden = true;
-    NEV.Sfx.win();
+    NEV.Sfx.win(); if (SRC === 'box' && NEV.BoxAudio) { NEV.BoxAudio.sfx('fanfare'); NEV.BoxAudio.say('finish'); }
     $('oTitle').textContent = isRest ? 'Repos terminé' : 'Séance terminée !';
     const bits = steps.map((s) => s.plan.sets + ' × ' + NEV.Ex.amountText(s.plan.unit, s.plan.perSet) + ' ' + s.ex.name.toLowerCase());
     let t = isRest ? 'Ton corps construit pendant qu\'il se repose. Bien joué.' : bits.slice(0, 4).join(' · ') + (bits.length > 4 ? ' …' : '');
@@ -334,7 +376,8 @@
     const hb = NEV.heroFromXp(p.progress.xp).stage.n;
     const streakBefore = p.progress.streak;
     let res;
-    if (SRC === 'combo') res = NEV.player.completeCombo(p, combo, { reps: S.totalReps, sets: S.setsDone, verified: S.verifiedAll });
+    if (SRC === 'box') res = NEV.player.completeBox(p, { reps: S.totalReps, sets: S.setsDone, verified: S.verifiedAll });
+    else if (SRC === 'combo') res = NEV.player.completeCombo(p, combo, { reps: S.totalReps, sets: S.setsDone, verified: S.verifiedAll });
     else res = NEV.player.complete(p, { reps: S.totalReps, sets: S.setsDone, verified: S.verifiedAll, src: SRC, rest: isRest });
     const fx = NEV.Rewards.run(p, user);
     NEV.player.save(p);
@@ -358,7 +401,8 @@
     if (o.ha.stage.n > o.hb) setTimeout(() => { heroCtl.powerUp(); heroCtl.growTo(o.ha.stage.n); NEV.Sfx.boom(4); NEV.Fx.flash('#ff8a3d', 900); }, 900);
     else setTimeout(() => heroCtl.powerUp(), 500);
     const acts = ['<a class="btn ok" href="accueil.html" data-go>Retour à l\'accueil</a>'];
-    if (SRC === 'daily') acts.push('<a class="btn ghost" href="specialisation.html" data-go>Un bonus en Spécialisation</a>');
+    if (SRC === 'box') acts.push('<a class="btn ghost" href="gacha-box.html" data-go>Ma Gacha Box</a>');
+    else if (SRC === 'daily') acts.push('<a class="btn ghost" href="specialisation.html" data-go>Un bonus en Spécialisation</a>');
     else acts.push('<a class="btn ghost" href="specialisation.html" data-go>Spécialisation</a>');
     acts.push('<a class="btn ghost" href="recompenses.html" data-go>Mes récompenses</a>');
     $('dActions').innerHTML = acts.join('');
@@ -368,20 +412,20 @@
   }
 
   function showAlready() {
-    $('xSrc').textContent = SRC === 'spe' ? 'Spécialisation' : 'Exercice du jour'; $('xTitle').textContent = 'Déjà validé';
-    setPhase('phDone'); $('dKick').textContent = 'Séance validée'; $('dTitle').textContent = 'C\'est fait pour cette carte';
+    $('xSrc').textContent = SRC === 'box' ? 'Gacha Box' : SRC === 'spe' ? 'Spécialisation' : 'Exercice du jour'; $('xTitle').textContent = 'Déjà validé';
+    setPhase('phDone'); $('dKick').textContent = 'Séance validée'; $('dTitle').textContent = SRC === 'box' ? 'Ta boîte du jour est validée' : 'C\'est fait pour cette carte';
     const r = slot.result || {};
     $('dStats').innerHTML = [['+' + (r.xpGain || 0), 'XP gagnés', 'gold'], [r.reps != null ? r.reps : '—', 'répétitions', ''], [p.progress.streak, 'Série (jours)', '']].map((s) => '<div class="' + s[2] + '"><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div>').join('');
     const h = NEV.heroFromXp(p.progress.xp); $('dHeroLine').textContent = p.progress.xp + ' XP · ' + h.stage.name; $('dBar').style.width = Math.round(h.pct * 100) + '%';
     NEV.Hero.mount($('dHero'), { stage: h.stage.n, aura: p.aura });
-    $('dActions').innerHTML = '<a class="btn ok" href="accueil.html" data-go>Retour à l\'accueil</a><a class="btn ghost" href="specialisation.html" data-go>Spécialisation</a>';
+    $('dActions').innerHTML = '<a class="btn ok" href="accueil.html" data-go>Retour à l\'accueil</a>' + (SRC === 'box' ? '<a class="btn ghost" href="gacha-box.html" data-go>Ma Gacha Box</a>' : '<a class="btn ghost" href="specialisation.html" data-go>Spécialisation</a>');
   }
 
   /* ---------- 8. Quitter ---------- */
   let quitArmed = 0;
   $('rQuit').onclick = () => {
     if (!quitArmed) { $('rQuit').textContent = 'Sûr ? Rien ne sera enregistré'; quitArmed = setTimeout(() => { quitArmed = 0; $('rQuit').textContent = 'Quitter la séance'; }, 3500); return; }
-    NEV.Vision.stop(); NEV.go(SRC === 'daily' ? 'accueil.html' : 'specialisation.html');
+    NEV.Vision.stop(); if (NEV.BoxAudio) NEV.BoxAudio.stopAll(); NEV.go(SRC === 'daily' ? 'accueil.html' : SRC === 'box' ? 'gacha-box.html' : 'specialisation.html');
   };
   window.addEventListener('pagehide', () => { try { NEV.Vision.stop(); } catch (e) { /* ignoré */ } });
   window.__nevX = { S, steps, finishSet, onPose }; // crochet de test

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0507">
+<title>neV.BOOSTER — Gacha Box</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="css/nev.css">
+<link rel="stylesheet" href="css/card.css">
+<link rel="stylesheet" href="css/gacha-box.css">
+</head>
+<body>
+<div class="page"><div class="wrap">
+  <div class="eyebrow">Gacha Box</div>
+  <h1 class="big" id="bxTitle">La boîte <em>mystère</em></h1>
+  <p class="lead" id="bxLead">Une boîte, une main qui plonge sans regarder, quatre cartes tirées au hasard : ta séance du jour.</p>
+  <div id="bxAlert" style="margin-top:16px"></div>
+
+  <section class="bx" id="bx" aria-label="Gacha Box en 3D">
+    <ol class="bx-steps" id="bxSteps" aria-label="Étapes du tirage">
+      <li data-s="1"><b>1</b><span>Apparition</span></li>
+      <li data-s="2"><b>2</b><span>Ouverture</span></li>
+      <li data-s="3"><b>3</b><span>Tirage</span></li>
+      <li data-s="4"><b>4</b><span>Révélation</span></li>
+    </ol>
+
+    <div class="bx-view" id="bxView">
+      <div class="bx-mount" id="bxMount"></div>
+      <div class="bx-2d" id="bxFallback" hidden></div>
+      <div class="bx-load" id="bxLoad" role="status">Chargement de la scène 3D…</div>
+      <button type="button" class="bx-snd" id="bxSnd" aria-pressed="false">Son : oui</button>
+      <p class="bx-hint" id="bxHint" hidden></p>
+    </div>
+
+    <p class="bx-status" id="bxStatus" role="status" aria-live="polite"></p>
+    <div class="bx-bar" id="bxBar">
+      <button type="button" class="btn big bx-open" id="bxOpen" hidden>Ouvrir la boîte</button>
+      <button type="button" class="btn ghost" id="bxSkip" hidden>Passer l'animation</button>
+      <button type="button" class="btn ok big" id="bxGo" hidden>Lancer la séance</button>
+      <button type="button" class="btn ghost" id="bxReplay" hidden>Revoir l'animation</button>
+      <button type="button" class="btn ghost" id="bxAgain" hidden>Nouveau tirage</button>
+    </div>
+    <div class="bx-opts">
+      <label class="check"><input type="checkbox" id="optSkip"><span>Passer les animations</span></label>
+      <label class="check"><input type="checkbox" id="optMusic"><span>Musique d'ambiance</span></label>
+      <label class="check"><input type="checkbox" id="optVoice" checked><span>Voix de motivation</span></label>
+    </div>
+  </section>
+
+  <section class="panel bx-list" id="bxList" hidden aria-labelledby="bxListH">
+    <h2 id="bxListH">Ta séance <span id="bxListMeta" class="muted"></span></h2>
+    <ol id="bxCards"></ol>
+    <p class="muted bx-rule">Avant chaque exercice : <b>3 secondes</b> de transition, puis un compte à rebours de <b>7 secondes</b>. Tes cartes sont tirées une seule fois par jour : elles ne changent pas si tu quittes la page.</p>
+  </section>
+
+  <details class="panel bx-info" style="margin-top:18px">
+    <summary>Comment ça marche ?</summary>
+    <p class="muted">Chaque jour, la boîte donne <b>4 cartes</b>. Une carte <b>Exercice</b> contient un seul exercice (son niveau de difficulté, le nombre de répétitions ou la durée). Une carte <b>Combo</b>, plus rare, contient un enchaînement de plusieurs exercices : elle ne prend qu'un seul emplacement. Le tirage utilise la même bibliothèque d'exercices et les mêmes règles de niveau que le gacha du jour : il tient compte de ton niveau et de ton matériel. Une fois les quatre cartes révélées, « Lancer la séance » enchaîne tous les exercices.</p>
+    <p class="muted" id="bxOdds"></p>
+  </details>
+</div></div>
+<script src="js/core.js"></script>
+<script src="js/cloud.js"></script>
+<script src="js/rewards.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/ex-data.js"></script>
+<script src="js/ex-anim.js"></script>
+<script src="js/ex-more.js"></script>
+<script src="js/exercises.js"></script>
+<script src="js/zones.js"></script>
+<script src="js/combos.js"></script>
+<script src="js/gachaengine.js"></script>
+<script src="js/figure.js"></script>
+<script src="js/figure3d.js"></script>
+<script src="js/sfx.js"></script>
+<script src="js/box-audio.js"></script>
+<script src="js/gacha-box3d.js"></script>
+<script src="js/p-gacha-box.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

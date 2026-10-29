@@ -19,7 +19,7 @@
   var t = '<div class="eyebrow">Ta carte du jour</div>';
   if (d.status === 'none') {
     t += '<h2 class="big" style="font-size:clamp(1.7rem,4vw,2.4rem);margin:8px 0">Une carte t\'attend.</h2><p class="muted">Un seul tirage par jour, totalement aléatoire. Le doigt choisit, la carte décide de ton entraînement.</p>' +
-      '<p style="margin:20px 0 0"><a class="btn" href="gacha.html" data-go>Tirer ma carte</a></p>';
+      '<p style="margin:20px 0 0"><a class="btn" href="gacha.html" data-go>Tirer ma carte</a> <a class="btn ghost" href="gacha-box.html" data-go>📦 Ouvrir la Gacha Box</a></p>';
   } else {
     var r = NEV.Gacha.rarity(d.card.rarity);
     var pl = d.card.plan;
@@ -46,6 +46,7 @@
   ].map(function (s) { return '<div class="stat"><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div>'; }).join('');
 
   $('tiles').innerHTML =
+    '<a class="tile" href="gacha-box.html" data-go>' + I.cube + '<b>Gacha Box</b><span>La boîte 3D : 4 cartes, une séance</span></a>' +
     '<a class="tile" href="quete.html" data-go>' + I.quest + '<b>Quête du jour</b><span>Tes objectifs et ton combo coach</span></a>' +
     '<a class="tile" href="bibliotheque.html" data-go>' + I.book + '<b>Bibliothèque</b><span>Tous les exercices, animés</span></a>' +
     '<a class="tile" href="chat.html" data-go>' + I.chat + '<b>Chat</b><span>Parle au coach et aux joueurs</span></a>' +

@@ -151,7 +151,7 @@
     const base = { drawnAt: Date.now(), table: CARDS_ON_TABLE, pick: rng.int(CARDS_ON_TABLE), mode, zone: zoneId };
 
     /* 1) carte spéciale ? */
-    const sp = rollSpecial(p, { mode });
+    const sp = opts.noSpecial ? null : rollSpecial(p, { mode });
     if (sp) {
       const S = SPECIALS[sp];
       if (sp === 'repos') {
@@ -213,6 +213,63 @@
     }
   }
 
+  /* ---------- Gacha Box : 4 cartes tirées d'un coup ----------
+     Chaque carte = un exercice (même moteur que le gacha du jour) ou, parfois, un COMBO (enchaînement existant).
+     Un combo occupe une seule carte. Réglable (NEV.cfg.box) : cards, sets (séries par exercice), comboChance. */
+  const BOX = { cards: 4, sets: 1, comboChance: 0.5 };
+  const boxCfg = () => Object.assign({}, BOX, (NEV.cfg && NEV.cfg.box) || {});
+
+  /* Combos que ce joueur peut faire : 2 à 4 exercices, tout le matériel disponible. */
+  function comboPool(p) {
+    const eq = (p.setup && p.setup.equip) || {};
+    return (NEV.Combos ? NEV.Combos.all() : []).filter((c) => NEV.Combos.valid(c) && !c.free && c.items.length >= 2 && c.items.length <= 4 &&
+      c.items.every((it) => { const ex = NEV.Ex.byId(it[0]); return ex && !ex.special && (ex.equip || []).every((k) => !!eq[k]); }));
+  }
+
+  function boxPlan(pl, sets) {
+    const mult = (pl.unit === 'side' || pl.unit === 'secside') ? 2 : 1;
+    return { unit: pl.unit, perSet: pl.perSet, sets, rest: pl.rest, total: pl.perSet * sets * mult, doubled: false };
+  }
+
+  /* Tire les cartes de la boîte. Ne sauvegarde rien : c'est ensureBox qui le fait. */
+  function drawBox(p, user) {
+    const B = boxCfg(), n = Math.max(2, Math.min(6, B.cards | 0));
+    const dbl = !!(p.daily && p.daily.double && p.daily.status !== 'done');
+    const sets = Math.max(1, Math.min(4, B.sets | 0)) * (dbl ? 2 : 1);
+    const pool = comboPool(p);
+    const comboAt = pool.length && rng.float() < B.comboChance ? rng.int(n) : -1;
+    const fake = Object.assign({}, p, { history: (p.history || []).slice() });
+    const cards = [];
+    for (let i = 0; i < n; i++) {
+      if (i === comboAt) {
+        const hist = fake.history.slice(0, 4).map((h) => h.id);
+        const fresh = pool.filter((c) => !c.items.some((it) => hist.indexOf(it[0]) >= 0));
+        const c = rng.pick(fresh.length ? fresh : pool);
+        const steps = c.items.map((it) => { const ex = NEV.Ex.byId(it[0]); const pl = plan(ex, p, false, false); return { id: ex.id, name: ex.name, tier: ex.tier, group: ex.group, plan: boxPlan(pl, sets) }; });
+        const tier = Math.max(1, Math.min(5, Math.round(steps.reduce((a, s) => a + s.tier, 0) / steps.length)));
+        cards.push({ type: 'combo', id: c.id, name: c.name, lvl: c.lvl || '', tier, rarity: 'combo', steps });
+        steps.forEach((s) => fake.history.unshift({ id: s.id }));
+        continue;
+      }
+      const c = draw(fake, user, { mode: 'daily', noSpecial: true });
+      cards.push({ type: 'single', id: c.id, name: c.name, group: c.group, tier: c.tier, rarity: c.rarity, rarityName: c.rarityName, plan: boxPlan(c.plan, sets) });
+      fake.history.unshift({ id: c.id });
+    }
+    return { date: util.todayStr(), cards, status: 'drawn', drawnAt: Date.now(), result: null };
+  }
+
+  /* Renvoie la boîte du jour ; la tire et l'enregistre si ce n'est pas déjà fait (impossible de re-tirer en rechargeant). */
+  function ensureBox(p, user) {
+    NEV.player.ensureDay(p);
+    if (!p.box.cards) {
+      const b = drawBox(p, user);
+      p.box = b;
+      p.pity = b.cards.some((c) => c.type === 'single' && c.tier >= 3) ? 0 : (p.pity || 0) + 1;
+      NEV.player.save(p);
+    }
+    return p.box;
+  }
+
   /* Renvoie la carte du jour (ou de Spécialisation) ; la tire et l'enregistre si ce n'est pas déjà fait. */
   function ensureCard(p, user, opts) {
     opts = opts || {};
@@ -235,6 +292,6 @@
   NEV.Gacha = {
     amount: (pl) => NEV.Ex.amountText(pl.unit, pl.perSet),
     RARITIES, SPECIALS, SPECIAL_RULE, WEIGHTS, weights, draw, ensureCard, plan, eligible, specialInfo, trainingDays,
-    CARDS_ON_TABLE, PITY_HARD, rarity: rarityOf
+    CARDS_ON_TABLE, PITY_HARD, rarity: rarityOf, BOX, drawBox, ensureBox, comboPool, boxCfg
   };
 })(window);

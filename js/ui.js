@@ -23,6 +23,7 @@
   I.list = svgi('M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01');
   I.body = svgi('M12 4a2 2 0 100 .01M7 9l5 1.5L17 9M12 10.5V15M12 15l-3 6M12 15l3 6');
   I.apple = svgi('M12 7c-2-2-6-1-6 4 0 4 2 9 4 9 1 0 1.5-.6 2-.6s1 .6 2 .6c2 0 4-5 4-9 0-5-4-6-6-4zM12 7c0-2 1-3 3-4');
+  I.cube = svgi('M12 3l8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9');
   I.help = svgi('M9.5 9a2.5 2.5 0 115 0c0 1.6-2.5 2-2.5 3.5M12 17h.01M12 3a9 9 0 100 18 9 9 0 000-18z');
   I.settings = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>';
   I.me = svgi('M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 4-6 8-6s8 2 8 6');
@@ -32,6 +33,7 @@
     ['accueil', 'accueil.html', 'Accueil', I.home, 1, 1],
     ['quete', 'quete.html', 'Quête', I.quest, 1, 1],
     ['gacha', 'gacha.html', 'Gacha', I.gacha, 1, 1],
+    ['gacha-box', 'gacha-box.html', 'Gacha Box', I.cube, 1, 0],
     ['specialisation', 'specialisation.html', 'Spécialisation', I.body, 1, 1],
     ['bibliotheque', 'bibliotheque.html', 'Exercices', I.book, 1, 0],
     ['programmes', 'programmes.html', 'Programmes', I.list, 1, 0],
@@ -47,7 +49,7 @@
   const lk = (l, inner, active) => '<a href="' + l[1] + '" data-go' + (l[0] === active ? ' class="on" aria-current="page"' : '') + '>' + inner + '</a>';
 
   const DESC = {
-    accueil: 'Ton tableau de bord', quete: 'Objectifs du jour et combo du coach', gacha: 'Ton tirage quotidien', specialisation: 'Cible une zone du corps',
+    accueil: 'Ton tableau de bord', quete: 'Objectifs du jour et combo du coach', gacha: 'Ton tirage quotidien', 'gacha-box': 'La boîte mystère en 3D : 4 cartes', specialisation: 'Cible une zone du corps',
     bibliotheque: 'Tous les exercices, animés', programmes: 'Des enchaînements prêts à faire', conseils: 'Sécurité, sommeil, récupération',
     alimentation: 'Manger pour progresser', chat: 'Parle au coach et aux joueurs', recompenses: 'Flammes, badges, parrainage', classement: 'Défi de la semaine, saison, amis', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'
   };
