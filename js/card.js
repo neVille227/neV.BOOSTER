@@ -16,7 +16,7 @@
   function front(ex, o) {
     o = o || {};
     const r = o.special ? NEV.Gacha.SPECIALS[o.special] : (o.tier ? NEV.Gacha.RARITIES[o.tier - 1] : rarityOf(ex));
-    const tags = (ex.muscles || []).slice(0, o.tagsMax || 3).map((m) => '<span>' + esc(NEV.MUSCLES_FR[m] || m) + '</span>').join('');
+    const tags = (o.diff ? '<span class="tc-diff">' + esc(o.diff) + '</span>' : '') + (ex.muscles || []).slice(0, o.tagsMax || (o.diff ? 2 : 3)).map((m) => '<span>' + esc(NEV.MUSCLES_FR[m] || m) + '</span>').join('');
     let plan = '';
     if (o.plan) plan = '<div class="tc-plan"><b>' + o.plan.sets + '</b> séries × <b>' + NEV.Ex.amountText(o.plan.unit, o.plan.perSet) + '</b>' + (o.plan.doubled ? ' <em>×2</em>' : '') + '</div>';
     return '<div class="tcard r-' + r.id + (r.tier >= 3 || r.special ? ' foil' : '') + (r.special ? ' special' : '') + '" style="--c:' + r.color + ';--c2:' + r.color2 + ';--g:' + r.glow + '" data-ex="' + esc(ex.id) + '">' +
@@ -25,6 +25,21 @@
       '<div class="tc-name">' + esc(ex.name) + '</div>' +
       '<div class="tc-tags">' + tags + '</div>' + plan +
       '<div class="tc-foot"><span>' + esc(r.special ? 'Spéciale · ' + r.name : r.name) + '</span><span>neV.BOOSTER</span></div>' +
+      '<i class="tc-glare" aria-hidden="true"></i></div></div>';
+  }
+
+  /* Carte COMBO (Gacha Box) : même cadre « spécial » que Repos / Tractions, mais les étoiles et les couleurs suivent la difficulté.
+     c : { name, tier, steps: [{ name, plan: { unit, perSet, sets } }] } */
+  function combo(c, o) {
+    o = o || {};
+    const r = NEV.Gacha.RARITIES[Math.max(0, Math.min(4, (c.tier || 1) - 1))];
+    const rows = (c.steps || []).map((s) => '<li><b>' + s.plan.perSet + '</b><em>' + (s.plan.unit === 'sec' || s.plan.unit === 'secside' ? 's' : 'rép.') + ' × ' + s.plan.sets + '</em><span>' + esc(s.name) + '</span></li>').join('');
+    return '<div class="tcard special combo r-' + r.id + ' foil" style="--c:' + r.color + ';--c2:' + r.color2 + ';--g:#ff2400">' +
+      '<div class="tc-in"><div class="tc-top"><span class="tc-code">COMBO</span><span class="tc-stars" aria-label="' + r.name + '">' + stars(r.stars) + '</span></div>' +
+      '<div class="tc-name">' + esc(c.name) + '</div>' +
+      '<div class="tc-tags"><span class="tc-diff">' + esc(o.diff || '') + '</span><span>' + (c.steps || []).length + ' exercices</span></div>' +
+      '<ol class="tc-steps">' + rows + '</ol>' +
+      '<div class="tc-foot"><span>Spéciale · Combo</span><span>neV.BOOSTER</span></div>' +
       '<i class="tc-glare" aria-hidden="true"></i></div></div>';
   }
 
@@ -69,5 +84,5 @@
   /* Raccourci : la face d'une carte enregistrée (carte du jour, carte de Spécialisation, historique). */
   function ofCard(card, o) { const ex = NEV.Ex.byId(card.id); return ex ? front(ex, Object.assign({ plan: card.plan, tier: card.tier, special: card.special || null }, o || {})) : ''; }
 
-  NEV.Card = { front, back, mountArt, tilt, rarityOf, ofCard };
+  NEV.Card = { front, combo, back, mountArt, tilt, rarityOf, ofCard };
 })(window);

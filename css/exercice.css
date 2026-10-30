@@ -87,11 +87,11 @@
   .xr-actions .btn{flex:1}
 }
 /* Gacha Box : transition de 3 s avant le compte à rebours de 7 s */
-.xr-trans{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:18px;background:radial-gradient(70% 60% at 50% 50%,#34197fcc,#06040bee);color:#f7f4ff}
+.xr-trans{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:18px;background:radial-gradient(70% 60% at 50% 50%,#7a0f26cc,#0c0507ee);color:#fff1f2}
 .xr-trans.on{animation:xrTrans .5s cubic-bezier(.2,.9,.3,1.1) both}
-.xr-trans small{font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#b9a0ff;font-size:.8rem}
-.xr-trans b{font-size:clamp(1.5rem,6vw,2.6rem);font-weight:900;line-height:1.1;text-shadow:0 0 30px #8b5cf6}
-.xr-trans span{font-weight:700;color:#d9cbff}
+.xr-trans small{font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#f3a6b0;font-size:.8rem}
+.xr-trans b{font-size:clamp(1.5rem,6vw,2.6rem);font-weight:900;line-height:1.1;text-shadow:0 0 30px #e0455f}
+.xr-trans span{font-weight:700;color:#ffe1e5}
 @keyframes xrTrans{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.xr-trans.on{animation:none}}
 @media (prefers-reduced-motion:reduce){.xr-bigok,.xr-go,.xr-okflash.on{animation:none}.xr-okflash.on{opacity:.9}}

@@ -4,7 +4,7 @@ Page : `gacha-box.html` (menu → « Gacha Box », tuile sur l'accueil, bouton s
 
 ## Ce que voit le joueur
 
-1. **Apparition** : une boîte noire et violette (arêtes lumineuses) se matérialise sur une table.
+1. **Apparition** : une boîte noire aux arêtes rouges lumineuses et finitions dorées, aux couleurs du site se matérialise sur une table.
 2. **Ouverture** : il touche « Ouvrir la boîte ». Une main soulève le couvercle.
 3. **Tirage** : la main plonge **sans regarder**, fouille, sort une carte, la pose face cachée… quatre fois.
 4. **Révélation** : les cartes se retournent une à une (étincelles ; plus fort pour une carte Combo).
@@ -24,7 +24,7 @@ Boutons : « Passer l'animation » (en plein tirage), option « Passer les anima
 
 | Fichier | Rôle |
 |---|---|
-| `gacha-box.html`, `css/gacha-box.css` | La page et son style (noir / violet / blanc) |
+| `gacha-box.html`, `css/gacha-box.css` | La page et son style (thème bordeaux / rouge / or du site) |
 | `js/p-gacha-box.js` | La logique de la page : tirage **avant** l'animation, étapes, boutons, version 2D |
 | `js/gacha-box3d.js` | La scène 3D : table, boîte, couvercle, main, cartes, particules, caméra |
 | `js/box-audio.js` | Les bruitages (synthétisés) + la voix de motivation |
@@ -49,3 +49,9 @@ L'admin peut les surcharger avec `NEV.cfg.box = { comboChance: 0.3 }`.
 - Main et décor sont des formes 3D simples (pas de photos ni de scan).
 - Voix synthétique, en français. Page non traduite en anglais pour l'instant.
 - Sans WebGL : version 2D (cartes qui se retournent), mêmes règles, mêmes sons.
+
+
+## Cartes et révélation (version « aux couleurs du site »)
+- Les cartes sont **les mêmes que sur le reste du site** : cadre dégradé selon la rareté/difficulté (Commun gris `N`, Rare violet `R`, Épique rose `SR`, Légendaire or `UR`, Mythique rouge `MR`), étoiles, personnage animé, pastille de difficulté (Facile → Extrême), muscles, plan « 3 séries × 15 rép. ». Le dessin vient de `js/gacha-box-cards.js` (qui copie `css/card.css`) ; la carte Combo reprend le cadre « spécial » blanc/écarlate (`NEV.Card.combo`).
+- La révélation est celle du gacha du jour : la carte monte vers l'écran, **tourne de plus en plus vite** (rayons, braises, secousses, couleurs qui changent), **explose en éclats**, puis la face apparaît avec le bandeau de rareté et le plan. Plus la carte est rare, plus la rotation et l'explosion sont fortes.
+- Sans WebGL, la version 2D retourne les vraies cartes du site avec les mêmes éclats.

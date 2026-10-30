@@ -49,3 +49,11 @@
   background:radial-gradient(60% 40% at 80% 10%,#fff6,transparent 70%)}
 .tcard.r-repos,.tcard.r-tractions{--g:#ff2400}
 @media(prefers-reduced-motion:reduce){.tcard.special{animation:none}}
+/* pastille de difficulté + carte Combo (Gacha Box) */
+.tc-tags .tc-diff{background:linear-gradient(135deg,var(--c),var(--c2));color:#1a0508;border-color:transparent;font-weight:900;letter-spacing:.02em}
+.tcard.combo .tc-code{background:linear-gradient(135deg,#fff,#ff2400);letter-spacing:.06em;font-size:5.6cqw;padding:1.2cqw 3.4cqw}
+.tc-steps{flex:1 1 auto;min-height:0;margin:0;padding:0;list-style:none;display:flex;flex-direction:column;justify-content:space-evenly}
+.tc-steps li{display:grid;grid-template-columns:auto auto 1fr;gap:2.4cqw;align-items:baseline;padding:2cqw 0;border-top:1px solid #ffffff18}
+.tc-steps b{font-size:10cqw;font-weight:900;line-height:1;color:var(--c);text-shadow:0 0 3cqw color-mix(in srgb,var(--c) 55%,transparent);min-width:12cqw}
+.tc-steps em{font-style:normal;font-size:4.2cqw;font-weight:800;color:#ffb3bd;letter-spacing:.04em;text-transform:uppercase}
+.tc-steps span{font-size:5.8cqw;font-weight:700;color:#ffe1e5;text-align:right;line-height:1.1}

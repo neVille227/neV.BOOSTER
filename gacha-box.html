@@ -8,13 +8,14 @@
 <link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="css/nev.css">
 <link rel="stylesheet" href="css/card.css">
+<link rel="stylesheet" href="css/gacha.css">
 <link rel="stylesheet" href="css/gacha-box.css">
 </head>
 <body>
 <div class="page"><div class="wrap">
   <div class="eyebrow">Gacha Box</div>
   <h1 class="big" id="bxTitle">La boîte <em>mystère</em></h1>
-  <p class="lead" id="bxLead">Une boîte, une main qui plonge sans regarder, quatre cartes tirées au hasard : ta séance du jour.</p>
+  <p class="lead" id="bxLead">Une boîte, une main qui plonge sans regarder, quatre cartes tirées au hasard. Chaque carte porte la couleur de sa difficulté : Commun, Rare, Épique, Légendaire ou Mythique.</p>
   <div id="bxAlert" style="margin-top:16px"></div>
 
   <section class="bx" id="bx" aria-label="Gacha Box en 3D">
@@ -31,6 +32,7 @@
       <div class="bx-load" id="bxLoad" role="status">Chargement de la scène 3D…</div>
       <button type="button" class="bx-snd" id="bxSnd" aria-pressed="false">Son : oui</button>
       <p class="bx-hint" id="bxHint" hidden></p>
+      <div class="bx-reveal" id="bxReveal" hidden aria-live="polite"><span class="rbanner" id="bxBanner"></span><b class="bx-rname" id="bxName"></b><span class="bx-rplan" id="bxPlan"></span></div>
     </div>
 
     <p class="bx-status" id="bxStatus" role="status" aria-live="polite"></p>
@@ -73,8 +75,11 @@
 <script src="js/gachaengine.js"></script>
 <script src="js/figure.js"></script>
 <script src="js/figure3d.js"></script>
+<script src="js/card.js"></script>
 <script src="js/sfx.js"></script>
+<script src="js/fx.js"></script>
 <script src="js/box-audio.js"></script>
+<script src="js/gacha-box-cards.js"></script>
 <script src="js/gacha-box3d.js"></script>
 <script src="js/p-gacha-box.js"></script>
 <script src="js/i18n.js"></script>
