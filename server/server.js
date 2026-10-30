@@ -163,7 +163,7 @@ function cleanPlayer(p, uid) {
 
 /* ---------------- routes publiques ---------------- */
 const emailOk = (e) => /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/.test(e) && e.length <= 254;
-const codeOf = (id) => 'NEV' + String(id).replace(/[^a-z0-9]/gi, '').slice(-5).toUpperCase();
+const codeOf = () => String(crypto.randomInt(0, 10000)).padStart(4, '0'); // code personnel : 4 chiffres (les anciens codes NEVxxxxx restent valables)
 
 async function signup(req, res, ip) {
   const b = await readBody(req, 8192);
@@ -173,6 +173,7 @@ async function signup(req, res, ip) {
   if (pw.length < 8 || pw.length > 200) return fail(res, 400, 'Le mot de passe doit faire au moins 8 caractères.', 'password');
   if (!b.consent) return fail(res, 400, 'Coche la case pour confirmer que tu as lu le conseil de sécurité.', 'consent');
   const chk = F.checkSignup(b); if (chk.error) return fail(res, 400, chk.error, chk.field);
+  if (b.sex !== 'm' && b.sex !== 'f') return fail(res, 400, 'Choisis ton sexe : masculin ou féminin.', 'sex');
   if (S.userByEmail(email)) return fail(res, 409, 'Un compte existe déjà avec cet email. Connecte-toi.', 'email');
   const ref = clean(b.ref, 12).toUpperCase().replace(/[^A-Z0-9]/g, '');
   let refUser = null;
@@ -180,11 +181,12 @@ async function signup(req, res, ip) {
   const id = 'u' + rid(8), salt = crypto.randomBytes(16).toString('hex');
   const hash = await scrypt(pw, salt);
   const user = { id, email, pseudo, created: today(), code: codeOf(id), refCount: 0, banned: false, refBy: refUser ? refUser.id : null, termsAt: now(), termsVer: F.policy.TERMS_VERSION, lang: chk.extra.lang };
-  while (S.codeTaken(user.code)) user.code = 'NEV' + rid(4).toUpperCase().replace(/[^A-Z0-9]/g, 'X').slice(0, 5);
+  for (let n = 0; S.codeTaken(user.code); n++) user.code = n < 300 ? codeOf() : 'NEV' + rid(4).toUpperCase().replace(/[^A-Z0-9]/g, 'X').slice(0, 5); // 4 chiffres tant qu'il en reste
   if (S.userByEmail(email)) return fail(res, 409, 'Un compte existe déjà avec cet email. Connecte-toi.', 'email'); // course entre deux inscriptions
   S.createUser(user, salt, hash);
   let player = null;
-  if (refUser) { player = { ref: { by: ref, count: 0, paid: 0, welcomed: false } }; S.savePlayer(id, Object.assign({ updated: now() }, player)); }
+  player = { sex: b.sex }; if (refUser) player.ref = { by: ref, count: 0, paid: 0, welcomed: false };
+  S.savePlayer(id, Object.assign({ updated: now() }, player));
   logEvent('signup', 'connexion', id, pseudo, { ref: !!refUser });
   await F.afterSignup(req, user).catch((e) => console.error('[inscription]', e && e.message));
   startSession(res, req, id);

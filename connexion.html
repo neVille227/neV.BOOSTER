@@ -19,6 +19,8 @@
 <title>neV.BOOSTER — Connexion</title>
 <link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="css/nev.css">
+<link rel="stylesheet" href="css/card.css">
+<link rel="stylesheet" href="intro-bg.css">
 <style>
   .auth{min-height:100vh;display:grid;place-items:center;padding:28px 0}
   .auth .box{width:min(460px,92%)}
@@ -27,11 +29,19 @@
   .auth .sub{text-align:center;color:var(--muted);font-size:.9rem;margin:0 0 22px}
   .auth .row{display:grid;grid-template-columns:1fr 1fr;gap:20px}
   .auth form[hidden]{display:none}
+  .sexe{border:0;padding:0;margin:0 0 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .sexe legend{padding:0;margin-bottom:6px;font-size:.82rem;font-weight:700;color:var(--rose)}
+  .sexe .pick{display:block;cursor:pointer}
+  .sexe .pick input{position:absolute;opacity:0}
+  .sexe .pick span{display:block;text-align:center;padding:12px;border-radius:12px;font-weight:800;background:#ffffff0d;border:1px solid #ffffff1c;color:var(--cream)}
+  .sexe .pick input:checked+span{background:var(--grad-btn);border-color:#e0455f;box-shadow:0 6px 18px #e0455f40}
+  .sexe .pick input:focus-visible+span{outline:2px solid var(--gold)}
+  .field.bad.sexe legend{color:#ff8a8a}
   .note{font-size:.76rem;color:var(--muted);text-align:center;margin:16px 0 0}
 </style>
 </head>
-<body>
-<main class="auth">
+<body data-nvbg="static">
+<main class="auth" style="position:relative;z-index:1">
   <div class="box">
     <img class="mark" src="img/mark.svg" alt="neV.BOOSTER">
     <div class="panel glow">
@@ -49,7 +59,11 @@
           <div class="field"><label for="suPw">Mot de passe</label><input id="suPw" name="password" type="password" autocomplete="new-password" placeholder="8 caractères min."></div>
           <div class="field"><label for="suPw2">Confirmation</label><input id="suPw2" name="password2" type="password" autocomplete="new-password"></div>
         </div>
-        <div class="field"><label for="suRef">Code de parrainage <span class="muted">(facultatif)</span></label><input id="suRef" name="ref" maxlength="12" autocomplete="off" autocapitalize="characters" placeholder="Ex. NEV4K9Z2"><span class="hint">Un ami t'a invité ? Vous gagnez tous les deux des flammes.</span></div>
+        <fieldset class="field sexe"><legend>Sexe</legend>
+          <label class="pick"><input type="radio" id="suSexM" name="sex" value="m"><span>Masculin</span></label>
+          <label class="pick"><input type="radio" id="suSexF" name="sex" value="f"><span>Féminin</span></label>
+        </fieldset>
+        <div class="field"><label for="suRef">Code de parrainage <span class="muted">(facultatif)</span></label><input id="suRef" name="ref" maxlength="12" autocomplete="off" autocapitalize="characters" placeholder="Ex. 4821"><span class="hint">Un ami t'a invité ? Vous gagnez tous les deux des flammes.</span></div>
         <label class="check"><input type="checkbox" id="suConsent"><span>Je m'entraîne à mon rythme, je m'arrête en cas de douleur ou de malaise, et je sais que neV.BOOSTER n'est pas un avis médical.</span></label>
         <label class="check"><input type="checkbox" id="suTerms"><span>J'accepte les <a href="conditions.html" target="_blank" rel="noopener">conditions d'utilisation</a> et la <a href="confidentialite.html" target="_blank" rel="noopener">politique de confidentialité</a>. Si je suis mineur, j'ai l'accord d'un parent ou tuteur.</span></label>
         <div class="err" id="errSignup" role="alert"></div>
@@ -68,6 +82,7 @@
     </div>
   </div>
 </main>
+<script src="intro-bg.js"></script>
 <script src="js/core.js"></script>
 <script src="js/cloud.js"></script>
 <script src="js/rewards.js"></script>

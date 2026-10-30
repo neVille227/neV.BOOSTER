@@ -18,7 +18,7 @@ NEV.ready(function (mode) {
   $('tabSignup').onclick = function () { tab('signup'); };
   $('tabLogin').onclick = function () { tab('login'); };
 
-  var FIELDS = { pseudo: 'suPseudo', email: 'suEmail', password: 'suPw', password2: 'suPw2', ref: 'suRef', consent: 'suConsent', terms: 'suTerms' };
+  var FIELDS = { pseudo: 'suPseudo', email: 'suEmail', password: 'suPw', password2: 'suPw2', ref: 'suRef', sex: 'suSexM', consent: 'suConsent', terms: 'suTerms' };
   function mark(map, field) {
     Object.keys(map).forEach(function (k) { var el = $(map[k]); var f = el.closest('.field'); if (f) f.classList.toggle('bad', k === field); });
   }
@@ -33,7 +33,7 @@ NEV.ready(function (mode) {
     $('btnSignup').disabled = true;
     NEV.auth.signup({
       pseudo: $('suPseudo').value, email: $('suEmail').value,
-      password: $('suPw').value, password2: $('suPw2').value, consent: $('suConsent').checked, terms: $('suTerms').checked, ref: $('suRef').value
+      password: $('suPw').value, password2: $('suPw2').value, consent: $('suConsent').checked, terms: $('suTerms').checked, ref: $('suRef').value, sex: (document.querySelector('input[name=sex]:checked') || {}).value || ''
     }).then(function (r) {
       $('btnSignup').disabled = false;
       if (!r.ok) { $('errSignup').textContent = r.error; mark(FIELDS, r.field); var el = $(FIELDS[r.field]); if (el) el.focus(); return; }

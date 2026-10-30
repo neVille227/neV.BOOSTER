@@ -149,7 +149,8 @@
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return { field: 'email', msg: 'Entre une adresse email valide.' };
       return null;
     },
-    codeOf(id) { return 'NEV' + String(id).replace(/[^a-z0-9]/gi, '').slice(-5).toUpperCase(); },
+    /* code personnel : 4 chiffres (les anciens codes NEVxxxxx restent valables) */
+    codeOf(id) { let h = 0; String(id).split('').forEach((c) => { h = (h * 31 + c.charCodeAt(0)) % 10000; }); return String(h).padStart(4, '0'); },
     check(f) {
       const email = String(f.email || '').trim().toLowerCase();
       const pseudo = String(f.pseudo || '').trim();
@@ -158,6 +159,7 @@
       if (bad) return { ok: false, field: bad.field, error: bad.msg };
       if (String(f.password || '').length < 8) return { ok: false, field: 'password', error: 'Le mot de passe doit faire au moins 8 caractères.' };
       if (f.password !== f.password2) return { ok: false, field: 'password2', error: 'Les deux mots de passe ne sont pas identiques.' };
+      if (f.sex !== 'm' && f.sex !== 'f') return { ok: false, field: 'sex', error: 'Choisis ton sexe : masculin ou féminin.' };
       if (!f.consent) return { ok: false, field: 'consent', error: 'Coche la case pour confirmer que tu as lu le conseil de sécurité.' };
       if (!f.terms) return { ok: false, field: 'terms', error: 'Coche la case pour accepter les conditions d\'utilisation et la politique de confidentialité.' };
       return { ok: true, email, pseudo };
@@ -171,6 +173,7 @@
       const salt = rng.id();
       const id = 'u' + rng.id();
       const user = { id, email: c.email, pseudo: c.pseudo, salt, hash: await hashPw(f.password, salt), created: util.todayStr(), code: auth.codeOf(id), refCount: 0 };
+      { let n = 0; const taken = (c) => Object.keys(users).some((k) => users[k].code === c); while (taken(user.code) && n++ < 500) user.code = String(Math.floor(rng.float ? rng.float() * 10000 : Math.random() * 10000)).padStart(4, '0'); }
       const ref = String(f.ref || '').trim().toUpperCase();
       let refUser = null;
       if (ref) {
@@ -182,7 +185,7 @@
       users[c.email] = user;
       NEV.store.set(USERS, users);
       NEV.store.set(SESSION, { uid: user.id, email: c.email, at: Date.now() });
-      if (refUser) { const p = P.load(user.id); p.ref.by = ref; P.save(p, user.id); }
+      { const p = P.load(user.id); if (refUser) p.ref.by = ref; p.sex = f.sex; P.save(p, user.id); }
       if (NEV.track) NEV.track('signup', { ref: !!refUser });
       return { ok: true, user: auth.current() };
     },

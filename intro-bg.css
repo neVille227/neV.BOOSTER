@@ -1,0 +1,36 @@
+/* neV.BOOSTER — fond permanent : Baki tracé en lumière rouge + cartes 3D flottantes (intro et écran de création de compte) */
+#nvbg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:radial-gradient(ellipse at 50% 40%,#3a0a18 0,#0a0507 62%)}
+#nvbg .bk{position:absolute;top:0;bottom:0;left:50%;height:100%;aspect-ratio:736/1308;transform:translateX(-50%)}
+#nvbg .bk img{position:absolute;inset:0;width:100%;height:100%;display:block}
+#nvbg .bk-full{opacity:0}
+#nvbg .bk-line{clip-path:inset(0 0 100% 0);filter:brightness(1.15) saturate(1.2)}
+#nvbg .bk-scan{position:absolute;left:-6%;right:-6%;top:0;height:3px;border-radius:3px;opacity:0;
+  background:linear-gradient(90deg,transparent,#ff8a3d 12%,#fff1f2 50%,#ff8a3d 88%,transparent);box-shadow:0 0 18px 6px #e0455fcc,0 0 60px 20px #e0455f66}
+/* tracé : la lumière descend de la tête aux pieds en dessinant le corps, puis la couleur remplit le dessin */
+#nvbg.trace .bk-line{animation:bkLine 5.2s cubic-bezier(.45,.05,.4,1) .3s forwards}
+#nvbg.trace .bk-scan{animation:bkScan 5.2s cubic-bezier(.45,.05,.4,1) .3s forwards}
+#nvbg.trace .bk-full{animation:bkFull 2.6s ease-in 3.6s forwards}
+@keyframes bkLine{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes bkScan{0%{top:0;opacity:0}6%{opacity:1}94%{opacity:1}100%{top:100%;opacity:0}}
+@keyframes bkFull{to{opacity:1}}
+#nvbg.done .bk-line{clip-path:inset(0)}#nvbg.done .bk-full{opacity:1}
+#nvbg.done .bk{animation:bkBreath 6s ease-in-out infinite}
+@keyframes bkBreath{50%{filter:brightness(1.18) drop-shadow(0 0 22px #e0455f66)}}
+#nvbg.dim .bk{opacity:.5}
+/* cartes flottantes en 3D */
+#nvbg .cards3d{position:absolute;inset:0;perspective:900px;perspective-origin:50% 45%;overflow:hidden}
+#nvbg .world{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(var(--px,0deg)) rotateY(var(--py,0deg));transition:transform .5s ease-out}
+#nvbg .fc{position:absolute;left:var(--x);top:var(--y);width:var(--w);transform-style:preserve-3d;transform:translate3d(-50%,-50%,var(--z));opacity:0}
+#nvbg.cards-on .fc{animation:fcIn 1.1s cubic-bezier(.2,.9,.3,1.1) var(--a,0s) forwards}
+@keyframes fcIn{from{opacity:0;transform:translate3d(-50%,-30%,calc(var(--z) - 500px)) scale(.4)}to{opacity:1;transform:translate3d(-50%,-50%,var(--z))}}
+#nvbg .fi{transform-style:preserve-3d;animation:fcFloat var(--t,9s) ease-in-out var(--d,0s) infinite alternate}
+@keyframes fcFloat{
+  0%{transform:translate3d(0,0,0) rotateX(var(--rx0,12deg)) rotateY(var(--ry0,-24deg)) rotateZ(var(--rz,-8deg))}
+  100%{transform:translate3d(var(--fx,10px),var(--fy,-26px),30px) rotateX(calc(var(--rx0,12deg)*-1)) rotateY(var(--ry1,28deg)) rotateZ(calc(var(--rz,-8deg)*-1))}}
+#nvbg .fc .tcard{box-shadow:0 0 0 1px #000a,0 14px 40px #000c,0 0 34px color-mix(in srgb,var(--g) 55%,transparent)}
+#nvbg .fc .tcard .tc-in{justify-content:space-between}
+#nvbg .fc .fn{font-weight:900;font-size:17cqw;line-height:1;text-align:center;color:var(--c);text-shadow:0 0 6cqw var(--g);margin:auto 0}
+#nvbg .fc .fl{text-align:center;font-weight:800;font-size:6cqw;letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--c) 75%,#fff)}
+/* voile pour garder les textes lisibles */
+#nvbg::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 30%,#0a050788 100%);pointer-events:none}
+@media(prefers-reduced-motion:reduce){#nvbg .fi,#nvbg.done .bk{animation:none}#nvbg.trace .bk-line,#nvbg.trace .bk-full{animation-duration:.01ms;animation-delay:0s}#nvbg.trace .bk-scan{display:none}}

@@ -4,7 +4,7 @@
   "description": "Booste ton quotidien : séances de musculation, cartes à tirer, flammes et classement entre amis.",
   "lang": "fr",
   "id": "/accueil.html",
-  "start_url": "accueil.html?utm=app",
+  "start_url": "index.html?utm=app",
   "categories": ["health", "fitness", "lifestyle"],
   "shortcuts": [
     { "name": "Quête du jour", "url": "quete.html", "icons": [{ "src": "img/icon-192.png", "sizes": "192x192" }] },

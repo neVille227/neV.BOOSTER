@@ -75,7 +75,7 @@
     if (player) store.set(NEV.player.key(u.id), player);
   }
   C.serverSignup = async function (f) {
-    const r = await api('signup', 'POST', { pseudo: f.pseudo, email: f.email, password: f.password, consent: !!f.consent, terms: !!f.terms, ref: f.ref || '', lang: (NEV.i18n && NEV.i18n.lang()) || 'fr' });
+    const r = await api('signup', 'POST', { pseudo: f.pseudo, email: f.email, password: f.password, consent: !!f.consent, terms: !!f.terms, ref: f.ref || '', sex: f.sex, lang: (NEV.i18n && NEV.i18n.lang()) || 'fr' });
     if (!r.ok) return { ok: false, field: r.data.field, error: r.data.error || 'Inscription impossible pour le moment.' };
     cacheServerUser(r.data.user, r.data.player);
     return { ok: true, user: NEV.auth.current() };
