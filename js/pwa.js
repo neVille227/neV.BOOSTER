@@ -8,6 +8,7 @@
   const KEY = 'nev.reminder';
   const head = doc.head;
   if (!doc.querySelector('link[rel=manifest]')) { const l = doc.createElement('link'); l.rel = 'manifest'; l.href = 'manifest.webmanifest'; head.appendChild(l); }
+  if (!doc.querySelector('link[rel=icon]')) { const l = doc.createElement('link'); l.rel = 'icon'; l.type = 'image/png'; l.sizes = '32x32'; l.href = 'img/favicon-32.png'; head.appendChild(l); const i = doc.createElement('link'); i.rel = 'shortcut icon'; i.href = 'favicon.ico'; head.appendChild(i); }
   if (!doc.querySelector('link[rel=apple-touch-icon]')) { const l = doc.createElement('link'); l.rel = 'apple-touch-icon'; l.href = 'img/apple-touch-icon.png'; head.appendChild(l); }
 
   let reg = null, deferred = null;
