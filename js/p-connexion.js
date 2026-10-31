@@ -1,7 +1,16 @@
 NEV.ready(function (mode) {
   var $ = function (id) { return document.getElementById(id); };
+  /* Parcours féminin : première connexion → introduction animée ; ensuite → accueil féminin (Yuki). */
+  function dest(p) {
+    if (p && p.sex === 'f') {
+      var first = true;
+      try { first = localStorage.getItem('nvbf.intro') !== '1'; localStorage.setItem('nvbf.intro', '1'); } catch (e) {}
+      return first ? 'femme/intro.html' : 'femme/index.html';
+    }
+    return p && p.maxPushups ? 'accueil.html' : 'niveau.html';
+  }
   NEV.cloud.sync().then(function (user) {
-    if (user) { var p = NEV.player.load(); NEV.go(p.maxPushups ? 'accueil.html' : 'niveau.html', 0); }
+    if (user) { var p = NEV.player.load(); NEV.go(dest(p), 0); }
   });
   $('storeNote').textContent = mode === 'server'
     ? 'Connexion sécurisée : ton mot de passe n\'est jamais conservé en clair.'
@@ -24,7 +33,7 @@ NEV.ready(function (mode) {
   }
   function done(u) {
     var p = NEV.player.load(u.id);
-    NEV.go(p.maxPushups ? 'accueil.html' : 'niveau.html');
+    NEV.go(dest(p));
   }
 
   $('formSignup').addEventListener('submit', function (e) {

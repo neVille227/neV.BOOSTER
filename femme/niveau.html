@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0507">
+<title>neV.BOOSTER Femme — Mon niveau</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="niveau">
+<header id="site-header"></header>
+
+<main>
+  <section class="wrap page-head">
+    <p class="eyebrow">Évaluation facultative</p>
+    <h1 style="margin-top:14px">Commence <em class="fr">à ton niveau.</em></h1>
+    <p class="lead">Indique combien de squats tu réalises confortablement. Pas besoin d'aller jusqu'à l'épuisement : tes programmes s'ajustent à partir de ce repère, et tu peux le modifier quand tu veux.</p>
+  </section>
+
+  <section class="wrap block">
+    <div class="split" style="align-items:flex-start">
+      <form class="card hl" id="lvl-form" novalidate>
+        <label for="squats">Squats réalisés confortablement</label>
+        <input id="squats" type="number" min="0" max="200" inputmode="numeric" placeholder="Ex. 12">
+        <div class="btn-row" style="margin-top:22px">
+          <button class="btn" type="submit">Calculer mes repères</button>
+          <button class="btn ghost" type="button" id="lvl-clear">Effacer</button>
+        </div>
+        <p class="note">Fais-le au calme, sans te presser, et arrête-toi bien avant la fatigue extrême. Cette étape est entièrement facultative : <a href="gacha.html" style="color:var(--rose);font-weight:700">passer directement aux cartes</a>.</p>
+      </form>
+      <div id="lvl-out" aria-live="polite"></div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer"></footer>
+<script src="script.js"></script>
+</body>
+</html>
