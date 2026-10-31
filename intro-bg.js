@@ -24,16 +24,18 @@
     [10, 22, 60, 96, -10, -1], [88, 20, 40, 104, 9, 3], [6, 62, -80, 84, 6, 1], [92, 64, 70, 100, -8, -1],
     [24, 86, 120, 90, 12, 4], [78, 88, -40, 88, -12, 0], [30, 8, -120, 74, -6, 2], [70, 8, -100, 76, 8, -1], [50, 94, -160, 70, 0, 1]
   ];
+  /* écran large (intro) : Baki passe à droite, le texte à gauche ; les cartes restent dans les marges libres */
+  var SPOTS_W = [[47, 13, -40, 84, -9, 3], [93, 20, 40, 92, 8, -1], [93, 72, 60, 88, -8, 4], [45, 88, -80, 78, 10, 1], [60, 94, -150, 64, -5, 0], [7, 9, -150, 60, -8, -1], [9, 93, -130, 64, 8, 2]];
   var SPOTS_S = [[13, 18, 40, 80, -10, -1], [86, 24, 50, 84, 9, 3], [12, 74, 60, 80, 8, 4], [87, 80, 30, 78, -9, -1], [50, 92, -80, 62, 0, 1]];
 
   function mount(o) {
     o = o || {};
     var el = doc.getElementById('nvbg');
     if (!el) { el = doc.createElement('div'); el.id = 'nvbg'; el.setAttribute('aria-hidden', 'true'); doc.body.insertBefore(el, doc.body.firstChild); }
-    var small = g.innerWidth < 640, spots = small ? SPOTS_S : SPOTS, h = '';
+    var small = g.innerWidth < 640, spots = o.split ? SPOTS_W : small ? SPOTS_S : SPOTS, h = '';
     spots.forEach(function (s, i) {
       var r = s[5] < 0 ? null : R[s[5]], rnd = function (a, b) { return (a + ((i * 37 + 11) % 100) / 100 * (b - a)).toFixed(1); };
-      h += '<div class="fc" style="--x:' + s[0] + '%;--y:' + s[1] + '%;--z:' + s[2] + 'px;--w:' + (small ? s[3] : s[3] * 1.15) + 'px;--rz:' + s[4] + 'deg;--rx0:' + rnd(6, 16) + 'deg;--ry0:' + rnd(-30, -12) + 'deg;--ry1:' + rnd(14, 34) + 'deg;--fx:' + rnd(-14, 14) + 'px;--fy:' + rnd(-34, -12) + 'px;--t:' + rnd(7, 11) + 's;--d:-' + rnd(0, 6) + 's;--a:' + (i * 0.16).toFixed(2) + 's' + (r ? ';--c:' + r.c + ';--g:' + r.g : '') + '"><div class="fi">' + (r ? face(r) : BACK) + '</div></div>';
+      h += '<div class="fc" style="--x:' + s[0] + '%;--y:' + s[1] + '%;--z:' + s[2] + 'px;--w:' + (small ? s[3] : o.split ? s[3] * 1.1 : s[3] * 1.15) + 'px;--rz:' + s[4] + 'deg;--rx0:' + rnd(6, 16) + 'deg;--ry0:' + rnd(-30, -12) + 'deg;--ry1:' + rnd(14, 34) + 'deg;--fx:' + rnd(-14, 14) + 'px;--fy:' + rnd(-34, -12) + 'px;--t:' + rnd(7, 11) + 's;--d:-' + rnd(0, 6) + 's;--a:' + (i * 0.16).toFixed(2) + 's' + (r ? ';--c:' + r.c + ';--g:' + r.g : '') + '"><div class="fi">' + (r ? face(r) : BACK) + '</div></div>';
     });
     el.innerHTML = '<div class="bk"><img class="bk-full" src="img/baki.webp" alt="" decoding="async"><img class="bk-line" src="img/baki-line.webp" alt="" decoding="async"><i class="bk-scan"></i></div><div class="cards3d"><div class="world">' + h + '</div></div>';
     el.className = (o.trace ? 'trace' : 'done') + (o.dim ? ' dim' : '') + (o.cards ? ' cards-on' : '');
@@ -46,6 +48,8 @@
   g.NEVBG = {
     mount: mount,
     showCards: function () { var e = doc.getElementById('nvbg'); if (e) e.classList.add('cards-on'); },
+    side: function (on) { var e = doc.getElementById('nvbg'); if (e) e.classList.toggle('split', !!on); },
+    dim: function (on) { var e = doc.getElementById('nvbg'); if (e) e.classList.toggle('dim', !!on); },
     finish: function () { var e = doc.getElementById('nvbg'); if (e) { e.classList.add('done'); } }
   };
   if (doc.body && doc.body.getAttribute('data-nvbg') === 'static') mount({ cards: true, dim: true });
