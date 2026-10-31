@@ -13,7 +13,7 @@
 (function (g) {
   'use strict';
   const NEV = (g.NEV = g.NEV || {}), doc = g.document, DATA = NEV.StoryData, $ = (i) => doc.getElementById(i);
-  const qs = new g.URLSearchParams(g.location.search), RENDER = qs.has('render'), FIX = qs.get('t');
+  const qs = new g.URLSearchParams(g.location.search), RENDER = qs.has('render'), FIX = qs.get('t'), INTRO = qs.has('intro');
   const reduce = !RENDER && g.matchMedia && g.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const T = DATA.T, N = T.length - 1, END = T[N];
   const root = $('fk'), audio = $('voice'), startBtn = $('start'), ppBtn = $('pp'), ppi = $('ppi'), sndBtn = $('snd'), tiltBtn = $('tilt'), curtain = $('curtain'), hint = $('hint');
@@ -145,7 +145,7 @@
     if (playing) {
       /* la voix mène l'horloge ; si elle est loin (saut en cours, réseau lent), on garde l'horloge et on la rattrape */
       if (useVoice && !audio.paused && !audio.seeking && audio.readyState > 2) { const d = audio.currentTime - t; if (Math.abs(d) < 0.9) t = audio.currentTime; else { t += dt; if (g.performance.now() - lastFix > 1500) { lastFix = g.performance.now(); try { audio.currentTime = t; } catch (e) { /* ignoré */ } } } } else t += dt;
-      if (t >= END) { t = END - 0.001; setPlaying(false); }
+      if (t >= END) { t = END - 0.001; setPlaying(false); if (INTRO) g.setTimeout(() => { doc.documentElement.classList.add('nev-leaving'); g.setTimeout(() => { g.location.href = 'connexion.html'; }, 600); }, 3500); }
     }
     ftime += dt; frames++;
     if (frames === 45) { if (ftime / frames > 0.05 && dpr > 0.8) { dpr = Math.max(0.75, dpr - 0.35); fit3d(); } frames = 0; ftime = 0; }
@@ -244,6 +244,7 @@
   ready.then(() => {
     if (FIX != null) { startBtn.classList.add('hide'); t = clamp(parseFloat(FIX) || 0, 0, END); cur = -1; paint(true); return; }
     if (RENDER) { startBtn.classList.add('hide'); cur = -1; paint(true); return; }
+    if (INTRO && !reduce) { startBtn.click(); return; }       // parcours d'ouverture : l'histoire se lance seule
     paint(true); if (ready3d) loop();       // animation d'attente derrière le bouton « Lancer l'histoire »
   });
   if (reduce) { /* sans animation automatique : le bouton lance la lecture de la voix seulement si on appuie sur ▶ */ }

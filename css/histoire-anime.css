@@ -158,3 +158,4 @@ body{font-family:var(--font);color:var(--ink);-webkit-text-size-adjust:100%}
   .fk *,.fk *::before{animation-duration:.01s!important;animation-delay:0s!important}
   .curtain{display:none}
 }
+.nev-leaving body{transition:opacity .6s ease;opacity:0;pointer-events:none}

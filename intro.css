@@ -60,3 +60,13 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--cream);font-fami
 .on .vision .story-link{animation:up .6s 3.6s forwards}
 .vision .story-link:focus-visible,.vision .story-link:hover{outline:2px solid #fff}
 @media(prefers-reduced-motion:reduce){.vision .story-link{opacity:1!important}}
+
+/* progression de l'ouverture */
+.prog{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(320px,70vw);display:flex;gap:6px;z-index:30;pointer-events:none}
+.prog span{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden}
+.prog span i{display:block;height:100%;width:0;background:linear-gradient(90deg,#e0455f,#f0b24a)}
+.prog .done i{width:100%}
+.prog .now i{width:100%;animation:pg 5.6s linear forwards}
+@keyframes pg{from{width:0}to{width:100%}}
+.step{position:fixed;left:0;right:0;bottom:max(30px,calc(env(safe-area-inset-bottom) + 12px));text-align:center;margin:0;font:600 .68rem Montserrat,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.55);z-index:30;pointer-events:none}
+@media(prefers-reduced-motion:reduce){.prog .now i{animation:none}}
