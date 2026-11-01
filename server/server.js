@@ -22,7 +22,7 @@ const PORT = Number(process.env.PORT || 8080), HOST = process.env.HOST || '0.0.0
 const PUBLIC_HOST = (() => { try { return new URL(process.env.NEV_BASE_URL || '').host; } catch (e) { return null; } })(); // adresse publique (ex. site Netlify qui relaie /api vers ce serveur)
 const DEFAULT_BASE = 'https://nevbooster.onrender.com', PUBLIC_BASE = (process.env.NEV_BASE_URL || '').replace(/\/+$/, '');
 const SECURE = process.env.NEV_SECURE === '1', TRUST_PROXY = process.env.NEV_TRUST_PROXY === '1';
-const SESSION_MS = 30 * 86400000, ADMIN_MS = 2 * 3600000;
+const SESSION_MS = 30 * 86400000, ADMIN_MS = 30 * 60000;
 const STARTED = Date.now();
 fs.mkdirSync(DATA_DIR, { recursive: true, mode: 0o700 });
 
@@ -107,8 +107,8 @@ function ipOf(req) {
 }
 const isSecure = (req) => SECURE || (TRUST_PROXY && req.headers['x-forwarded-proto'] === 'https');
 function cookies(req) { const o = {}; String(req.headers.cookie || '').split(';').forEach((p) => { const i = p.indexOf('='); if (i > 0) o[p.slice(0, i).trim()] = p.slice(i + 1).trim(); }); return o; }
-function setCookie(res, req, name, val, maxAgeS) {
-  const c = name + '=' + val + '; Path=/; HttpOnly; SameSite=Strict; Max-Age=' + maxAgeS + (isSecure(req) ? '; Secure' : '');
+function setCookie(res, req, name, val, maxAgeS) { // maxAgeS = null → cookie de session (disparaît à la fermeture du navigateur / de l'appli)
+  const c = name + '=' + val + '; Path=/; HttpOnly; SameSite=Strict' + (maxAgeS == null ? '' : '; Max-Age=' + maxAgeS) + (isSecure(req) ? '; Secure' : '');
   const prev = res.getHeader('Set-Cookie') || []; res.setHeader('Set-Cookie', [].concat(prev, c));
 }
 function send(res, code, obj, extra) { const b = JSON.stringify(obj); res.writeHead(code, Object.assign({ 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Content-Length': Buffer.byteLength(b) }, extra || {})); res.end(b); }
@@ -131,8 +131,11 @@ function sessionUser(req) {
   const s = S.getSession(tok, 'player'); if (!s) return null;
   const u = S.userById(s.uid); return u && !u.banned ? u : null;
 }
-const isOwner = (req) => { const t = cookies(req).nev_a; return !!(t && S.getSession(t, 'admin')); };   // connecté avec le mot de passe admin
-const isAdmin = (req) => { if (isOwner(req)) return true; const u = sessionUser(req); return !!(u && u.isAdmin); }; // ou joueur nommé admin
+/* Accès admin : TOUJOURS une session « nev_a » ouverte avec un mot de passe (jamais déduite de la session joueur).
+   uid « admin » = propriétaire (mot de passe admin) ; sinon uid = joueur nommé admin (son propre mot de passe de compte). */
+const adminSess = (req) => { const t = cookies(req).nev_a; return t ? S.getSession(t, 'admin') : null; };
+const isOwner = (req) => { const s = adminSess(req); return !!(s && s.uid === 'admin'); };
+const isAdmin = (req) => { const s = adminSess(req); if (!s) return false; if (s.uid === 'admin') return true; const u = S.userById(s.uid); return !!(u && !u.banned && u.isAdmin); }; // un rôle retiré coupe l'accès aussitôt
 F = require('./features')({ S, send, fail, readBody, limit, clean, now, rid, scrypt, safeEq, today, addDays, startSession, setCookie, cookies, counters, logEvent, isSecure });
 const pub = (u) => F.pubUser(u);
 
@@ -323,17 +326,22 @@ async function adminDb(req, res, route, url, ip, m) {
 }
 async function adminApi(req, res, route, ip) {
   const m = req.method, url = new URL(req.url, 'http://x');
-  if (route === 'state' && m === 'GET') return send(res, 200, { hasPassword: true, authed: isAdmin(req) });
+  if (route === 'state' && m === 'GET') return send(res, 200, { hasPassword: true, authed: isAdmin(req), owner: isOwner(req) });
   if (route === 'login' && m === 'POST') {
     const w = limit('al:' + ip, 5, 15 * 60000); if (w) { counters.blocked++; return fail(res, 429, 'Trop d\'essais. Réessaie dans ' + Math.ceil(w / 60) + ' min.'); }
-    const b = await readBody(req, 1024), adm = S.getAdmin(), h = await scrypt(String(b.password || '').slice(0, 200), adm.salt);
-    if (!safeEq(h, adm.hash)) { counters.adminBadLogins++; logEvent('error', 'admin', null, null, { msg: 'admin login refusé', ip: sha(ip).slice(0, 8) }); S.audit('login-refuse', 'admin', sha(ip).slice(0, 8)); return fail(res, 401, 'Mot de passe refusé.'); }
-    const tok = crypto.randomBytes(32).toString('base64url'); S.addSession(tok, 'admin', 'admin', now() + ADMIN_MS); setCookie(res, req, 'nev_a', tok, ADMIN_MS / 1000);
-    S.audit('login', 'admin', sha(ip).slice(0, 8));
-    return send(res, 200, { ok: true });
+    const b = await readBody(req, 1024), adm = S.getAdmin(), pw = String(b.password || '').slice(0, 200), h = await scrypt(pw, adm.salt);
+    const open = (uid, who) => { const tok = crypto.randomBytes(32).toString('base64url'); S.addSession(tok, uid, 'admin', now() + ADMIN_MS); setCookie(res, req, 'nev_a', tok, null); S.audit('login', who, sha(ip).slice(0, 8)); return send(res, 200, { ok: true, role: uid === 'admin' ? 'owner' : 'admin' }); };
+    if (safeEq(h, adm.hash)) return open('admin', 'admin');
+    // joueur nommé admin : son mot de passe de compte (e-mail donné, ou joueur actuellement connecté)
+    const em = clean(b.email, 254).toLowerCase(), cand = em ? S.userByEmail(em) : sessionUser(req);
+    if (cand && cand.isAdmin && !cand.banned) {
+      const cred = S.credentials(cand.id), hh = await scrypt(pw, cred ? cred.salt : '00'.repeat(16));
+      if (cred && safeEq(hh, cred.hash)) return open(cand.id, cand.pseudo);
+    }
+    counters.adminBadLogins++; logEvent('error', 'admin', null, null, { msg: 'admin login refusé', ip: sha(ip).slice(0, 8) }); S.audit('login-refuse', 'admin', sha(ip).slice(0, 8)); return fail(res, 401, 'Mot de passe refusé.');
   }
-  if (!isAdmin(req)) return fail(res, 401, 'Accès réservé.');
   if (route === 'logout' && m === 'POST') { const t = cookies(req).nev_a; if (t) S.delSession(t); setCookie(res, req, 'nev_a', '', 0); return send(res, 200, { ok: true }); }
+  if (!isAdmin(req)) return fail(res, 401, 'Accès réservé.');
   const wa = limit('ad:' + ip, 240, 60000); if (wa) return fail(res, 429, 'Trop de requêtes admin. Patiente un instant.');
   if (route.indexOf('db/') === 0) return adminDb(req, res, route, url, ip, m);
   if (route === 'users' && m === 'GET') return send(res, 200, { users: S.userRows() });

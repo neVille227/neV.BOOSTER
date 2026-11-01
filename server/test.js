@@ -97,11 +97,17 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   r = await call(B, 'POST', '/api/admin/role', { uid: idA, admin: true }); t('un joueur ne peut pas se nommer admin', r.s === 401);
   { const idB = (await call(B, 'GET', '/api/me')).j.user.id;
     r = await call(ADM, 'POST', '/api/admin/role', { uid: idB, admin: true }); t('le propriétaire nomme un admin', r.s === 200, r.j);
+    r = await call(B, 'GET', '/api/me'); t('le joueur nommé voit sa notification (isAdmin)', r.j.user.isAdmin === true, r.j.user);
+    r = await call(B, 'GET', '/api/admin/users'); t('être nommé admin ne suffit pas : le mot de passe est obligatoire', r.s === 401, r.j);
+    r = await call(B, 'POST', '/api/admin/login', { password: 'mauvais-mot-de-passe' }); t('mauvais mot de passe refusé pour l\'admin nommé', r.s === 401);
+    r = await call(B, 'POST', '/api/admin/login', { password: 'motdepasse2' }); t('l\'admin nommé entre avec son mot de passe', r.s === 200 && r.j.role === 'admin', r.j);
+    t('cookie admin = cookie de session (pas de Max-Age)', /nev_a=[^;]+;(?![^]*Max-Age)/.test(r.r.headers.get('set-cookie') || '') && !/nev_a=[^;]*;[^]*Max-Age/.test(r.r.headers.get('set-cookie') || ''));
     r = await call(B, 'GET', '/api/admin/users'); t('le joueur nommé accède à l\'admin', r.s === 200 && r.j.users.some((u) => u.id === idB && u.admin), r.j);
     r = await call(B, 'POST', '/api/admin/gift', { uid: idA, flames: 1, draws: 0 }); t('un admin-joueur peut offrir', r.s === 200);
     r = await call(B, 'POST', '/api/admin/role', { uid: idA, admin: true }); t('un admin-joueur ne nomme pas d\'autre admin', r.s === 403, r.j);
     r = await call(ADM, 'POST', '/api/admin/role', { uid: idB, admin: false }); t('retrait du rôle', r.s === 200);
-    r = await call(B, 'GET', '/api/admin/users'); t('plus d\'accès après retrait', r.s === 401); }
+    r = await call(B, 'GET', '/api/admin/users'); t('plus d\'accès après retrait', r.s === 401);
+    await call(ADM, 'POST', '/api/admin/role', { uid: idB, admin: true }); r = await call(B, 'POST', '/api/admin/logout', {}); r = await call(B, 'GET', '/api/admin/users'); t('après « Quitter », le code est redemandé', r.s === 401); await call(ADM, 'POST', '/api/admin/role', { uid: idB, admin: false }); }
   await call(A, 'PUT', '/api/player', { player: { badges: {}, progress: {} } }); r = await call(A, 'GET', '/api/me'); t('badge offert conservé après une sauvegarde client', !!r.j.player.badges[bid]);
   r = await call(ADM, 'POST', '/api/admin/announce', { text: 'Bienvenue !' }); r = await call(A, 'GET', '/api/config'); t('annonce', r.j.announce && r.j.announce.text === 'Bienvenue !');
   r = await call(ADM, 'GET', '/api/admin/chat/threads'); t('fil coach visible par l\'admin', r.j.threads.length === 1);

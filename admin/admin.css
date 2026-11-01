@@ -87,3 +87,9 @@ code.js{font-size:.74rem;color:#ffd8a8;display:block;max-width:360px;overflow:hi
 .btn.danger{background:#7a0f26;border-color:#ff5d7a99;color:#fff}.btn.danger:hover{background:#9a1431}
 .main h3{margin:20px 0 8px;font-size:1rem}
 .pill{display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:1px 7px;border-radius:99px;background:#f0b24a26;color:#f0b24a;border:1px solid #f0b24a66;vertical-align:middle}
+
+/* accès admin : mot de passe jamais mémorisé, installation */
+.admicon{display:block;margin:0 auto 10px;border-radius:20px}
+.linkb{background:none;border:0;color:#d9b8c0;text-decoration:underline;cursor:pointer;font:inherit}
+.instbox{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)}
+@supports (-webkit-text-security:disc){ input.nosave{-webkit-text-security:disc} }

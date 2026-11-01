@@ -21,20 +21,25 @@
   const exName = (id) => { if (String(id).indexOf('combo:') === 0) return 'Combo ' + String(id).slice(6); const e = NEV.Ex.byId(id); return e ? e.name : id; };
 
   /* ---------- accès ---------- */
+  /* Le mot de passe est redemandé À CHAQUE entrée : on ferme toute session ouverte avant d'afficher la porte, et à la sortie de la page. */
+  let named = false;
+  function noSave() { const gp = $('gp'); gp.value = ''; gp.readOnly = true; setTimeout(() => { gp.readOnly = false; }, 60); } // champ non pré-remplissable par un gestionnaire de mots de passe
   async function gate() {
+    await A.logout();
     const st = await A.state();
-    if (st.authed) return start();
     $('app').hidden = true; $('gate').hidden = false;
-    $('gtxt').textContent = st.hasPassword ? 'Entre le mot de passe admin.' : 'Première visite : choisis ton mot de passe admin (10 caractères minimum). Garde-le précieusement.';
-    $('gp').autocomplete = st.hasPassword ? 'current-password' : 'new-password';
-    $('gp').focus();
+    $('gtxt').textContent = st.hasPassword ? 'Entre ton mot de passe. Il est demandé à chaque ouverture et ne peut pas être enregistré.' : 'Première visite : choisis ton mot de passe admin (10 caractères minimum). Garde-le précieusement.';
+    noSave(); $('gp').focus();
   }
+  $('gnamed').addEventListener('click', () => { named = !named; $('gemw').hidden = !named; $('gnamed').textContent = named ? 'Je suis le propriétaire (mot de passe admin)' : 'Je suis un admin nommé (avec mon compte joueur)'; (named ? $('gem') : $('gp')).focus(); });
   $('gf').addEventListener('submit', async (e) => {
     e.preventDefault(); $('gerr').textContent = '';
-    const r = await A.login($('gp').value); $('gp').value = '';
+    const r = await A.login($('gp').value, named ? $('gem').value : ''); $('gp').value = '';
     if (!r.ok) { $('gerr').textContent = r.error; return; }
-    $('gate').hidden = true; start();
+    $('gem').value = ''; $('gate').hidden = true; start();
   });
+  g_pagehide();
+  function g_pagehide() { window.addEventListener('pagehide', () => { try { A.logout(); } catch (e) { /* ignoré */ } }); }
   $('out').addEventListener('click', async () => { await A.logout(); clearInterval(timer); $('app').hidden = true; gate(); });
   function start() {
     $('gate').hidden = true; $('app').hidden = false;

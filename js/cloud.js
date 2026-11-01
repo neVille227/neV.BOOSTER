@@ -177,8 +177,8 @@
     let ok = false; try { ok = g.sessionStorage.getItem(LAS) === '1'; } catch (e) { /* ignoré */ }
     return { hasPassword: !!store.get(LA, null), authed: ok };
   };
-  A.login = async function (pw) {
-    if (C.mode === 'server') { const r = await api('admin/login', 'POST', { password: pw }); return r.ok ? { ok: true } : { ok: false, error: r.data.error || 'Mot de passe refusé.' }; }
+  A.login = async function (pw, email) {
+    if (C.mode === 'server') { const r = await api('admin/login', 'POST', { password: pw, email: email || '' }); return r.ok ? { ok: true } : { ok: false, error: r.data.error || 'Mot de passe refusé.' }; }
     const rec = store.get(LA, null);
     if (!rec) {
       if (String(pw).length < 10) return { ok: false, error: 'Choisis un mot de passe admin d\'au moins 10 caractères.' };
@@ -191,7 +191,7 @@
     return { ok: true };
   };
   A.logout = async function () {
-    if (C.mode === 'server') await api('admin/logout', 'POST', {});
+    if (C.mode === 'server') { try { await fetch(ROOT + 'api/admin/logout', { method: 'POST', credentials: 'same-origin', keepalive: true, headers: { 'X-NEV': '1', 'Content-Type': 'application/json' }, body: '{}' }); } catch (e) { /* ignoré */ } }
     try { g.sessionStorage.removeItem(LAS); } catch (e) { /* ignoré */ }
   };
 

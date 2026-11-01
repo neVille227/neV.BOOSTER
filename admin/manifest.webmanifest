@@ -1,0 +1,17 @@
+{
+  "name": "neV.BOOSTER Admin",
+  "short_name": "nVB Admin",
+  "description": "Espace d'administration neV.BOOSTER. Le mot de passe est demandé à chaque ouverture.",
+  "lang": "fr",
+  "id": "/admin/",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0a0507",
+  "theme_color": "#0a0507",
+  "icons": [
+    { "src": "../img/admin-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../img/admin-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "../img/admin-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -71,7 +71,7 @@ module.exports = function features(ctx) {
   /* ---------------- pub : ce que le navigateur a le droit de voir ---------------- */
   const pubUser = (u) => ({
     id: u.id, email: u.email, pseudo: u.pseudo, created: u.created, code: u.code, refCount: u.refCount || 0,
-    verified: !!u.verified, lang: okLang(u.lang), publicBoard: !!u.publicBoard, mailOn: mailer.configured()
+    verified: !!u.verified, lang: okLang(u.lang), publicBoard: !!u.publicBoard, mailOn: mailer.configured(), isAdmin: !!u.isAdmin
   });
 
   /* ====================================================================

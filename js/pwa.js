@@ -35,6 +35,28 @@
   }
   if (ios) setTimeout(banner, 3000);
 
+
+  /* Joueur nommé admin : dès qu'il est nommé (vérifié à l'ouverture, au retour sur l'appli puis toutes les 60 s), un bandeau lui propose d'installer l'admin.
+     Il n'y entre qu'avec son mot de passe (demandé à chaque fois, jamais mémorisé). */
+  let admChecked = 0;
+  async function adminNotice() {
+    if (doc.getElementById('nevAdmNote') || (NEV.pwa && NEV.pwa.standalone() && /\/admin\//.test(g.location.pathname))) return;
+    if (Date.now() - admChecked < 20000) return; admChecked = Date.now();
+    let u = null;
+    try { const r = await g.fetch('api/me', { credentials: 'same-origin', cache: 'no-store', headers: { 'X-NEV': '1' } }); if (!r.ok) return; u = (await r.json()).user; } catch (e) { return; }
+    if (!u || !u.isAdmin) return;
+    const k = 'nev.admNote.' + u.id; try { if (g.localStorage.getItem(k)) return; } catch (e) { /* ignoré */ }
+    const el = doc.createElement('div'); el.id = 'nevAdmNote'; el.className = 'nevinst'; el.setAttribute('role', 'alert');
+    el.innerHTML = '<img src="img/admin-192.png" alt="" width="44" height="44"><div class="t"><b>Tu es maintenant administrateur</b><span>Installe l\'appli Admin, puis entre ton mot de passe : il est demandé à chaque ouverture.</span></div><a class="btn sm" id="nevAdmGo" href="admin/">Installer l\'admin</a><button type="button" class="x" aria-label="Plus tard">✕</button>';
+    doc.body.appendChild(el);
+    el.querySelector('#nevAdmGo').addEventListener('click', () => { try { g.localStorage.setItem(k, '1'); } catch (e) { /* ignoré */ } });
+    el.querySelector('.x').onclick = () => { try { g.localStorage.setItem(k, '1'); } catch (e) { /* ignoré */ } el.remove(); };
+  }
+  if (!/\/admin\//.test(g.location.pathname) && !/(connexion|mot-de-passe|verifier-email|index)\.html$|\/$/.test(g.location.pathname)) {
+    setTimeout(adminNotice, 2500); setInterval(adminNotice, 60000);
+    doc.addEventListener('visibilitychange', () => { if (!doc.hidden) adminNotice(); });
+  }
+
   const get = () => { try { return JSON.parse(g.localStorage.getItem(KEY)) || { on: false, hour: 18 }; } catch (e) { return { on: false, hour: 18 }; } };
   const set = (v) => { try { g.localStorage.setItem(KEY, JSON.stringify(v)); } catch (e) { /* ignoré */ } };
   const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
