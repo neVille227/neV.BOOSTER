@@ -1,8 +1,8 @@
 /* neV.BOOSTER — parcours féminin · feuille de style partagée */
 :root{
-  --bg:#0a0507; --s1:#150a0e; --s2:#1e0e14; --line:rgba(255,255,255,.09);
-  --tx:#FBEFF1; --soft:#CDBFCA; --mu:#B3A5B0;
-  --rose:#E0455F; --lilac:#FF8FA3; --gold:#F0B24A; --ink:#1a0509;
+  --bg:#FBF6F7; --s1:#FFFFFF; --s2:#F6E9EC; --line:rgba(122,31,51,.14);
+  --tx:#2B0F18; --soft:#5A3540; --mu:#7C5C66;
+  --rose:#C32D50; --lilac:#A8283F; --gold:#B8862B; --ink:#FFFFFF;
   --r:24px;
 }
 *{box-sizing:border-box}
@@ -170,3 +170,35 @@ footer.site .in b{color:#E9DEE5}
 .yuki-hello p{margin:2px 0 0;font-family:'Fraunces',Georgia,serif;font-style:italic;font-size:19px;line-height:1.3}
 .yuki-x{position:absolute;top:6px;right:8px;border:0;background:none;color:var(--mu);font-size:22px;cursor:pointer;line-height:1}
 @keyframes yin{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+/* ===== Thème clair (logo et bannière clairs) ===== */
+.site-header{background:rgba(251,246,247,.92)}
+nav.main{color:var(--soft)}nav.main a:hover,nav.main a[aria-current="page"]{color:var(--tx)}
+.brand img{width:40px;height:40px;border-radius:10px;display:block}
+.btn.ghost{border-color:rgba(122,31,51,.35);color:var(--tx)}
+.btn.gold{background:var(--gold)}
+.card.hl{background:linear-gradient(160deg,#FFF1F4,#FBE3E9);border-color:rgba(195,45,80,.35)}
+.chip{background:rgba(122,31,51,.06);border-color:rgba(122,31,51,.14);color:var(--tx)}
+.bar{background:rgba(122,31,51,.12)}
+.gcard{background:#fff;border-color:rgba(168,40,63,.3);box-shadow:0 10px 30px rgba(122,31,51,.08)}
+.gcard.rare{background:#FFF8EA;border-color:rgba(184,134,43,.6)}
+.gcard.combo{background:linear-gradient(160deg,#FFE9EE,#FBD3DC);border-color:var(--rose)}
+.gcard.back{background:#F6E9EC;border-color:rgba(122,31,51,.3);color:var(--mu)}
+.gcard.back .mark{border-color:rgba(122,31,51,.35);color:var(--lilac)}
+.tab .ic{background:rgba(122,31,51,.08)}
+.tab[aria-selected="true"]{background:rgba(195,45,80,.1)}
+.exo{background:rgba(122,31,51,.04);border-color:rgba(122,31,51,.1)}
+label{color:var(--tx)}
+input[type=number],textarea{border-color:rgba(122,31,51,.3);background:#fff;color:var(--tx)}
+.box{background:linear-gradient(160deg,#FFF1F4,#F6D9E0);border-color:rgba(168,40,63,.4);box-shadow:0 30px 80px rgba(195,45,80,.15)}
+.box::before{background:#F0C6D0;border-color:rgba(168,40,63,.4)}
+.seance{background:rgba(251,246,247,.98)}
+.ring circle:first-child{stroke:rgba(122,31,51,.14)}
+footer.site .in b{color:var(--tx)}
+.badge .dot{border-color:var(--mu)}
+.badge.on .dot{background:rgba(184,134,43,.15)}
+.step .n{background:rgba(195,45,80,.12)}
+.yuki-hello{background:#fff;border-color:rgba(195,45,80,.45);box-shadow:0 18px 40px rgba(122,31,51,.2);color:var(--tx)}
+.yuki-hello p{color:var(--tx)}
+.hero-banner{display:block;width:100%;height:auto;border-radius:24px;border:1px solid var(--line);box-shadow:0 18px 50px rgba(122,31,51,.12);margin-bottom:8px}
+em.fr{color:var(--rose)}

@@ -75,7 +75,7 @@
       h.className = 'site-header';
       var inner = el('div', 'in');
       var brand = el('a', 'brand'); brand.href = 'index.html';
-      var lg = el('div', 'logo', 'nVB'); brand.appendChild(lg);
+      var lg = el('img'); lg.src = 'img/logo-clair.webp'; lg.alt = ''; lg.width = 40; lg.height = 40; brand.appendChild(lg);
       var bt = el('div', null, 'neV.BOOSTER '); bt.appendChild(el('span', null, '· Femme')); brand.appendChild(bt);
       var nav = el('nav', 'main'); nav.setAttribute('aria-label', 'Navigation principale');
       NAV.forEach(function (n) { var a = el('a', null, n[1]); a.href = n[0]; if (n[2] === page) a.setAttribute('aria-current', 'page'); nav.appendChild(a); });
@@ -216,7 +216,7 @@
       body.textContent = '';
       body.appendChild(el('div', 'eyebrow', label));
       var wrap = el('div'); body.appendChild(wrap);
-      var ring = el('div', 'ring'); ring.innerHTML = '<svg viewBox="0 0 200 200" width="200" height="200" aria-hidden="true"><circle cx="100" cy="100" r="88" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="10"/><circle class="fg" cx="100" cy="100" r="88" fill="none" stroke="#E0455F" stroke-width="10" stroke-linecap="round" stroke-dashoffset="0"/></svg><div class="t" id="tick" aria-live="off"></div>';
+      var ring = el('div', 'ring'); ring.innerHTML = '<svg viewBox="0 0 200 200" width="200" height="200" aria-hidden="true"><circle cx="100" cy="100" r="88" fill="none" stroke="rgba(122,31,51,.14)" stroke-width="10"/><circle class="fg" cx="100" cy="100" r="88" fill="none" stroke="#E0455F" stroke-width="10" stroke-linecap="round" stroke-dashoffset="0"/></svg><div class="t" id="tick" aria-live="off"></div>';
       body.appendChild(ring); return { ring: ring, secs: secs, onDone: onDone, sub: sub, skipText: skipText };
     }
     function countdown(v, onDone) {
