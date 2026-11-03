@@ -46,15 +46,18 @@
     if (opts.floor !== false) { floor = new T.Mesh(new T.PlaneGeometry(60, 60), new T.MeshStandardMaterial({ color: 0x22101a, metalness: 0.5, roughness: 0.35 })); floor.rotation.x = -Math.PI / 2; S.add(floor); }
 
     /* Personnage : torse, tête, bras (épaule + coude), jambes (hanche + genou). setM(0..1) = masse musculaire. */
-    function person(skin, sh, dress) {
+    function person(skin, sh, dress, o) {
+      o = o || {};
       const grp = new T.Group(), Sk = M(skin), P = { g: grp, sh: [], el: [], hp: [], kn: [], db: [] };
       const b = P.b = new T.Group(); b.position.y = 1; grp.add(b);
       const cy = (a, c, h, m, p, y) => { const o = new T.Mesh(new T.CylinderGeometry(a, c, h, 14), m); o.position.y = y; p.add(o); return o; };
       const sp = (r, m, p, x, y, z) => { const o = new T.Mesh(new T.SphereGeometry(r, 16, 12), m); o.position.set(x, y, z); p.add(o); return o; };
       P.tm = M(skin); P.torso = cy(0.3, 0.22, 0.8, P.tm, b, 0.45); cy(0.08, 0.09, 0.15, Sk, b, 0.92);
       P.head = sp(0.2, Sk, b, 0, 1.12, 0); [1, -1].forEach((s) => sp(0.03, M(0x111111), P.head, 0.07 * s, 0.03, 0.18));
-      sp(0.17, M(0x1a0f0a), P.head, 0, 0.07, -0.05);
+      if (!o.bald) sp(o.female ? 0.21 : 0.17, M(o.hair || 0x1a0f0a), P.head, 0, o.female ? 0.06 : 0.07, o.female ? -0.07 : -0.05);
+      if (o.female) { const pt = cy(0.07, 0.03, 0.5, M(o.hair || 0xe8c766), P.head, -0.28); pt.position.z = -0.2; pt.rotation.x = -0.35; }
       cy(0.25, 0.27, 0.3, M(sh), b, -0.02);
+      if (o.bra) { const br = cy(0.296, 0.282, 0.2, M(o.bra), P.torso, 0.17); br.position.y = 0.17; }
       if (dress) { const d = cy(0.14, 0.4, 0.6, M(dress), b, 0.0); d.position.y = -0.1; P.torso.material = M(dress); }
       [1, -1].forEach((s, i) => {
         const a = new T.Group(); a.position.set(0.38 * s, 0.78, 0); b.add(a); P.sh[i] = a; sp(0.11, Sk, a, 0, 0, 0); cy(0.08, 0.07, 0.42, Sk, a, -0.21);

@@ -67,6 +67,7 @@
   /* Un exercice peut-il sortir ? opts.zone : tirage de Spécialisation (mobilité autorisée). */
   function eligible(ex, setup, opts) {
     opts = opts || {};
+    if (ex.for && ex.for !== (NEV.sex || 'm')) return false; // exercices propres à une version
     if (ex.special) return false; // Repos et Tractions ne sortent que par les cartes spéciales
     const gachaOk = ex.gacha !== false || (opts.zone && ex.group === 'mobilite');
     if (!gachaOk || !ex.cam) return false;

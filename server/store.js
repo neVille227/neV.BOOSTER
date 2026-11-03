@@ -3,7 +3,7 @@
    La BASE DE DONNÉES du site (SQLite, intégrée à Node : aucune installation).
 
    Deux fichiers dans le dossier de données :
-   • nev.db  — toutes les informations du site : comptes, progression, séances, badges,
+   • database.sqlite (ancien nom : nev.db, migré tout seul) — toutes les informations du site : comptes, progression, séances, badges,
                chat, combos, journal de suivi, journal d'audit admin. C'est cette base
                que l'onglet « Base de données » de l'admin affiche, exporte et sauvegarde.
    • auth.db — les SECRETS : mots de passe hachés, sessions, mot de passe admin.
@@ -163,7 +163,10 @@ CREATE INDEX IF NOT EXISTS ix_tokens_uid ON tokens(uid, kind);
 
 function open(dir) {
   fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
-  const DATA_FILE = path.join(dir, 'nev.db'), AUTH_FILE = path.join(dir, 'auth.db'), BK_DIR = path.join(dir, 'backups');
+  const DATA_FILE = path.join(dir, 'database.sqlite'), AUTH_FILE = path.join(dir, 'auth.db'), BK_DIR = path.join(dir, 'backups');
+  /* Migration : l'ancienne base s'appelait nev.db. Elle est renommée (avec ses fichiers WAL) sans perdre une seule donnée. */
+  const OLD = path.join(dir, 'nev.db');
+  if (!fs.existsSync(DATA_FILE) && fs.existsSync(OLD)) ['', '-wal', '-shm'].forEach((x) => { try { if (fs.existsSync(OLD + x)) fs.renameSync(OLD + x, DATA_FILE + x); } catch (e) { /* ignoré */ } });
   const db = new DatabaseSync(DATA_FILE), auth = new DatabaseSync(AUTH_FILE);
   [db, auth].forEach((d) => { d.exec('PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=4000;'); });
   // Le site n'utilise plus l'âge : on retire l'ancienne colonne des bases existantes (les vues sont recréées juste après).

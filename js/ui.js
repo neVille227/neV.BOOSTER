@@ -27,6 +27,10 @@
   I.help = svgi('M9.5 9a2.5 2.5 0 115 0c0 1.6-2.5 2-2.5 3.5M12 17h.01M12 3a9 9 0 100 18 9 9 0 000-18z');
   I.settings = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>';
   I.me = svgi('M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 4-6 8-6s8 2 8 6');
+  I.users = svgi('M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM2.5 20c0-3.6 3-5.5 6.5-5.5s6.5 1.9 6.5 5.5M16 4.5a3.3 3.3 0 010 6.3M18 14.8c2.2.6 3.5 2.2 3.5 5.2');
+  I.trophy = svgi('M8 4h8v5a4 4 0 01-8 0zM8 6H4v1.5A3.5 3.5 0 007.5 11M16 6h4v1.5A3.5 3.5 0 0116.5 11M12 13v4M8 20h8M10 17h4');
+  I.info = svgi('M12 3a9 9 0 100 18 9 9 0 000-18zM12 11v5M12 8h.01');
+  I.coach = svgi('M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.3 7.2 17.9l.9-5.4L4.2 8.7l5.4-.8z');
   I.out = svgi('M9 4H5v16h4M16 8l4 4-4 4M20 12H9');
   // [id, page, nom, icône, barre du haut (ordi), barre du bas (téléphone)]
   const LINKS = [
@@ -40,10 +44,20 @@
     ['conseils', 'conseils.html', 'Conseils', I.leaf, 0, 0],
     ['alimentation', 'alimentation.html', 'Alimentation', I.apple, 0, 0],
     ['chat', 'chat.html', 'Chat', I.chat, 0, 0],
-    ['classement', 'classement.html', 'Classement', I.gift, 0, 0],
+    ['amis', 'amis.html', 'Amis', I.users, 0, 0],
+    ['classement', 'classement.html', 'Classement', I.trophy, 0, 0],
+    ['coachs', 'coachs.html', 'Salon des coachs', I.coach, 0, 0],
     ['recompenses', 'recompenses.html', 'Récompenses', I.gift, 0, 0],
     ['tuto', 'tuto.html', 'Tuto', I.help, 0, 0],
+    ['apropos', 'apropos.html', 'À propos', I.info, 0, 0],
     ['compte', 'compte.html', 'Mon compte', I.me, 0, 0]
+  ];
+  /* Barre latérale : tout le menu, rangé par thème. */
+  const GROUPS = [
+    ['Principal', ['accueil', 'quete', 'gacha', 'gacha-box']],
+    ['Entraînement', ['specialisation', 'bibliotheque', 'programmes', 'alimentation', 'conseils']],
+    ['Communauté', ['chat', 'amis', 'classement', 'recompenses', 'coachs']],
+    ['Mon espace', ['apropos', 'tuto', 'compte']]
   ];
 
   const lk = (l, inner, active) => '<a href="' + l[1] + '" data-go' + (l[0] === active ? ' class="on" aria-current="page"' : '') + '>' + inner + '</a>';
@@ -51,7 +65,7 @@
   const DESC = {
     accueil: 'Ton tableau de bord', quete: 'Objectifs du jour et combo du coach', gacha: 'Ton tirage quotidien', 'gacha-box': 'La boîte mystère en 3D : 4 cartes', specialisation: 'Cible une zone du corps',
     bibliotheque: 'Tous les exercices, animés', programmes: 'Des enchaînements prêts à faire', conseils: 'Sécurité, sommeil, récupération',
-    alimentation: 'Manger pour progresser', chat: 'Parle au coach et aux joueurs', recompenses: 'Flammes, badges, parrainage', classement: 'Défi de la semaine, saison, amis', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'
+    alimentation: 'Manger pour progresser', chat: 'Parle au coach et aux joueurs', amis: 'Ajoute des amis par code', coachs: 'Les coachs du site', apropos: 'Toi, le site, les infos légales', recompenses: 'Flammes, badges, parrainage', classement: 'Défi de la semaine et saison', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'
   };
   I.menu = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 8h16M4 16h16"/></svg>';
   I.close = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -76,6 +90,26 @@
     const help = doc.createElement('a'); help.className = 'helpfab'; help.href = 'tuto.html'; help.setAttribute('data-go', ''); help.setAttribute('aria-label', 'Aide : le tuto du site'); help.title = 'Je suis perdu ? Le tuto'; help.textContent = '?';
     doc.body.insertBefore(hdr, doc.body.firstChild);
     doc.body.appendChild(menu);
+    let side = null;
+    if (user && !pub) {
+      const byId = {}; LINKS.forEach((l) => { byId[l[0]] = l; });
+      const lv = p && p.maxPushups ? NEV.levelFromMax(p.maxPushups) : null;
+      side = doc.createElement('aside'); side.className = 'side'; side.id = 'sideNav'; side.setAttribute('aria-label', 'Navigation principale');
+      side.innerHTML = '<div class="sideTop"><a class="logo" href="accueil.html" data-go>neV<span>.</span>BOOSTER</a><button type="button" class="sideX" aria-label="Fermer le menu">' + I.close + '</button></div>' +
+        '<nav class="sideNav">' + GROUPS.map((gp) => '<div class="sg"><div class="sgt">' + gp[0] + '</div>' + gp[1].map((id) => { const l = byId[id]; return '<a class="si' + (id === active ? ' on' : '') + '" href="' + l[1] + '" data-go' + (id === active ? ' aria-current="page"' : '') + '>' + l[3] + '<span>' + l[2] + '</span></a>'; }).join('') + '</div>').join('') + '</nav>' +
+        '<div class="sideMe"><div class="av" aria-hidden="true">' + esc((user.pseudo || '?').slice(0, 1).toUpperCase()) + '</div><div class="who"><b>' + esc(user.pseudo) + '</b><small>' + (lv ? 'Niveau ' + lv.n + ' · ' + esc(lv.name) : 'Bienvenue') + '</small></div><button type="button" class="sideOut" aria-label="Se déconnecter" title="Se déconnecter">' + I.out + '</button></div>';
+      doc.body.appendChild(side);
+      const scrim = doc.createElement('div'); scrim.className = 'sideScrim'; doc.body.appendChild(scrim);
+      doc.body.classList.add('has-side');
+      const setSide = (open) => { side.classList.toggle('open', open); scrim.classList.toggle('open', open); doc.documentElement.classList.toggle('menu-open', open); const b = hdr.querySelector('.menuBtn'); if (b) b.setAttribute('aria-expanded', String(open)); };
+      hdr.querySelector('.menuBtn').addEventListener('click', (e) => { e.stopImmediatePropagation(); setSide(!side.classList.contains('open')); }, true);
+      scrim.addEventListener('click', () => setSide(false));
+      side.querySelector('.sideX').addEventListener('click', () => setSide(false));
+      side.querySelector('.sideOut').addEventListener('click', () => { NEV.auth.logout(); NEV.go('connexion.html'); });
+      doc.addEventListener('keydown', (e) => { if (e.key === 'Escape') setSide(false); });
+      const cur = side.querySelector('.si.on'); if (cur && cur.scrollIntoView) { try { cur.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignoré */ } }
+      loadCompanion(active);
+    }
     if (active !== 'tuto') doc.body.appendChild(help);
     if (!doc.querySelector('.sitefoot')) {
       const foot = doc.createElement('footer'); foot.className = 'sitefoot';
@@ -106,6 +140,13 @@
     }
   }
 
+  /* Bulle de chat flottante, coach qui se balade : chargés à part pour garder ce fichier léger. */
+  function loadCompanion(active) {
+    if (doc.getElementById('nevCompanion')) return;
+    const sc = doc.createElement('script'); sc.id = 'nevCompanion'; sc.src = 'js/companion.js'; sc.dataset.page = active || '';
+    doc.body.appendChild(sc);
+  }
+
   /* Pages ouvertes à tous (tuto, conseils…) : pas de redirection vers la connexion. */
   async function bootPublic(active) {
     await NEV.cloud.ready;
@@ -130,6 +171,8 @@
     NEV.cfg = cfg;
     if (NEV.Rewards) NEV.Rewards.setCustom(cfg.badges);
     const p = NEV.player.load();
+    if (NEV.setSex && (p.sex === 'f' ? 'f' : 'm') !== NEV.sex) NEV.setSex(p.sex);
+    else if (NEV.setSex) { try { g.localStorage.setItem('nev.sex', NEV.sex); } catch (e) { /* ignoré */ } }
     if (opts.needLevel !== false && !p.maxPushups) { NEV.go('niveau.html', 0); return null; }
     let fx = null;
     if (NEV.Rewards && opts.needLevel !== false) fx = NEV.Rewards.run(p, user);

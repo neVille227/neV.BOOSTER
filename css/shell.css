@@ -1,0 +1,145 @@
+/* ==========================================================
+   neV.BOOSTER — shell.css : barre latérale, bulle de chat, Yuki,
+   fonds, adaptation mobile. Couleurs de la version homme inchangées.
+   ========================================================== */
+:root{--side-w:252px}
+
+/* ---------- fond illustré (homme : Baki assis ; femme : Yuki lumineuse) ---------- */
+body{isolation:isolate}
+body::before{content:"";position:fixed;z-index:-1;pointer-events:none;right:1vw;bottom:0;height:78vh;width:82vh;background:url(../img/bg-baki.webp) no-repeat center bottom/contain;opacity:.3}
+html[data-sex=f] body::before{right:0;height:100vh;width:56vh;background:url(../img/bg-yuki.webp) no-repeat center/cover;opacity:.55;mix-blend-mode:multiply;-webkit-mask-image:radial-gradient(ellipse 62% 60% at 50% 48%,#000 55%,transparent 100%);mask-image:radial-gradient(ellipse 62% 60% at 50% 48%,#000 55%,transparent 100%)}
+@media(max-width:900px){
+  body::before{right:50%;transform:translateX(50%);height:56vh;width:60vh;opacity:.16}
+  html[data-sex=f] body::before{height:86vh;width:48vh;opacity:.42}
+}
+.nev-intro body::before,body.noart::before{display:none}
+
+/* ---------- barre latérale ---------- */
+body.has-side .hdr .logo{display:none}
+.side{position:fixed;z-index:70;top:0;bottom:0;left:0;width:min(86vw,var(--side-w));display:flex;flex-direction:column;background:linear-gradient(180deg,#14080c,#0a0507);border-right:1px solid #ffffff14;box-shadow:12px 0 40px #0008;transform:translateX(-102%);transition:transform .28s cubic-bezier(.2,.7,.2,1);visibility:hidden}
+.side.open{transform:none;visibility:visible}
+.sideTop{display:flex;align-items:center;justify-content:space-between;padding:20px 18px 14px}
+.sideTop .logo{font-size:1.05rem}
+.sideX{background:none;border:1px solid #ffffff22;border-radius:10px;width:36px;height:36px;display:grid;place-items:center;color:var(--muted)}
+.sideX svg{width:18px;height:18px}
+.sideNav{flex:1;overflow-y:auto;padding:4px 12px 14px;scrollbar-width:thin}
+.sg{margin-top:14px}
+.sgt{padding:6px 12px;font-size:.66rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);opacity:.85}
+.si{display:flex;align-items:center;gap:12px;padding:10px 12px;margin:2px 0;border-radius:12px;text-decoration:none;font-weight:600;font-size:.9rem;color:var(--cream);border:1px solid transparent;transition:background .15s,border-color .15s}
+.si svg{width:20px;height:20px;flex:none;color:var(--red)}
+.si:hover{background:#ffffff0d}
+.si.on{background:linear-gradient(90deg,#7a0f2655,#e0455f1f);border-color:#e0455f66;color:#fff}
+.si:focus-visible,.sideX:focus-visible,.sideOut:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.sideMe{display:flex;align-items:center;gap:10px;padding:14px 16px;border-top:1px solid #ffffff12;background:#00000026}
+.sideMe .av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:900;background:var(--grad-btn);color:#fff;flex:none}
+.sideMe .who{min-width:0;flex:1;display:flex;flex-direction:column;line-height:1.25}
+.sideMe .who b{font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sideMe .who small{color:var(--muted);font-size:.72rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sideOut{background:none;border:1px solid #ffffff22;border-radius:10px;width:36px;height:36px;display:grid;place-items:center;color:var(--muted);flex:none}
+.sideOut svg{width:18px;height:18px}.sideOut:hover{color:#fff;border-color:#fff6}
+.sideScrim{position:fixed;inset:0;z-index:65;background:#050203a6;backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .25s}
+.sideScrim.open{opacity:1;pointer-events:auto}
+@media(min-width:1000px){
+  body.has-side{padding-left:var(--side-w)}
+  .side{transform:none;visibility:visible}
+  .sideX,.sideScrim{display:none}
+  body.has-side .hdr .menuBtn{display:none}
+  body.has-side .hdr .wrap{justify-content:flex-end}
+  body.has-side .hdr{border-bottom-color:#ffffff0f}
+  body.has-side .sitefoot{margin-left:0}
+}
+html.menu-open{overflow:hidden}
+@media(min-width:1000px){html.menu-open{overflow:auto}}
+
+/* ---------- bulle de chat flottante ---------- */
+.chatFab{position:fixed;z-index:60;right:18px;bottom:20px;width:76px;height:76px;border-radius:50%;border:0;display:grid;place-items:center;color:#fff;background:var(--grad-btn);box-shadow:0 12px 34px #e0455f66,0 0 0 4px #ffffff14;transition:transform .2s,filter .2s}
+.chatFab:hover{transform:scale(1.06);filter:brightness(1.1)}
+.chatFab svg{width:34px;height:34px}
+.chatFab:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.chatFab .on,.chatPanel .on{display:inline-block;width:16px;height:16px;border-radius:50%;background:#2fd36b;border:3px solid #14080c;box-shadow:0 0 0 0 #2fd36b99;animation:fabPulse 2s infinite}
+.chatFab .on{position:absolute;right:4px;top:4px;width:20px;height:20px}
+.chatPanel .on{width:9px;height:9px;border:0;margin-right:4px;vertical-align:middle}
+@keyframes fabPulse{0%{box-shadow:0 0 0 0 #2fd36b99}70%{box-shadow:0 0 0 9px #2fd36b00}100%{box-shadow:0 0 0 0 #2fd36b00}}
+.chatPanel{position:fixed;z-index:61;right:18px;bottom:108px;width:min(360px,calc(100vw - 24px));height:min(480px,calc(100vh - 140px));display:flex;flex-direction:column;border-radius:20px;background:linear-gradient(160deg,#2a0e16,#12070b);border:1px solid #e0455f55;box-shadow:0 24px 70px #000c;overflow:hidden;animation:pop .25s cubic-bezier(.2,.9,.3,1.2)}
+.chatPanel[hidden]{display:none}
+.chatPanel header{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#00000033;border-bottom:1px solid #ffffff12}
+.cpWho{display:flex;align-items:center;gap:10px}.cpWho b{display:block;font-size:.92rem}.cpWho small{color:var(--muted);font-size:.72rem}
+.cpAv{width:36px;height:36px;border-radius:50%;background:var(--grad-btn) center/cover no-repeat;flex:none;box-shadow:0 0 0 2px #ffffff22}
+.cpX{background:none;border:0;color:var(--muted);font-size:1.1rem;padding:6px 8px}
+.cpTabs{display:flex;gap:4px;padding:8px 10px 0}
+.cpTabs button{flex:1;border:0;background:#ffffff0a;color:var(--muted);padding:8px;border-radius:10px;font-weight:700;font-size:.78rem}
+.cpTabs button.on{background:var(--grad-btn);color:#fff}
+.cpMsgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.cpMsgs .m{max-width:86%;padding:8px 11px;border-radius:14px 14px 14px 4px;background:#ffffff10;font-size:.84rem;line-height:1.4;overflow-wrap:anywhere}
+.cpMsgs .m.me{align-self:flex-end;border-radius:14px 14px 4px 14px;background:#8e1b3c}
+.cpMsgs .m.adm{border:1px solid #f0b24a66}
+.cpMsgs .who{display:block;font-size:.66rem;color:var(--muted);margin-bottom:2px}
+.cpMsgs .empty{margin:auto;color:var(--muted);font-size:.84rem;text-align:center}
+.cpForm{display:flex;gap:8px;padding:10px}
+.cpForm input{flex:1;min-width:0;background:#1c0b11;border:1px solid var(--line);border-radius:12px;padding:10px 12px;outline:none}
+.cpForm input:focus{border-color:var(--red)}
+.cpErr{margin:0;padding:0 12px 4px;color:var(--danger);font-size:.74rem;min-height:0}
+.cpFull{display:block;text-align:center;padding:9px;font-size:.76rem;font-weight:700;color:var(--muted);border-top:1px solid #ffffff12;text-decoration:none}
+.cpFull:hover{color:#fff}
+body.has-side .helpfab{bottom:112px}
+@media(max-width:560px){.chatFab{width:68px;height:68px;right:12px;bottom:14px}.chatPanel{right:12px;bottom:92px}body.has-side .helpfab{bottom:96px;right:20px}}
+@media print{.chatFab,.chatPanel,.side,.yuki{display:none!important}}
+
+/* ---------- Yuki qui se balade ---------- */
+.yuki{position:fixed;z-index:40;left:0;bottom:0;pointer-events:none;width:clamp(96px,12vw,150px);animation:yWalk 46s linear infinite}
+.yuki .yBtn{pointer-events:auto;display:block;width:100%;padding:0;border:0;background:none;cursor:pointer;animation:yBob 1s ease-in-out infinite;transform-origin:50% 100%}
+.yuki img{display:block;width:100%;height:auto;max-height:22vh;object-fit:cover;object-position:top;filter:drop-shadow(0 6px 14px #7a1f3355)}
+.yuki.wave .yBtn{animation:yWave .5s ease 2}
+.yuki .yTip{position:absolute;bottom:calc(100% - 6px);left:50%;transform:translateX(-30%);width:max-content;max-width:210px;padding:9px 13px;border-radius:14px 14px 14px 4px;background:#fff;color:#2b0f18;font-size:.78rem;font-weight:600;line-height:1.35;box-shadow:0 8px 24px #7a1f3340;border:1px solid #c32d5033;pointer-events:none}
+.yuki:hover{animation-play-state:paused}
+@keyframes yWalk{0%{transform:translateX(2vw)}48%{transform:translateX(calc(100vw - 100% - 100px))}50%{transform:translateX(calc(100vw - 100% - 100px)) scaleX(-1)}98%{transform:translateX(2vw) scaleX(-1)}100%{transform:translateX(2vw)}}
+@keyframes yBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes yWave{0%,100%{transform:rotate(0)}30%{transform:rotate(-5deg)}70%{transform:rotate(5deg)}}
+@media(min-width:1000px){.yuki{left:var(--side-w)}@keyframes yWalk{0%{transform:translateX(2vw)}48%{transform:translateX(calc(100vw - var(--side-w) - 100% - 110px))}50%{transform:translateX(calc(100vw - var(--side-w) - 100% - 110px)) scaleX(-1)}98%{transform:translateX(2vw) scaleX(-1)}100%{transform:translateX(2vw)}}}
+.yuki .yTip{transform:none}
+@media(prefers-reduced-motion:reduce){.yuki{animation:none;left:auto;right:100px}.yuki .yBtn{animation:none}}
+
+/* ---------- accueil : quêtes visibles, choix de tirage ---------- */
+.qd{display:grid;gap:10px;margin:14px 0 0;padding:0;list-style:none}
+.qd li{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:#ffffff08;border:1px solid var(--line)}
+.qd li.done{opacity:.7}.qd li.done b{text-decoration:line-through}
+.qd .ck{width:26px;height:26px;border-radius:8px;border:2px solid #ffffff33;background:none;display:grid;place-items:center;color:#fff;font-weight:900;flex:none}
+.qd li.done .ck{background:var(--ok2);border-color:var(--ok2)}
+.qd .t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}.qd .t span{color:var(--muted);font-size:.78rem}
+.pickrow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:20px}
+@media(max-width:620px){.pickrow{grid-template-columns:1fr}}
+.pk{text-align:left;font:inherit;color:inherit;cursor:pointer;display:flex;flex-direction:column;gap:6px;padding:22px;border-radius:18px;border:1px solid var(--line);background:var(--panel);text-decoration:none;transition:.2s}
+.pk:hover{border-color:var(--red);transform:translateY(-2px);box-shadow:0 14px 34px #e0455f26}
+.pk .pkh{display:flex;align-items:center;gap:12px}.pk svg{width:30px;height:30px;color:var(--red)}
+.pk b{font-size:1.1rem}.pk span{color:var(--muted);font-size:.84rem}.pk .chip{align-self:flex-start;margin-top:6px}
+
+/* ---------- À propos, coachs ---------- */
+.ap-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-top:26px}
+@media(max-width:820px){.ap-grid{grid-template-columns:1fr}}
+.ap-grid h3{font-size:1.1rem;margin-bottom:14px}
+dl.kv{display:grid;grid-template-columns:auto 1fr;gap:10px 18px;margin:0;font-size:.92rem}
+dl.kv dt{color:var(--muted);font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;align-self:center}
+dl.kv dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.ap-links{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.ap-links a{display:flex;justify-content:space-between;gap:10px;padding:11px 14px;border-radius:12px;background:#ffffff08;border:1px solid var(--line);text-decoration:none;font-weight:600;font-size:.9rem}
+.ap-links a:hover{border-color:var(--red)}
+.coach{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.coach img{width:150px;height:200px;object-fit:cover;object-position:top;border-radius:18px;border:1px solid var(--line);background:#00000033}
+.coach .info{flex:1;min-width:220px}
+
+/* ---------- mobile : rien ne déborde, images centrées ---------- */
+html,body{max-width:100%;overflow-x:hidden}
+img,video,canvas,svg,iframe{max-width:100%}
+img,video{height:auto}
+.page .wrap,.wrap{min-width:0}
+.panel,.card,.stat,.tile,.pk{min-width:0}
+@media(max-width:760px){
+  .wrap{width:min(var(--maxw),calc(100% - 32px))}
+  .hero-mount,.heroBox .stage,.stage{margin-left:auto;margin-right:auto}
+  .heroBox .stage{max-width:min(300px,78vw)}
+  table.t{display:block;overflow-x:auto}
+  pre,code{overflow-wrap:anywhere;white-space:pre-wrap}
+  h1.big{overflow-wrap:anywhere}
+  .announce{flex-wrap:wrap}
+}
+.ql li{flex-wrap:wrap}.ql .t{min-width:0;flex:1 1 150px}

@@ -3,7 +3,7 @@
    Serveur Node.js SANS dépendance (Node 22.13+ pour la base SQLite intégrée). Il fait deux choses :
    1) servir le site (dossier parent) avec des en-têtes de sécurité stricts ;
    2) fournir l'API /api/* : comptes, progression, chat, combos, badges, admin, suivi ;
-   3) stocker TOUT dans une vraie base de données SQLite (voir store.js) : nev.db + auth.db.
+   3) stocker TOUT dans une vraie base de données SQLite (voir store.js) : database.sqlite + auth.db (dans NEV_DATA, par ex. /var/data sur Render ; jamais dans le dossier servi au public).
    Lancer :  NEV_ADMIN_PASSWORD="un-mot-de-passe-long" node server/server.js
    Variables : PORT (8080), HOST (0.0.0.0), NEV_ADMIN_PASSWORD, NEV_SECURE=1 (derrière https),
                NEV_TRUST_PROXY=1 (lit X-Forwarded-For), NEV_DATA (dossier des données).
@@ -305,11 +305,11 @@ async function adminDb(req, res, route, url, ip, m) {
   }
   if (route === 'db/backup' && m === 'GET') {
     const tmp = path.join(S.files.backups, 'dl-' + rid(6) + '.tmp'); fs.mkdirSync(S.files.backups, { recursive: true, mode: 0o700 });
-    try { await S.backupTo(tmp); const body = fs.readFileSync(tmp); S.audit('backup-download', 'nev.db', body.length + ' octets'); return download(res, body, 'application/octet-stream', 'nev-sauvegarde-' + stamp() + '.db'); }
+    try { await S.backupTo(tmp); const body = fs.readFileSync(tmp); S.audit('backup-download', 'database.sqlite', body.length + ' octets'); return download(res, body, 'application/octet-stream', 'nev-sauvegarde-' + stamp() + '.db'); }
     finally { fs.rm(tmp, { force: true }, () => {}); }
   }
   if (route === 'db/backup-now' && m === 'POST') { await S.autoBackup(); S.audit('backup-now', 'serveur', null); return send(res, 200, { info: S.info() }); }
-  if (route === 'db/check' && m === 'POST') { S.audit('check', 'nev.db', null); return send(res, 200, S.check()); }
+  if (route === 'db/check' && m === 'POST') { S.audit('check', 'database.sqlite', null); return send(res, 200, S.check()); }
   if (route === 'db/query' && m === 'POST') {
     const w = limit('qy:' + ip, 30, 60000); if (w) return fail(res, 429, 'Trop de requêtes SQL. Patiente un instant.');
     const b = await readBody(req, 2048);
