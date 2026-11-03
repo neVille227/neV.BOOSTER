@@ -98,7 +98,7 @@
       side.innerHTML = '<div class="sideTop"><a class="logo" href="accueil.html" data-go>neV<span>.</span>BOOSTER</a><button type="button" class="sideX" aria-label="Fermer le menu">' + I.close + '</button></div>' +
         '<nav class="sideNav">' + GROUPS.map((gp) => '<div class="sg"><div class="sgt">' + gp[0] + '</div>' + gp[1].map((id) => { const l = byId[id]; return '<a class="si' + (id === active ? ' on' : '') + '" href="' + l[1] + '" data-go' + (id === active ? ' aria-current="page"' : '') + '>' + l[3] + '<span>' + l[2] + '</span></a>'; }).join('') + '</div>').join('') + '</nav>' +
         '<div class="sideMe"><div class="av" aria-hidden="true">' + esc((user.pseudo || '?').slice(0, 1).toUpperCase()) + '</div><div class="who"><b>' + esc(user.pseudo) + '</b><small>' + (lv ? 'Niveau ' + lv.n + ' · ' + esc(lv.name) : 'Bienvenue') + '</small></div><button type="button" class="sideOut" aria-label="Se déconnecter" title="Se déconnecter">' + I.out + '</button></div>';
-      doc.body.appendChild(side);
+      doc.body.appendChild(side); menu.remove();
       const scrim = doc.createElement('div'); scrim.className = 'sideScrim'; doc.body.appendChild(scrim);
       doc.body.classList.add('has-side');
       const setSide = (open) => { side.classList.toggle('open', open); scrim.classList.toggle('open', open); doc.documentElement.classList.toggle('menu-open', open); const b = hdr.querySelector('.menuBtn'); if (b) b.setAttribute('aria-expanded', String(open)); };
@@ -171,8 +171,7 @@
     NEV.cfg = cfg;
     if (NEV.Rewards) NEV.Rewards.setCustom(cfg.badges);
     const p = NEV.player.load();
-    if (NEV.setSex && (p.sex === 'f' ? 'f' : 'm') !== NEV.sex) NEV.setSex(p.sex);
-    else if (NEV.setSex) { try { g.localStorage.setItem('nev.sex', NEV.sex); } catch (e) { /* ignoré */ } }
+    if (NEV.setSex && ((p.sex === 'f' ? 'f' : 'm') !== NEV.sex || !NEV.known)) NEV.setSex(p.sex);
     if (opts.needLevel !== false && !p.maxPushups) { NEV.go('niveau.html', 0); return null; }
     let fx = null;
     if (NEV.Rewards && opts.needLevel !== false) fx = NEV.Rewards.run(p, user);

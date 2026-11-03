@@ -69,10 +69,4 @@
     [p.progress.streak, 'Série (jours)'], [p.progress.best, 'Record'], [p.progress.total, 'Séances'], [lvl.name, 'Niveau ' + lvl.n]
   ].map(function (s) { return '<div class="stat"><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div>'; }).join('');
 
-  $('tiles').innerHTML =
-    '<a class="tile" href="gacha-box.html" data-go>' + I.cube + '<b>Gacha Box</b><span>La boîte 3D : 4 cartes, une séance</span></a>' +
-    '<a class="tile" href="quete.html" data-go>' + I.quest + '<b>Quête du jour</b><span>Tes objectifs et ton combo coach</span></a>' +
-    '<a class="tile" href="bibliotheque.html" data-go>' + I.book + '<b>Bibliothèque</b><span>Tous les exercices, animés</span></a>' +
-    '<a class="tile" href="chat.html" data-go>' + I.chat + '<b>Chat</b><span>Parle au coach et aux joueurs</span></a>' +
-    '<a class="tile" href="niveau.html?step=2" data-go><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg><b>Réglages</b><span>Niveau, matériel, séries</span></a>';
 })();

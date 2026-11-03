@@ -17,7 +17,9 @@ const store = require('./store');
 const mailer = require('./mail');
 
 const ROOT = path.resolve(__dirname, '..');
-const DATA_DIR = path.resolve(process.env.NEV_DATA || path.join(__dirname, 'data'));
+/* La base SQLite vit HORS du site public : sur Render, sur le disque persistant monté en /var/data (database.sqlite + auth.db).
+   Sans NEV_DATA : /var/data s'il existe (Render), sinon server/data (essais en local, jamais envoyé sur GitHub). */
+const DATA_DIR = path.resolve(process.env.NEV_DATA || (fs.existsSync('/var/data') ? '/var/data' : path.join(__dirname, 'data')));
 const PORT = Number(process.env.PORT || 8080), HOST = process.env.HOST || '0.0.0.0';
 const PUBLIC_HOST = (() => { try { return new URL(process.env.NEV_BASE_URL || '').host; } catch (e) { return null; } })(); // adresse publique (ex. site Netlify qui relaie /api vers ce serveur)
 const DEFAULT_BASE = 'https://nevbooster.onrender.com', PUBLIC_BASE = (process.env.NEV_BASE_URL || '').replace(/\/+$/, '');
@@ -145,6 +147,7 @@ function cleanPlayer(p, uid) {
   p = noProto(p) || {};
   const u = S.userById(uid);
   p.maxPushups = p.maxPushups == null ? null : num(p.maxPushups, 0, 200, null);
+  p.maxSquats = p.maxSquats == null ? null : num(p.maxSquats, 0, 300, null);
   p.level = p.level == null ? null : num(p.level, 1, 5, null);
   p.flames = Math.floor(num(p.flames, 0, 1e6, 0)); p.flamesTotal = Math.floor(num(p.flamesTotal, 0, 1e7, 0));
   p.pity = Math.floor(num(p.pity, 0, 50, 0));
@@ -461,6 +464,7 @@ const server = http.createServer(async (req, res) => {
 server.headersTimeout = 15000; server.requestTimeout = 30000; server.keepAliveTimeout = 5000; server.maxHeadersCount = 60;
 initAdmin().then(() => server.listen(PORT, HOST, () => {
   console.log('neV.BOOSTER : http://localhost:' + PORT + '  (base SQLite : ' + S.files.data + ')');
+  if (process.env.RENDER && !DATA_DIR.startsWith('/var/data')) console.warn('ATTENTION : la base est hors du disque Render (/var/data) : elle sera perdue au prochain déploiement. Ajoute un disque monté sur /var/data et NEV_DATA=/var/data.');
   const bk = () => S.autoBackup().catch((e) => console.error('[sauvegarde]', e && e.message));
   bk(); setInterval(bk, 6 * 3600000).unref(); // une sauvegarde par jour, 7 conservées
   F.maintenance(); setInterval(F.maintenance, 3600000).unref();

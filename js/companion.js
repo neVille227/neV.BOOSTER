@@ -1,5 +1,5 @@
 /* neV.BOOSTER — companion.js : bulle de chat toujours visible (point vert = actif)
-   et, dans la version femme, Yuki qui se balade au bas de l'écran. */
+   et le coach (Yuki pour les femmes, Baki pour les hommes) qui se balade au bas de l'écran. */
 (function (g) {
   'use strict';
   const NEV = g.NEV, doc = g.document, esc = NEV.util.esc;
@@ -46,15 +46,19 @@
     });
   }
 
-  /* ---------- Yuki se balade (version femme) ---------- */
-  if (fem && !NEV.util.reduced()) {
-    const TIPS = ['Respire par le nez, souffle par la bouche.', 'Un verre d\'eau maintenant ? Ton corps te dira merci.', 'Dos droit, épaules relâchées : bien joué.', 'Petit pas après petit pas : la régularité gagne toujours.', 'N\'oublie pas ton échauffement, 3 minutes suffisent.', 'Ta carte du jour t\'attend. On y va ?', 'Fière de toi : continue comme ça !'];
-    const w = doc.createElement('div'); w.className = 'yuki'; w.setAttribute('role', 'complementary'); w.setAttribute('aria-label', 'Yuki, ta coach');
-    w.innerHTML = '<div class="yTip" hidden></div><button type="button" class="yBtn" aria-label="Yuki, ta coach : toucher pour un conseil"><img src="femme/img/yuki-coach.webp" alt="" width="405" height="720" decoding="async"></button>';
+  /* ---------- le coach se balade : Yuki (version femme) ou Baki (version homme) ---------- */
+  if (!NEV.util.reduced()) {
+    const C = fem
+      ? { name: 'Yuki', cls: 'yuki', img: 'femme/img/yuki-coach.webp', w: 405, h: 720, hello: 'Coucou ! Je suis Yuki, ta coach. Touche-moi pour un conseil.',
+          tips: ['Respire par le nez, souffle par la bouche.', 'Un verre d\'eau maintenant ? Ton corps te dira merci.', 'Dos droit, épaules relâchées : bien joué.', 'Petit pas après petit pas : la régularité gagne toujours.', 'N\'oublie pas ton échauffement, 3 minutes suffisent.', 'Ta carte du jour t\'attend. On y va ?', 'Fière de toi : continue comme ça !'] }
+      : { name: 'Baki', cls: 'yuki baki', img: 'img/baki.webp', w: 736, h: 1308, hello: 'Je suis Baki, ton coach. La discipline crée la liberté. Touche-moi pour un conseil.',
+          tips: ['La régularité bat la motivation. Fais ta séance du jour.', 'Contrôle chaque répétition : la qualité avant la quantité.', 'Bois de l\'eau, dors bien : c\'est là que les muscles grandissent.', 'Échauffe-toi 3 minutes, tes articulations te remercieront.', 'Ta carte du jour t\'attend. Pas d\'excuses.', 'Un jour raté ? Reviens demain, plus fort.', 'Bien joué. Continue.'] };
+    const w = doc.createElement('div'); w.className = C.cls; w.setAttribute('role', 'complementary'); w.setAttribute('aria-label', C.name + ', ton coach');
+    w.innerHTML = '<div class="yTip" hidden></div><button type="button" class="yBtn" aria-label="' + C.name + ', ton coach : toucher pour un conseil"><img src="' + C.img + '" alt="" width="' + C.w + '" height="' + C.h + '" decoding="async"></button>';
     doc.body.appendChild(w);
     const tip = w.querySelector('.yTip'), btn = w.querySelector('.yBtn'); let ti = 0, tt = 0;
     const say = (t) => { tip.textContent = t; tip.hidden = false; clearTimeout(tt); tt = setTimeout(() => { tip.hidden = true; }, 5200); };
-    btn.addEventListener('click', () => { say(TIPS[ti++ % TIPS.length]); w.classList.add('wave'); setTimeout(() => w.classList.remove('wave'), 900); });
-    setTimeout(() => say('Coucou ! Je suis Yuki, ta coach. Touche-moi pour un conseil.'), 2500);
+    btn.addEventListener('click', () => { say(C.tips[ti++ % C.tips.length]); w.classList.add('wave'); setTimeout(() => w.classList.remove('wave'), 900); });
+    setTimeout(() => say(C.hello), 2500);
   }
 })(window);

@@ -7,8 +7,8 @@
   const NEV = (g.NEV = g.NEV || {}), doc = g.document;
   const KEY = 'nev.reminder';
   const head = doc.head;
-  const FEM = NEV.sex === 'f', SUF = FEM ? '-f' : '';
-  if (!doc.querySelector('link[rel=manifest]')) { const l = doc.createElement('link'); l.rel = 'manifest'; l.href = FEM ? 'manifest-femme.webmanifest' : 'manifest.webmanifest'; head.appendChild(l); }
+  const SUF = !NEV.known ? '-n' : NEV.sex === 'f' ? '-f' : '';
+  if (!doc.querySelector('link[rel=manifest]')) { const l = doc.createElement('link'); l.rel = 'manifest'; l.href = !NEV.known ? 'manifest.webmanifest' : NEV.sex === 'f' ? 'manifest-femme.webmanifest' : 'manifest-homme.webmanifest'; head.appendChild(l); }
   if (!doc.querySelector('link[rel=icon]')) { const l = doc.createElement('link'); l.rel = 'icon'; l.type = 'image/png'; l.sizes = '32x32'; l.href = 'img/favicon' + SUF + '-32.png'; head.appendChild(l); const i = doc.createElement('link'); i.rel = 'shortcut icon'; i.href = 'favicon.ico'; head.appendChild(i); }
   if (!doc.querySelector('link[rel=apple-touch-icon]')) { const l = doc.createElement('link'); l.rel = 'apple-touch-icon'; l.href = 'img/apple-touch-icon' + SUF + '.png'; head.appendChild(l); }
 

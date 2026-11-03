@@ -29,7 +29,7 @@ Contact et suggestions : **nevlarchitecteopere@gmail.com**
 | `admin/` | Espace admin : tableau de bord, **suivi du site**, **base de données**, joueurs, créateur de combos, créateur de badges, annonce, chat |
 | `server/server.js` | Serveur Node.js **sans dépendance** : sert le site + API sécurisée |
 | `server/store.js` | **La base de données SQLite** (tables, requêtes, sauvegardes, outils admin) |
-| `server/data/` | Créé au premier lancement : `nev.db` (toutes les données), `auth.db` (mots de passe, sessions), `backups/` |
+| `server/data/` | Créé au premier lancement : `database.sqlite` (toutes les données ; ancien nom `nev.db`, renommé automatiquement), `auth.db` (mots de passe, sessions), `backups/` |
 | `server/test.js` | 131 tests automatiques : API, sécurité, base de données, redémarrage, migration |
 | `img/banner.png` | Bannière du site (1500 × 500) |
 | `media/neVBOOSTER-video.mp4` | Vidéo de présentation, 85 s, avec bande-son motivante (136 BPM, montée, drops, impacts calés sur les scènes) ; générateur : `_dev/music2.py` |
@@ -95,9 +95,9 @@ Une vraie base **SQLite** stocke tout ce que font les joueurs. Elle est visible,
 - **Console SQL** : requêtes `SELECT` en lecture seule (exemples fournis : joueurs les plus actifs, séances par jour, inscriptions, inactifs…).
 - **Export & sauvegardes** : export de toute la base, sauvegarde `.db` téléchargeable, sauvegarde automatique **chaque jour** (7 conservées dans `server/data/backups/`), contrôle d'intégrité.
 
-**Deux fichiers séparés** : `nev.db` (les données) et `auth.db` (mots de passe hachés, sessions, mot de passe admin). L'admin ne peut **jamais** lire `auth.db` : ni la console, ni les exports, ni les sauvegardes téléchargeables n'y touchent. Les sessions étant dans `auth.db`, les joueurs restent connectés après un redémarrage du serveur.
+**Deux fichiers séparés** : `database.sqlite` (les données) et `auth.db` (mots de passe hachés, sessions, mot de passe admin). L'admin ne peut **jamais** lire `auth.db` : ni la console, ni les exports, ni les sauvegardes téléchargeables n'y touchent. Les sessions étant dans `auth.db`, les joueurs restent connectés après un redémarrage du serveur.
 
-**Restaurer** : arrête le serveur, remplace `server/data/nev.db` par une sauvegarde, relance.
+**Restaurer** : arrête le serveur, remplace `database.sqlite` (dans `NEV_DATA`) par une sauvegarde, relance.
 
 **Mode démo** (sans serveur) : l'onglet affiche la « base » de **ton navigateur** (mêmes tables, lecture et export seulement, pas de console SQL).
 
@@ -201,7 +201,7 @@ Dans le code : exercices dans `js/ex-data.js` et `js/ex-more.js` (animations dan
 - La caméra exige `https` ou `localhost` : elle peut être bloquée si le site est affiché dans un cadre (iframe) d'un autre site.
 - La base SQLite utilise le module `node:sqlite` de Node, encore marqué « expérimental » : Node affiche un avertissement au démarrage (sans gravité) et il faut Node 22.13+.
 - La console SQL est exécutée dans le processus du serveur : une requête volontairement énorme pourrait le ralentir un instant (accès réservé à l'admin).
-- Pas d'écran de restauration : la restauration se fait en remplaçant le fichier `nev.db` (voir plus haut).
+- Pas d'écran de restauration : la restauration se fait en remplaçant le fichier `database.sqlite` (voir plus haut).
 - La version **anglaise** couvre le parcours principal (connexion, niveau, accueil, quête, gacha, récompenses, classement, chat, compte, histoire). Les pages longues, les textes juridiques, les noms d'exercices et les messages d'erreur du serveur restent en français.
 - Le **rappel** de séance s'affiche à l'ouverture de l'appli ; sans service de notification dédié, un site ne peut pas réveiller un téléphone.
 - La 3D demande WebGL ; sans WebGL, la version 2D reste affichée.
@@ -217,3 +217,23 @@ Dans le code : exercices dans `js/ex-data.js` et `js/ex-more.js` (animations dan
 Écris à **nevlarchitecteopere@gmail.com** avec : ce que tu veux ajouter, ce qui t'a gêné, une capture d'écran si possible.
 
 Bon entraînement. 🔥
+
+## Version homme / version femme (novembre 2026)
+
+- **Un seul site, deux thèmes** : le sexe choisi à l'inscription (`p.sex`) règle le thème. Homme = thème sombre (couleurs d'origine) ; femme = thème clair (`css/light.css`). `js/theme.js` l'applique avant l'affichage.
+- **Barre latérale** (`js/ui.js`) : tout le menu rangé en 4 groupes (Principal, Entraînement, Communauté, Mon espace). Sur téléphone elle s'ouvre avec le bouton Menu.
+- **Bulle de chat** en bas à droite avec point vert (`js/companion.js`) ; **Yuki** se balade au bas de l'écran dans la version femme.
+- **Pages** : `apropos.html` (profil, progression, site, légal), `amis.html` et `classement.html` séparés, `coachs.html` (salon des coachs, un seul coach pour l'instant).
+- **Accueil** : quêtes du jour visibles et cochables ; choix « Tirer une carte » / « Gacha Box » avant l'animation (aussi sur `gacha.html`).
+- **Exercices** : `js/ex-extra.js` ajoute 15 exercices pour les femmes et 8 pour les hommes (champ `for`). Les cartes sont illustrées par un avatar homme (crâne rasé, short jaune) ou femme (blonde, brassière et short noirs).
+- **Deux applis installables** sur le même téléphone : `manifest.webmanifest` (icône sombre) et `manifest-femme.webmanifest` (icône rose, fichiers `img/*-f-*.png`).
+- **Base de données** : `database.sqlite` (ancien `nev.db`, renommé automatiquement) et `auth.db` dans `NEV_DATA` (`/var/data` sur Render). Le dossier `server/` n'est jamais servi : le test automatique vérifie que ces fichiers répondent 404.
+- **Droits d'auteur** : les images de Baki et de Yuki viennent de tes fichiers ; vérifie le droit de les publier (œuvres protégées).
+
+## Base de données sur Render (rappel)
+
+La base n'est jamais dans GitHub ni dans le dossier public. Sur Render : disque persistant monté sur `/var/data` + variable `NEV_DATA=/var/data` (déjà dans `render.yaml` et le `Dockerfile`). Les fichiers `database.sqlite` et `auth.db` y sont créés au premier démarrage. Si tu as créé le service à la main : Render → ton service → *Disks* → *Add Disk* (Mount Path `/var/data`), puis *Environment* → `NEV_DATA` = `/var/data`.
+
+## Icônes de l'appli
+
+Avant tout compte sur l'appareil : icône neutre (logo mi-sombre mi-clair, `manifest.webmanifest`). Après la création du compte : compte masculin = `manifest-homme.webmanifest` (sombre), compte féminin = `manifest-femme.webmanifest` (rose). Les trois ont un identifiant différent : les installer ensemble sur le même téléphone est possible.

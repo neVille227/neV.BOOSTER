@@ -4,5 +4,6 @@ WORKDIR /app
 COPY . .
 ENV NODE_ENV=production
 EXPOSE 8080
-# DIAGNOSTIC : affiche le contenu du dossier avant de lancer le serveur (à retirer quand tout marche)
-CMD ["sh", "-c", "echo '--- /app ---'; ls -la /app; echo '--- /app/server ---'; ls -la /app/server; node server/server.js"]
+# La base de données n'est JAMAIS dans l'image ni sur GitHub : elle est sur le disque persistant Render (/var/data).
+ENV NEV_DATA=/var/data
+CMD ["node", "server/server.js"]

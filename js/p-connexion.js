@@ -2,6 +2,7 @@ NEV.ready(function (mode) {
   var $ = function (id) { return document.getElementById(id); };
   /* Parcours féminin : première connexion → animation féminine directe (sans l'intro homme) ; ensuite → le même site, thème clair. */
   function dest(p) {
+    if (NEV.setSex && p && p.sex) NEV.setSex(p.sex);
     if (p && p.sex === 'f') {
       var first = true;
       try { first = localStorage.getItem('nvbf.intro') !== '1'; localStorage.setItem('nvbf.intro', '1'); } catch (e) {}
@@ -24,7 +25,7 @@ NEV.ready(function (mode) {
     $('tabSignup').classList.toggle('on', su); $('tabLogin').classList.toggle('on', !su);
     $('tabSignup').setAttribute('aria-selected', su); $('tabLogin').setAttribute('aria-selected', !su);
   }
-  Array.prototype.forEach.call(document.querySelectorAll('input[name=sex]'), function (r) { r.addEventListener('change', function () { if (NEV.setSex) NEV.setSex(r.value); }); });
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=sex]'), function (r) { r.addEventListener('change', function () { if (NEV.previewSex) NEV.previewSex(r.value); }); });
   $('tabSignup').onclick = function () { tab('signup'); };
   $('tabLogin').onclick = function () { tab('login'); };
 

@@ -4,18 +4,26 @@
   var user = ctx.user, p = ctx.p;
   var cautious = false;
 
-  var val = p.maxPushups || 10;
-  function level() { return NEV.levelFromMax(val); }
+  /* Version femme : on demande le maximum de SQUATS (équivalent interne en « pompes » ×0,36 pour les niveaux). */
+  var SQ = p.sex === 'f', MAXV = SQ ? 300 : 200, EQ = 0.36;
+  var val = SQ ? (p.maxSquats || (p.maxPushups ? Math.round(p.maxPushups / EQ) : 25)) : (p.maxPushups || 10);
+  if (SQ) {
+    document.querySelector('h1.q').innerHTML = 'Ton maximum de <em>squats</em> ?';
+    document.querySelector('#s1 .sub').textContent = 'Le plus que tu puisses faire d\'affilée, proprement, sans t\'arrêter. Entre un nombre de 1 à 300.';
+    $('maxIn').max = MAXV; $('maxRange').max = MAXV; $('maxIn').value = val; $('maxRange').value = val;
+    $('maxIn').setAttribute('aria-label', 'Maximum de squats'); $('maxRange').setAttribute('aria-label', 'Curseur du maximum de squats');
+  }
+  function level() { return NEV.levelFromMax(SQ ? Math.max(1, Math.round(val * EQ)) : val); }
   function renderLevel() {
     var l = level();
     $('lvN').textContent = l.n; $('lvName').textContent = l.name; $('lvDesc').textContent = l.range + ' · ' + l.desc;
     $('maxIn').value = val; $('maxRange').value = val;
   }
-  function setVal(v) { val = NEV.util.clamp(Math.round(Number(v) || 1), 1, 200); renderLevel(); }
+  function setVal(v) { val = NEV.util.clamp(Math.round(Number(v) || 1), 1, MAXV); renderLevel(); }
   $('minus').onclick = function () { setVal(val - 1); };
   $('plus').onclick = function () { setVal(val + 1); };
   $('maxRange').oninput = function () { setVal(this.value); };
-  $('maxIn').oninput = function () { var v = Number(this.value); if (this.value !== '' && v >= 1 && v <= 200) { val = Math.round(v); $('maxRange').value = val; var l = level(); $('lvN').textContent = l.n; $('lvName').textContent = l.name; $('lvDesc').textContent = l.range + ' · ' + l.desc; } };
+  $('maxIn').oninput = function () { var v = Number(this.value); if (this.value !== '' && v >= 1 && v <= MAXV) { val = Math.round(v); $('maxRange').value = val; var l = level(); $('lvN').textContent = l.n; $('lvName').textContent = l.name; $('lvDesc').textContent = l.range + ' · ' + l.desc; } };
   $('maxIn').onchange = function () { setVal(this.value); };
 
   function show(n) {
@@ -25,7 +33,7 @@
   }
   $('to2').onclick = function () {
     var raw = Number($('maxIn').value);
-    if (!Number.isInteger(raw) || raw < 1 || raw > 200) { $('err1').textContent = 'Entre un nombre entier de 1 à 200.'; $('maxIn').focus(); return; }
+    if (!Number.isInteger(raw) || raw < 1 || raw > MAXV) { $('err1').textContent = 'Entre un nombre entier de 1 à ' + MAXV + '.'; $('maxIn').focus(); return; }
     $('err1').textContent = ''; val = raw; renderLevel(); show(2);
   };
   $('back1').onclick = function () { show(1); };
@@ -53,7 +61,8 @@
     var focus = document.querySelector('[name=focus]:checked').value;
     var sets = Number(document.querySelector('[name=sets]:checked').value);
     var cam = document.querySelector('[name=cam]:checked').value === '1';
-    p.maxPushups = val; p.level = l.n;
+    if (SQ) { p.maxSquats = val; p.maxPushups = Math.max(1, Math.round(val * EQ)); } else p.maxPushups = val;
+    p.level = l.n;
     p.setup = { focus: focus, sets: sets, camera: cam, equip: equip, zones: (p.setup && p.setup.zones) || [] };
     // Si le réglage change après un tirage non commencé, on garde la carte déjà tirée du jour.
     NEV.player.save(p);

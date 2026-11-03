@@ -143,3 +143,8 @@ img,video{height:auto}
   .announce{flex-wrap:wrap}
 }
 .ql li{flex-wrap:wrap}.ql .t{min-width:0;flex:1 1 150px}
+
+/* Baki : silhouette entière qui marche au bas de l'écran */
+.yuki.baki{width:clamp(80px,9vw,120px)}
+.yuki.baki img{max-height:none;object-fit:contain;filter:drop-shadow(0 0 14px #e0455f88)}
+html:not([data-theme=light]) .yuki .yTip{background:#1c0b11;color:#fff1f2;border-color:#e0455f66;box-shadow:0 8px 24px #000a}
