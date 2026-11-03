@@ -1,5 +1,7 @@
 (function(){
   'use strict';
+  /* Appareil d'une joueuse : directement l'animation féminine, sans passer par l'intro homme. */
+  try{ if(localStorage.getItem('nev.sex')==='f'){ location.replace('femme/intro.html'); return; } }catch(e){}
   /* Chaque ouverture du site : Baki tracé en lumière rouge → logo nVB → notre vision (≈ 6 s) → création du compte.
      Baki et les cartes 3D flottantes restent en fond jusqu'à l'écran de création du compte, où le parcours s'arrête. */
   var $=function(id){return document.getElementById(id)};
