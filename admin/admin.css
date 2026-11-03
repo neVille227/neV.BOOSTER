@@ -93,3 +93,32 @@ code.js{font-size:.74rem;color:#ffd8a8;display:block;max-width:360px;overflow:hi
 .linkb{background:none;border:0;color:#d9b8c0;text-decoration:underline;cursor:pointer;font:inherit}
 .instbox{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)}
 @supports (-webkit-text-security:disc){ input.nosave{-webkit-text-security:disc} }
+
+/* ---------- mise en page espacée et professionnelle ---------- */
+.app{grid-template-columns:268px minmax(0,1fr)}
+.side{padding:28px 18px;gap:22px;background:linear-gradient(180deg,#14080c,#0a0507);box-shadow:8px 0 30px #0006}
+.brand{font-size:1.2rem;padding:0 8px 18px;border-bottom:1px solid #ffffff14}
+#nav{gap:6px;overflow-y:auto;flex:1;min-height:0}
+#nav button{padding:13px 14px;font-size:.92rem;border-radius:12px;letter-spacing:.01em}
+#nav button.on{box-shadow:inset 3px 0 0 var(--red)}
+.sidefoot{gap:10px;padding-top:18px;border-top:1px solid #ffffff14}
+.main{padding:44px clamp(18px,4vw,56px) 90px;max-width:1320px}
+.main h1{font-size:2rem;margin:0 0 8px}
+.main h2{font-size:1.2rem;margin:44px 0 18px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.main h3{margin:0 0 12px}
+.lead{margin:0 0 30px;font-size:1rem;line-height:1.6;max-width:760px}
+.grid{gap:22px}.g2{gap:24px}.split{gap:26px}
+.chart{padding:24px;border-radius:18px;box-shadow:0 10px 30px #0004}
+.panel.f{padding:26px}
+.tw{border-radius:16px;margin:6px 0 10px}
+table.t th,table.t td{padding:14px 16px}
+.row{gap:14px;margin:18px 0}
+.main label.lb,.askb label.lb{margin:18px 0 8px}
+.itm{padding:12px 14px;margin:10px 0}
+.warnbar{padding:16px 18px;margin:18px 0}
+.hbar{margin:10px 0;gap:12px}
+@media(max-width:860px){
+  .main{padding:26px 16px 70px}
+  .side{padding:16px}
+  #nav button{padding:11px 14px;white-space:nowrap}
+}

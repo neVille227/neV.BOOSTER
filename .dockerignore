@@ -3,3 +3,6 @@ _dev
 _original
 server/data
 *.zip
+*.sqlite*
+*.db
+*.db-*

@@ -13,7 +13,13 @@
 
   const W = 400, H = 286, VBY = -26, FLOOR = 226, ANK = 219;
   const L = { thigh: 52, shin: 50, foot: 18, torso: 72, neck: 22, head: 14, ua: 36, fa: 34 };
-  const C = { skin: '#eab9a3', skin2: '#b97d68', shorts: '#8e1b3c', shorts2: '#5a0f22', hair: '#1b0c10', shoe: '#f6eeee', shoe2: '#c63a52', glow: '#ff5a3d' };
+  const C = { skin: '#eab9a3', skin2: '#b97d68', shorts: '#8e1b3c', shorts2: '#5a0f22', hair: '#1b0c10', eye: '#1b0c10', top: null, shoe: '#f6eeee', shoe2: '#c63a52', glow: '#ff5a3d' };
+  /* Deux avatars : homme (crâne rasé, peau chaude, short jaune) et femme (blonde, brassière et short noirs). */
+  const STYLE = {
+    m: { skin: '#f3cf9a', skin2: '#d6a76c', shorts: '#f2b705', shorts2: '#c48f00', hair: '#f3cf9a', eye: '#1b0c10', top: null },
+    f: { skin: '#f6d6c4', skin2: '#dcae98', shorts: '#1d1d22', shorts2: '#0d0d10', hair: '#e8c766', eye: '#2a1a14', top: '#1d1d22' }
+  };
+  const applyStyle = () => Object.assign(C, STYLE[g.NEV && g.NEV.sex === 'f' ? 'f' : 'm']);
   const rad = (d) => (d * Math.PI) / 180;
   const f1 = (n) => Math.round(n * 10) / 10;
 
@@ -216,6 +222,7 @@
   }
 
   function drawSide(p, muscles, props, phase) {
+    applyStyle();
     const j = resolveSide(p);
     const front = rot(j.tdir, 90 * j.face);
     // torse
@@ -224,10 +231,11 @@
     const torso = '<path d="' + smoothClosed(pts) + '" fill="' + C.skin + '"/>';
     const shortsPts = [sp(0.02, 13), sp(0.2, 12), sp(0.2, -12), sp(0.02, -13), add(j.hip, front, 0)];
     const shorts = '<path d="' + smoothClosed([sp(-0.14, 12), sp(0.22, 12), sp(0.22, -12), sp(-0.14, -12)]) + '" fill="' + C.shorts + '"/>';
+    const bra = C.top ? '<path d="' + smoothClosed([sp(0.6, -12), sp(0.6, 15), sp(0.9, 14), sp(0.9, -10)]) + '" fill="' + C.top + '"/>' : '';
     const neckSvg = seg(j.neck, add(j.neck, j.hdir, 10), 11, C.skin);
     const fd = rot(j.hdir, 90 * j.face);
     const hc = j.head;
-    const headSvg = circ(hc, 14.5, C.hair) + circ(add(hc, fd, 3.2), 12.2, C.skin) + circ(add(add(hc, fd, 8.5), j.hdir, 1), 1.7, C.hair) +
+    const headSvg = circ(hc, 14.5, C.hair) + circ(add(hc, fd, 3.2), 12.2, C.skin) + circ(add(add(hc, fd, 8.5), j.hdir, 1), 1.7, C.eye) +
       poly([add(add(hc, fd, 12), j.hdir, 0), add(add(hc, fd, 16), j.hdir, -3), add(add(hc, fd, 11), j.hdir, -4)], C.skin);
     const legSvg = (i, col, shoeCol, w1, w2) => {
       const lg = j.legs[i], ank = lg.end;
@@ -239,23 +247,25 @@
     };
     const spots = muscleSpots(j);
     const thighCover = (i) => { const lg = j.legs[i]; const e = [j.hip[0] + (lg.mid[0] - j.hip[0]) * 0.46, j.hip[1] + (lg.mid[1] - j.hip[1]) * 0.46]; return seg(j.hip, e, i ? 18 : 21, i ? C.shorts2 : C.shorts); };
-    let out = armSvg(1, C.skin2) + legSvg(1, C.skin2, '#d8caca', 18, 13) + thighCover(1) + torso + shorts + legSvg(0, C.skin, C.shoe, 19, 14) + thighCover(0) + neckSvg + headSvg + armSvg(0, C.skin);
+    let out = armSvg(1, C.skin2) + legSvg(1, C.skin2, '#d8caca', 18, 13) + thighCover(1) + torso + shorts + bra + legSvg(0, C.skin, C.shoe, 19, 14) + thighCover(0) + neckSvg + headSvg + armSvg(0, C.skin);
     out += spotsSvg(spots, muscles, phase);
     return { svg: propsSvg(props, j, false) ? propsSvg(props.filter((q) => q.k === 'mat' || q.k === 'chair' || q.k === 'wall' || q.k === 'step' || q.k === 'table' || q.k === 'bar'), j) + out + propsSvg(props.filter((q) => !(q.k === 'mat' || q.k === 'chair' || q.k === 'wall' || q.k === 'step' || q.k === 'table' || q.k === 'bar')), j) : out, j };
   }
 
   function drawFront(p, muscles, props, phase) {
+    applyStyle();
     const j = resolveFront(p);
     const sp = (t, dx) => add(add(j.hip, j.tdir, L.torso * t), j.perp, dx);
     const torsoPts = [sp(0, 12), sp(0.4, 11), sp(0.82, 21), sp(1, 17), sp(1, -17), sp(0.82, -21), sp(0.4, -11), sp(0, -12)];
     const torso = '<path d="' + smoothClosed(torsoPts) + '" fill="' + C.skin + '"/>';
     const shorts = '<path d="' + smoothClosed([sp(-0.05, 15), sp(0.22, 13), sp(0.22, -13), sp(-0.05, -15), sp(-0.12, 0)]) + '" fill="' + C.shorts + '"/>';
+    const braF = C.top ? '<path d="' + smoothClosed([sp(0.62, 19), sp(0.62, -19), sp(0.95, -17), sp(0.95, 17)]) + '" fill="' + C.top + '"/>' : '';
     const hc = j.head;
-    const headSvg = seg(j.neck, hc, 12, C.skin) + circ(hc, 14, C.skin) + '<path d="M' + f1(hc[0] - 14.5) + ' ' + f1(hc[1] - 2) + ' A14.5 14.5 0 0 1 ' + f1(hc[0] + 14.5) + ' ' + f1(hc[1] - 2) + ' Q' + f1(hc[0]) + ' ' + f1(hc[1] - 12) + ' ' + f1(hc[0] - 14.5) + ' ' + f1(hc[1] - 2) + 'Z" fill="' + C.hair + '"/>' + circ([hc[0] - 4.8, hc[1] + 1], 1.5, C.hair) + circ([hc[0] + 4.8, hc[1] + 1], 1.5, C.hair);
+    const headSvg = seg(j.neck, hc, 12, C.skin) + circ(hc, 14, C.skin) + '<path d="M' + f1(hc[0] - 14.5) + ' ' + f1(hc[1] - 2) + ' A14.5 14.5 0 0 1 ' + f1(hc[0] + 14.5) + ' ' + f1(hc[1] - 2) + ' Q' + f1(hc[0]) + ' ' + f1(hc[1] - 12) + ' ' + f1(hc[0] - 14.5) + ' ' + f1(hc[1] - 2) + 'Z" fill="' + C.hair + '"/>' + circ([hc[0] - 4.8, hc[1] + 1], 1.5, C.eye) + circ([hc[0] + 4.8, hc[1] + 1], 1.5, C.eye);
     const legSvg = (i) => { const lg = j.legs[i], hp = j.hipPts[i]; return seg(hp, lg.mid, 18, C.skin) + seg(lg.mid, lg.end, 13, C.skin) + circ(lg.mid, 7, C.skin) + '<ellipse cx="' + f1(lg.end[0]) + '" cy="' + f1(lg.end[1] + 5) + '" rx="10" ry="5.5" fill="' + C.shoe + '"/>'; };
     const armSvg = (i) => { const a = j.arms[i], s = j.shPts[i]; return seg(s, a.mid, 13, C.skin) + seg(a.mid, a.end, 11, C.skin) + circ(a.mid, 6, C.skin) + circ(a.end, 5.6, C.skin) + circ(s, 8.5, C.skin); };
     const cover = (i) => { const lg = j.legs[i], hp = j.hipPts[i]; return seg(hp, [hp[0] + (lg.mid[0] - hp[0]) * 0.5, hp[1] + (lg.mid[1] - hp[1]) * 0.5], 20, C.shorts); };
-    const out = legSvg(0) + legSvg(1) + torso + shorts + cover(0) + cover(1) + headSvg + armSvg(0) + armSvg(1) + spotsSvg(muscleSpotsFront(j), muscles, phase);
+    const out = legSvg(0) + legSvg(1) + torso + shorts + braF + cover(0) + cover(1) + headSvg + armSvg(0) + armSvg(1) + spotsSvg(muscleSpotsFront(j), muscles, phase);
     return { svg: propsSvg(props, j, true) + out, j };
   }
 

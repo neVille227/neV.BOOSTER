@@ -121,7 +121,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   console.log('Base de données (SQLite)');
   const ADM2 = ADM; // session admin ouverte plus haut (la limite de 5 essais/15 min est déjà atteinte pour cette IP)
   for (const p of ['/api/admin/db/info', '/api/admin/db/rows?table=users', '/api/admin/db/export?table=all', '/api/admin/db/backup']) { r = await call(A, 'GET', p); t('accès base refusé à un joueur : ' + p.slice(11, 30), r.s === 401, r.s); r = await call(null, 'GET', p); t('accès base refusé sans session : ' + p.slice(11, 30), r.s === 401, r.s); }
-  for (const p of ['/server/data/nev.db', '/nev.db', '/auth.db', '/server/data/auth.db', '/server/store.js']) { const x = await fetch(BASE + p); t('fichier base protégé : ' + p, x.status === 404, x.status); }
+  for (const p of ['/server/data/database.sqlite', '/database.sqlite', '/var/data/database.sqlite', '/server/data/nev.db', '/nev.db', '/auth.db', '/server/data/auth.db', '/server/store.js']) { const x = await fetch(BASE + p); t('fichier base protégé : ' + p, x.status === 404, x.status); }
   r = await call(ADM2, 'GET', '/api/admin/db/info'); const names = r.j.tables.map((x) => x.name);
   t('db/info : tables du site présentes', ['users', 'players', 'workouts', 'logins', 'badge_grants', 'badge_defs', 'combos', 'chat_messages', 'events', 'meta', 'admin_audit', 'referrals', 'v_joueurs'].every((n) => names.includes(n)), names);
   t('db/info : les secrets ne sont PAS dans la base visible', !names.includes('credentials') && !names.includes('sessions') && !names.includes('admin'), names);

@@ -1,0 +1,77 @@
+/* ==========================================================
+   neV.BOOSTER — light.css : thème clair de la version femme.
+   Mêmes pages, mêmes fonctions ; rose poudré, rouge framboise, or doux.
+   ========================================================== */
+html[data-theme=light]{
+  --bg:#fbf6f7;--bg2:#f6e9ec;--wine:#a8283f;--wine2:#7a1f33;--red:#c32d50;--ember:#d9642a;--gold:#a9751c;
+  --cream:#2b0f18;--rose:#8a3a4c;--muted:#6f525c;--line:rgba(122,31,51,.16);
+  --ok:#168a49;--ok2:#168a49;--danger:#c0243d;
+  --panel:rgba(255,255,255,.86);--panel2:#fff;
+  --grad-effort:linear-gradient(135deg,#a8283f 0%,#c32d50 50%,#e0764a 100%);
+  --grad-btn:linear-gradient(135deg,#b32a4b,#d6405f 70%,#ee7a62);
+  color-scheme:light;
+}
+html[data-theme=light],html[data-theme=light] body{background-color:var(--bg)}
+html[data-theme=light] body{color:var(--cream);background:radial-gradient(1000px 640px at 90% -12%,#ffd9e2 0,transparent 62%),radial-gradient(800px 560px at -6% 110%,#f7e2c8 0,transparent 58%),var(--bg);background-attachment:fixed}
+html[data-theme=light] h1.big em,html[data-theme=light] h2 em{filter:none}
+html[data-theme=light] .hdr{background:linear-gradient(180deg,#fffffff0,#fbf6f7cc);border-bottom-color:var(--line)}
+html[data-theme=light] .logo{color:var(--cream)}
+html[data-theme=light] .me .flame{background:#e0764a1a;border-color:#e0764a66;color:#a8481c}
+html[data-theme=light] .me .spark{background:#a9751c1a;border-color:#a9751c66;color:#8a5d10}
+html[data-theme=light] .me button{border-color:var(--line);color:var(--muted)}
+html[data-theme=light] .panel{box-shadow:0 14px 40px #7a1f3317}
+html[data-theme=light] .panel.glow{box-shadow:0 0 0 1px #c32d5044,0 18px 50px #c32d5018}
+html[data-theme=light] .btn{color:#fff;box-shadow:0 10px 26px #c32d5036}
+html[data-theme=light] .btn.ghost{background:#ffffffcc;box-shadow:inset 0 0 0 1px var(--line);color:var(--cream)}
+html[data-theme=light] .btn.gold{background:linear-gradient(135deg,#d9a64a,#e8894a);color:#3a1a06;box-shadow:0 10px 26px #d9a64a44}
+html[data-theme=light] .btn.ok{background:linear-gradient(135deg,#168a49,#34b872);color:#fff;box-shadow:0 10px 26px #168a4933}
+html[data-theme=light] .chip{background:#7a1f330d;border-color:var(--line);color:var(--rose)}
+html[data-theme=light] .chip.red{background:#c32d5016;border-color:#c32d5055;color:#a8283f}
+html[data-theme=light] .chip.gold{background:#a9751c18;border-color:#a9751c55;color:#8a5d10}
+html[data-theme=light] .chip.ok{background:#168a4918;border-color:#168a4955;color:#0f6a37}
+html[data-theme=light] .field label{color:#4a1a28}
+html[data-theme=light] .field input,html[data-theme=light] .field select,html[data-theme=light] .field textarea,html[data-theme=light] input,html[data-theme=light] select,html[data-theme=light] textarea{background:#fff;border-color:var(--line);color:var(--cream)}
+html[data-theme=light] .tabs{background:#7a1f330d}
+html[data-theme=light] .banner{background:linear-gradient(90deg,#e0764a22,#c32d5012);border-color:#e0764a77}
+html[data-theme=light] .banner b{color:#a8481c}
+html[data-theme=light] .banner.ok{background:linear-gradient(90deg,#168a4922,#34b87210);border-color:#168a4966}
+html[data-theme=light] .toast{background:#fff;color:var(--cream);border-color:#c32d5066;box-shadow:0 14px 40px #7a1f3333}
+html[data-theme=light] .modal{background:#fbf6f7cc}
+html[data-theme=light] .modal .box{background:linear-gradient(160deg,#fff,#fbeef1);border-color:#c32d5055;box-shadow:0 30px 80px #7a1f333d}
+html[data-theme=light] .bar{background:#7a1f3318}
+html[data-theme=light] table.t th,html[data-theme=light] table.t td{border-bottom-color:var(--line)}
+html[data-theme=light] .announce{background:linear-gradient(90deg,#c32d50,#e0764a)}
+html[data-theme=light] .bdg{background:#fff}
+html[data-theme=light] .tile,html[data-theme=light] .stat,html[data-theme=light] .pk{background:#fff;box-shadow:0 8px 24px #7a1f330f}
+html[data-theme=light] .miniCard{background:linear-gradient(135deg,#fff,#fbeef1)}
+html[data-theme=light] .qd li,html[data-theme=light] .ap-links a{background:#fff}
+html[data-theme=light] .qd .ck{border-color:#7a1f3350;color:#fff}
+/* barre latérale, chat */
+html[data-theme=light] .side{background:linear-gradient(180deg,#ffffff,#fbeef1);border-right-color:var(--line);box-shadow:12px 0 40px #7a1f331a}
+html[data-theme=light] .si{color:var(--cream)}
+html[data-theme=light] .si:hover{background:#7a1f330a}
+html[data-theme=light] .si.on{background:linear-gradient(90deg,#c32d5026,#e0764a14);border-color:#c32d5066;color:#7a1f33}
+html[data-theme=light] .sideX,html[data-theme=light] .sideOut{border-color:var(--line);color:var(--muted)}
+html[data-theme=light] .sideMe{background:#7a1f330a;border-top-color:var(--line)}
+html[data-theme=light] .sideScrim{background:#3a0f1a55}
+html[data-theme=light] .chatFab .on,html[data-theme=light] .chatPanel .on{border-color:#fff}
+html[data-theme=light] .chatPanel{background:linear-gradient(160deg,#fff,#fbeef1);border-color:#c32d5055;box-shadow:0 24px 70px #7a1f3340}
+html[data-theme=light] .chatPanel header{background:#7a1f330a;border-bottom-color:var(--line)}
+html[data-theme=light] .cpTabs button{background:#7a1f330d;color:var(--muted)}
+html[data-theme=light] .cpTabs button.on{color:#fff}
+html[data-theme=light] .cpMsgs .m{background:#7a1f330d}
+html[data-theme=light] .cpMsgs .m.me{background:#c32d50;color:#fff}
+html[data-theme=light] .cpMsgs .m.me .who{color:#ffe3ea}
+html[data-theme=light] .cpForm input{background:#fff}
+html[data-theme=light] .cpFull{border-top-color:var(--line)}
+html[data-theme=light] .navmenu{background:#fbf6f7e6}
+html[data-theme=light] .mt{background:#fff;color:var(--cream)}
+html[data-theme=light] .mt.on{background:linear-gradient(160deg,#ffe3ea,#fff)}
+html[data-theme=light] .helpfab{background:linear-gradient(135deg,#c32d50,#e0764a);color:#fff}
+html[data-theme=light] .sitefoot{color:var(--muted)}
+html[data-theme=light] .nevinst{background:#fff;color:var(--cream);border-color:var(--line)}
+html[data-theme=light] .nevinst .t span{color:var(--muted)}
+
+/* îlots sombres : cartes, caméra, tirage, démonstrations gardent leurs couleurs */
+html[data-theme=light] :is(.tcard,.gstage,.reveal,.xr-cambox,.xr-demo,.xr-demo-mini,.xr-trans,.xr-go,.xm-demo,.xr-nocam,.tour,.fx-pop .card,.stp .ill,.heroBox .stage){--cream:#fff1f2;--muted:#c2a3aa;--rose:#f3a6b0;--line:#4a2029;color:#fff1f2}
+html[data-theme=light] .cpTabs button.on{background:var(--grad-btn);color:#fff}

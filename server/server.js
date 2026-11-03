@@ -3,7 +3,7 @@
    Serveur Node.js SANS dépendance (Node 22.13+ pour la base SQLite intégrée). Il fait deux choses :
    1) servir le site (dossier parent) avec des en-têtes de sécurité stricts ;
    2) fournir l'API /api/* : comptes, progression, chat, combos, badges, admin, suivi ;
-   3) stocker TOUT dans une vraie base de données SQLite (voir store.js) : nev.db + auth.db.
+   3) stocker TOUT dans une vraie base de données SQLite (voir store.js) : database.sqlite + auth.db (dans NEV_DATA, par ex. /var/data sur Render ; jamais dans le dossier servi au public).
    Lancer :  NEV_ADMIN_PASSWORD="un-mot-de-passe-long" node server/server.js
    Variables : PORT (8080), HOST (0.0.0.0), NEV_ADMIN_PASSWORD, NEV_SECURE=1 (derrière https),
                NEV_TRUST_PROXY=1 (lit X-Forwarded-For), NEV_DATA (dossier des données).
@@ -17,7 +17,9 @@ const store = require('./store');
 const mailer = require('./mail');
 
 const ROOT = path.resolve(__dirname, '..');
-const DATA_DIR = path.resolve(process.env.NEV_DATA || path.join(__dirname, 'data'));
+/* La base SQLite vit HORS du site public : sur Render, sur le disque persistant monté en /var/data (database.sqlite + auth.db).
+   Sans NEV_DATA : /var/data s'il existe (Render), sinon server/data (essais en local, jamais envoyé sur GitHub). */
+const DATA_DIR = path.resolve(process.env.NEV_DATA || (fs.existsSync('/var/data') ? '/var/data' : path.join(__dirname, 'data')));
 const PORT = Number(process.env.PORT || 8080), HOST = process.env.HOST || '0.0.0.0';
 const PUBLIC_HOST = (() => { try { return new URL(process.env.NEV_BASE_URL || '').host; } catch (e) { return null; } })(); // adresse publique (ex. site Netlify qui relaie /api vers ce serveur)
 const DEFAULT_BASE = 'https://nevbooster.onrender.com', PUBLIC_BASE = (process.env.NEV_BASE_URL || '').replace(/\/+$/, '');
@@ -145,6 +147,7 @@ function cleanPlayer(p, uid) {
   p = noProto(p) || {};
   const u = S.userById(uid);
   p.maxPushups = p.maxPushups == null ? null : num(p.maxPushups, 0, 200, null);
+  p.maxSquats = p.maxSquats == null ? null : num(p.maxSquats, 0, 300, null);
   p.level = p.level == null ? null : num(p.level, 1, 5, null);
   p.flames = Math.floor(num(p.flames, 0, 1e6, 0)); p.flamesTotal = Math.floor(num(p.flamesTotal, 0, 1e7, 0));
   p.pity = Math.floor(num(p.pity, 0, 50, 0));
@@ -305,11 +308,11 @@ async function adminDb(req, res, route, url, ip, m) {
   }
   if (route === 'db/backup' && m === 'GET') {
     const tmp = path.join(S.files.backups, 'dl-' + rid(6) + '.tmp'); fs.mkdirSync(S.files.backups, { recursive: true, mode: 0o700 });
-    try { await S.backupTo(tmp); const body = fs.readFileSync(tmp); S.audit('backup-download', 'nev.db', body.length + ' octets'); return download(res, body, 'application/octet-stream', 'nev-sauvegarde-' + stamp() + '.db'); }
+    try { await S.backupTo(tmp); const body = fs.readFileSync(tmp); S.audit('backup-download', 'database.sqlite', body.length + ' octets'); return download(res, body, 'application/octet-stream', 'nev-sauvegarde-' + stamp() + '.db'); }
     finally { fs.rm(tmp, { force: true }, () => {}); }
   }
   if (route === 'db/backup-now' && m === 'POST') { await S.autoBackup(); S.audit('backup-now', 'serveur', null); return send(res, 200, { info: S.info() }); }
-  if (route === 'db/check' && m === 'POST') { S.audit('check', 'nev.db', null); return send(res, 200, S.check()); }
+  if (route === 'db/check' && m === 'POST') { S.audit('check', 'database.sqlite', null); return send(res, 200, S.check()); }
   if (route === 'db/query' && m === 'POST') {
     const w = limit('qy:' + ip, 30, 60000); if (w) return fail(res, 429, 'Trop de requêtes SQL. Patiente un instant.');
     const b = await readBody(req, 2048);
@@ -461,6 +464,7 @@ const server = http.createServer(async (req, res) => {
 server.headersTimeout = 15000; server.requestTimeout = 30000; server.keepAliveTimeout = 5000; server.maxHeadersCount = 60;
 initAdmin().then(() => server.listen(PORT, HOST, () => {
   console.log('neV.BOOSTER : http://localhost:' + PORT + '  (base SQLite : ' + S.files.data + ')');
+  if (process.env.RENDER && !DATA_DIR.startsWith('/var/data')) console.warn('ATTENTION : la base est hors du disque Render (/var/data) : elle sera perdue au prochain déploiement. Ajoute un disque monté sur /var/data et NEV_DATA=/var/data.');
   const bk = () => S.autoBackup().catch((e) => console.error('[sauvegarde]', e && e.message));
   bk(); setInterval(bk, 6 * 3600000).unref(); // une sauvegarde par jour, 7 conservées
   F.maintenance(); setInterval(F.maintenance, 3600000).unref();

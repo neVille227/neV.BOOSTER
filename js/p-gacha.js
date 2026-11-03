@@ -17,6 +17,13 @@
   const stage = $('gstage'), table = $('gtable'), msg = $('gmsg');
   let busy = false, countTimer = 0;
 
+  /* ----- choix du tirage, avant l'animation : une carte ou la Gacha Box ----- */
+  if (MODE === 'daily' && d0().status === 'none' && qs.get('go') !== '1') {
+    $('pick').hidden = false; stage.hidden = true;
+    $('pkOne').addEventListener('click', () => { $('pick').hidden = true; stage.hidden = false; stage.scrollIntoView({ block: 'center' }); });
+  }
+  function d0() { return p.daily; }
+
   /* ----- son ----- */
   const sndBtn = $('snd');
   const syncSnd = () => { sndBtn.textContent = 'Son : ' + (NEV.Sfx.muted ? 'non' : 'oui'); sndBtn.setAttribute('aria-pressed', String(!NEV.Sfx.muted)); };

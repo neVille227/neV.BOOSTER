@@ -5,8 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0a0507">
 <title>neV.BOOSTER — Gacha du jour</title>
+<script src="js/theme.js"></script>
 <link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="css/nev.css">
+<link rel="stylesheet" href="css/shell.css">
+<link rel="stylesheet" href="css/light.css">
 <link rel="stylesheet" href="css/card.css">
 <link rel="stylesheet" href="css/gacha.css">
 </head>
@@ -15,8 +18,12 @@
   <div class="eyebrow">Gacha du jour</div>
   <h1 class="big" id="gTitle">Ton tirage du <em>jour</em></h1>
   <p class="lead" id="gLead">Cinq cartes, une seule pour toi. Le doigt choisit, le hasard décide de ton entraînement.</p>
-  <p style="margin:14px 0 0"><a class="btn ghost sm" href="gacha-box.html" data-go>📦 Nouveau : la Gacha Box en 3D (4 cartes)</a></p>
   <div id="gAlert" style="margin-top:16px"></div>
+
+  <section class="pickrow" id="pick" aria-label="Choisis ton tirage" hidden>
+    <button type="button" class="pk" id="pkOne"><div class="pkh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="11" height="16" rx="2" transform="rotate(-8 10 11)"/><rect x="9" y="5" width="11" height="16" rx="2" transform="rotate(8 14 13)"/></svg><b>Tirer une carte</b></div><span>1 carte parmi 5, une séance claire.</span><span class="chip red">Tirage du jour</span></button>
+    <a class="pk" href="gacha-box.html" data-go><div class="pkh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9"/></svg><b>Gacha Box</b></div><span>La boîte 3D : 4 cartes, un combo.</span><span class="chip gold">4 cartes</span></a>
+  </section>
 
   <section class="gstage" id="gstage" aria-label="Zone de tirage">
     <button type="button" class="snd" id="snd" aria-pressed="false">Son : oui</button>
@@ -42,6 +49,7 @@
 <script src="js/ex-data.js"></script>
 <script src="js/ex-anim.js"></script>
 <script src="js/ex-more.js"></script>
+<script src="js/ex-extra.js"></script>
 <script src="js/exercises.js"></script>
 <script src="js/zones.js"></script>
 <script src="js/gachaengine.js"></script>

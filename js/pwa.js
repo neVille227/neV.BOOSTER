@@ -7,9 +7,10 @@
   const NEV = (g.NEV = g.NEV || {}), doc = g.document;
   const KEY = 'nev.reminder';
   const head = doc.head;
-  if (!doc.querySelector('link[rel=manifest]')) { const l = doc.createElement('link'); l.rel = 'manifest'; l.href = 'manifest.webmanifest'; head.appendChild(l); }
-  if (!doc.querySelector('link[rel=icon]')) { const l = doc.createElement('link'); l.rel = 'icon'; l.type = 'image/png'; l.sizes = '32x32'; l.href = 'img/favicon-32.png'; head.appendChild(l); const i = doc.createElement('link'); i.rel = 'shortcut icon'; i.href = 'favicon.ico'; head.appendChild(i); }
-  if (!doc.querySelector('link[rel=apple-touch-icon]')) { const l = doc.createElement('link'); l.rel = 'apple-touch-icon'; l.href = 'img/apple-touch-icon.png'; head.appendChild(l); }
+  const SUF = !NEV.known ? '-n' : NEV.sex === 'f' ? '-f' : '';
+  if (!doc.querySelector('link[rel=manifest]')) { const l = doc.createElement('link'); l.rel = 'manifest'; l.href = !NEV.known ? 'manifest.webmanifest' : NEV.sex === 'f' ? 'manifest-femme.webmanifest' : 'manifest-homme.webmanifest'; head.appendChild(l); }
+  if (!doc.querySelector('link[rel=icon]')) { const l = doc.createElement('link'); l.rel = 'icon'; l.type = 'image/png'; l.sizes = '32x32'; l.href = 'img/favicon' + SUF + '-32.png'; head.appendChild(l); const i = doc.createElement('link'); i.rel = 'shortcut icon'; i.href = 'favicon.ico'; head.appendChild(i); }
+  if (!doc.querySelector('link[rel=apple-touch-icon]')) { const l = doc.createElement('link'); l.rel = 'apple-touch-icon'; l.href = 'img/apple-touch-icon' + SUF + '.png'; head.appendChild(l); }
 
   let reg = null, deferred = null;
   const sw = ('serviceWorker' in g.navigator) && (g.location.protocol === 'https:' || /^(localhost|127\.0\.0\.1)$/.test(g.location.hostname));
@@ -26,7 +27,7 @@
     try { const d = +g.localStorage.getItem(DISMISS) || 0; if (Date.now() - d < 14 * 864e5 || g.localStorage.getItem('nev.installed')) return; } catch (e) { /* ignoré */ }
     if (!deferred && !ios) return;
     const el = doc.createElement('div'); el.id = 'nevInstall'; el.className = 'nevinst'; el.setAttribute('role', 'region'); el.setAttribute('aria-label', 'Installer l\'application');
-    el.innerHTML = '<img src="img/icon-192.png" alt="" width="44" height="44"><div class="t"><b>Installe l\'appli neV.BOOSTER</b><span>' +
+    el.innerHTML = '<img src="img/icon' + SUF + '-192.png" alt="" width="44" height="44"><div class="t"><b>Installe l\'appli neV.BOOSTER</b><span>' +
       (deferred ? 'Plein écran, icône sur ton écran d\'accueil, pages vues hors ligne.' : 'Touche Partager puis « Sur l\'écran d\'accueil ».') + '</span></div>' +
       (deferred ? '<button type="button" class="btn sm" id="nevInstallGo">Installer</button>' : '') + '<button type="button" class="x" aria-label="Plus tard">✕</button>';
     doc.body.appendChild(el);

@@ -35,7 +35,9 @@
       cv.style.cssText = 'width:100%;height:340px;display:block;touch-action:pan-y';
       el.appendChild(cv);
       const X = NEV.Fig3D.stage(cv, { alpha: true, fov: 32, floor: false });
-      const hero = X.person(NEV.Fig3D.SKIN, NEV.Fig3D.SHIRT);
+      const fem = NEV.sex === 'f';
+      /* Avatar d'évolution : homme (crâne rasé, short jaune) ou femme (blonde, brassière et short noirs) */
+      const hero = fem ? X.person(0xf6d6c4, 0x1d1d22, null, { female: true, hair: 0xe8c766, bra: 0x1d1d22 }) : X.person(0xf3cf9a, 0xf2b705, null, { bald: true });
       X.cam.position.set(0, 1.35, 5.2); X.cam.lookAt(0, 1.05, 0);
       const disc = new T.Mesh(new T.CylinderGeometry(1, 1.1, 0.08, 32), X.M(0x8a1538, 0x551020)); disc.position.y = -0.04; X.S.add(disc);
       const ring = new T.Mesh(new T.TorusGeometry(0.95, 0.025, 8, 48), X.M(0xff3d6e, 0xff3d6e)); ring.rotation.x = Math.PI / 2; ring.position.y = 0.02; X.S.add(ring);

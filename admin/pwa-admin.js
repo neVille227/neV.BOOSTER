@@ -12,7 +12,7 @@
     if (!box || standalone) return;
     if (deferred) { box.hidden = false; help.textContent = 'Plein écran et icône « Admin » sur ton écran d\'accueil. Le mot de passe reste demandé à chaque ouverture.'; }
     else if (ios) { box.hidden = false; go.hidden = true; help.textContent = 'iPhone : touche Partager puis « Sur l\'écran d\'accueil ».'; }
-    else return;
+    else { box.hidden = false; go.hidden = true; help.textContent = 'Si le bouton n\'apparaît pas : menu du navigateur (⋮) puis « Installer l\'application » ou « Ajouter à l\'écran d\'accueil ». Cherche l\'icône « nVB Admin » (rouge) dans la liste de tes applications, puis maintiens-la pour la poser sur l\'écran d\'accueil.'; }
     go.onclick = function () { if (!deferred) return; deferred.prompt(); deferred.userChoice.then(function () { deferred = null; box.hidden = true; }); };
   }
   g.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; ui(); });

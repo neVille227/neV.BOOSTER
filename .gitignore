@@ -4,3 +4,10 @@ node_modules/
 .env
 _dev/
 _original/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+*.db-wal
+*.db-shm
+auth.db*

@@ -5,7 +5,7 @@
   const esc = NEV.util.esc;
   const ctx = await NEV.bootPublic('bibliotheque');
   const p = ctx.p, user = ctx.user;
-  const ALL = NEV.Ex.list();
+  const ALL = NEV.Ex.list().filter((e) => !e.for || e.for === (NEV.sex || 'm'));
   const PAGE = 24;
   let order = ALL.slice(), cat = '', tier = 0, q = '', nomat = false, shown = PAGE, view = [];
 

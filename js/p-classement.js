@@ -3,7 +3,7 @@
   'use strict';
   const $ = (id) => document.getElementById(id);
   const esc = NEV.util.esc, P = NEV.Policy;
-  const ctx = await NEV.boot('classement'); if (!ctx) return;
+  const ctx = await NEV.boot($('friends') ? 'amis' : 'classement'); if (!ctx) return;
   const p = ctx.p, user = ctx.user, server = NEV.cloud.mode === 'server';
   let scope = 'friends', per = 'week';
 
@@ -39,7 +39,7 @@
       '<article class="panel cl-card"><div class="eyebrow">Saison ' + (se.n || '—') + ' · ' + esc(se.name) + '</div><h3>' + (se.n ? se.left + ' jours restants' : 'La saison 1 commence le ' + fdate(P.seasonOf('2026-10-19').start)) + '</h3>' +
       (se.n ? '<p>Fais ' + se.goal + ' séances pendant la saison (six semaines) pour gagner ' + se.reward + ' flammes.</p><div class="cl-bar" role="progressbar" aria-label="Progression de la saison" aria-valuemin="0" aria-valuemax="' + se.goal + '" aria-valuenow="' + Math.min(se.sessions, se.goal) + '"><i style="width:' + Math.min(100, Math.round(100 * se.sessions / se.goal)) + '%"></i></div><div class="cl-meta"><span>' + Math.min(se.sessions, se.goal) + ' / ' + se.goal + ' séances</span><span>' + se.xp + ' XP gagnés</span></div>' + btn(se, 'season') : '<p>Chaque saison dure six semaines : un nouveau classement, une nouvelle récompense.</p>') + '</article>';
   }
-  $('chal').addEventListener('click', async (e) => {
+  if ($('chal')) $('chal').addEventListener('click', async (e) => {
     const b = e.target.closest('[data-claim]'); if (!b) return; b.disabled = true;
     const kind = b.dataset.claim, s = await state(), o = kind === 'season' ? s.season : s.challenge;
     if (server) {
@@ -70,8 +70,8 @@
     const optin = scope === 'public' ? '<label class="cl-opt"><input type="checkbox" id="optin"' + (d.publicOptIn ? ' checked' : '') + '><span>Apparaître dans le classement public avec mon pseudo (décoché par défaut, tu peux changer quand tu veux).</span></label>' : '';
     $('board').innerHTML = seg() + (rows || '<p class="cl-empty">Personne à afficher pour le moment.</p>') + optin;
   }
-  $('board').addEventListener('click', (e) => { const b = e.target.closest('[data-scope],[data-per]'); if (!b) return; if (b.dataset.scope) scope = b.dataset.scope; if (b.dataset.per) per = b.dataset.per; drawBoard(); });
-  $('board').addEventListener('change', async (e) => { if (e.target.id !== 'optin') return; const r = await NEV.cloud.api('account/board', 'POST', { public: e.target.checked }); if (!r.ok) e.target.checked = false; drawBoard(); });
+  if ($('board')) $('board').addEventListener('click', (e) => { const b = e.target.closest('[data-scope],[data-per]'); if (!b) return; if (b.dataset.scope) scope = b.dataset.scope; if (b.dataset.per) per = b.dataset.per; drawBoard(); });
+  if ($('board')) $('board').addEventListener('change', async (e) => { if (e.target.id !== 'optin') return; const r = await NEV.cloud.api('account/board', 'POST', { public: e.target.checked }); if (!r.ok) e.target.checked = false; drawBoard(); });
 
   async function drawFriends() {
     if (!server) { $('friends').innerHTML = '<p class="cl-empty">Les amis demandent le serveur (mode démo : non disponible).</p>'; return; }
@@ -80,13 +80,15 @@
       (d.friends.length ? '<div class="eyebrow">Amis</div><div class="cl-fr">' + d.friends.map((f) => '<span>' + esc(f.pseudo) + '<button type="button" data-rm="' + esc(f.id) + '" aria-label="Retirer ' + esc(f.pseudo) + '">✕</button></span>').join('') + '</div>' : '<p class="muted">Pas encore d\'ami dans ton classement.</p>') +
       (d.waiting.length ? '<div class="eyebrow" style="margin-top:22px">En attente de leur côté</div><div class="cl-fr">' + d.waiting.map((f) => '<span>' + esc(f.code) + '<button type="button" data-rm="' + esc(f.id) + '" aria-label="Annuler">✕</button></span>').join('') + '</div><p class="muted" style="margin-top:12px">Dis à ces amis d\'ajouter ton code pour qu\'ils apparaissent.</p>' : '');
   }
-  $('friends').addEventListener('submit', async (e) => {
+  if ($('friends')) $('friends').addEventListener('submit', async (e) => {
     e.preventDefault(); const code = $('fc').value.trim(); if (!code) return;
     const r = await NEV.cloud.api('friends', 'POST', { code: code });
     if (!r.ok) { $('fe').textContent = (r.data && r.data.error) || 'Impossible.'; return; }
-    await drawFriends(); drawBoard();
+    await drawFriends(); if ($('board')) drawBoard();
   });
-  $('friends').addEventListener('click', async (e) => { const b = e.target.closest('[data-rm]'); if (!b) return; await NEV.cloud.api('friends/remove', 'POST', { id: b.dataset.rm }); await drawFriends(); drawBoard(); });
+  if ($('friends')) $('friends').addEventListener('click', async (e) => { const b = e.target.closest('[data-rm]'); if (!b) return; await NEV.cloud.api('friends/remove', 'POST', { id: b.dataset.rm }); await drawFriends(); if ($('board')) drawBoard(); });
 
-  await drawChal(); drawBoard(); drawFriends();
+  if ($('chal')) await drawChal();
+  if ($('board')) drawBoard();
+  if ($('friends')) drawFriends();
 })();
