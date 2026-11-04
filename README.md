@@ -237,3 +237,9 @@ La base n'est jamais dans GitHub ni dans le dossier public. Sur Render : disque 
 ## Icônes de l'appli
 
 Avant tout compte sur l'appareil : icône neutre (logo mi-sombre mi-clair, `manifest.webmanifest`). Après la création du compte : compte masculin = `manifest-homme.webmanifest` (sombre), compte féminin = `manifest-femme.webmanifest` (rose). Les trois ont un identifiant différent : les installer ensemble sur le même téléphone est possible.
+
+## Mode visiteur
+Depuis la page de connexion, « Visiteur · Homme / Femme » ouvre `gacha.html?visiteur=m|f` : le visiteur voit le thème choisi et peut **tirer une carte**, mais l'exercice est verrouillé (« Créer mon compte pour lancer l'exercice »). Rien n'est enregistré ni envoyé au serveur ; `exercice.html` renvoie de toute façon vers la connexion sans compte. À l'inscription, le logo devient sombre (masculin) ou clair (féminin).
+
+## Logo
+`img/logo-nvb.webp` (mi-sombre, mi-clair) est animé dans l'intro (`index.html`, `intro.css`) ; `logo-nvb-m.webp` / `logo-nvb-f.webp` servent à la page de connexion selon le sexe choisi.

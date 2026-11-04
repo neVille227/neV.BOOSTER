@@ -8,7 +8,7 @@
   var reduced=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
   var ember=$('ember'), skip=$('skip'), bg=NEVBG.mount({trace:true});
   var prog=$('prog'), stepEl=$('step'), LAB=['Le tracé','Le logo','Notre vision','Son histoire'];
-  var T={trace:reduced?400:5800, logo:reduced?1500:5400, vision:reduced?2500:6400};
+  var T={trace:reduced?400:5800, logo:reduced?1500:6200, vision:reduced?2500:6400};
   var timers=[], phase='trace', leaving=false;
   function later(fn,ms){var t=setTimeout(fn,ms); timers.push(t); return t}
   function clear(){timers.forEach(clearTimeout); timers=[]}

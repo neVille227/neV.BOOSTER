@@ -262,6 +262,7 @@
     updated: 0
   });
   const P = (NEV.player = {
+    blank: defaults, /* joueur vierge en mémoire (mode visiteur) : jamais enregistré */
     key(uid) { return 'nev.p.' + uid; },
     load(uid) {
       uid = uid || (auth.current() || {}).id;

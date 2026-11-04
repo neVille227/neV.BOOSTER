@@ -3,12 +3,24 @@
   'use strict';
   const $ = (id) => document.getElementById(id);
   const esc = NEV.util.esc, sleep = NEV.util.sleep, reduced = NEV.util.reduced();
-  const ctx = await NEV.boot('gacha'); if (!ctx) return;
-  const user = ctx.user, p = ctx.p;
-  NEV.player.ensureDay(p); NEV.player.save(p);
-  /* Deux systèmes, une seule page : gacha.html (du jour) et gacha.html?mode=spe&zone=cou (Spécialisation). */
+  /* Mode visiteur (?visiteur=m|f) : on peut tirer une carte, jamais l'exécuter sans compte.
+     Le joueur est vierge, en mémoire seulement : rien n'est enregistré, rien n'est envoyé au serveur. */
   const qs = new URLSearchParams(location.search);
-  const MODE = qs.get('mode') === 'spe' ? 'spe' : 'daily';
+  const GUEST = qs.get('visiteur') === 'f' ? 'f' : qs.get('visiteur') === 'm' ? 'm' : '';
+  let ctx;
+  if (GUEST) {
+    ctx = await NEV.bootPublic('gacha');
+    if (ctx.user) { location.replace('gacha.html'); return; }   // déjà connecté : le vrai tirage
+    ctx.p = NEV.player.blank(); ctx.user = { id: 'visiteur', guest: true };
+    ctx.p.sex = GUEST; ctx.p.maxPushups = GUEST === 'f' ? 8 : 15; ctx.p.level = 1;
+    NEV.track = function () {};
+  } else {
+    ctx = await NEV.boot('gacha'); if (!ctx) return;
+  }
+  const user = ctx.user, p = ctx.p;
+  NEV.player.ensureDay(p); if (!GUEST) NEV.player.save(p);
+  /* Deux systèmes, une seule page : gacha.html (du jour) et gacha.html?mode=spe&zone=cou (Spécialisation). */
+  const MODE = !GUEST && qs.get('mode') === 'spe' ? 'spe' : 'daily';
   let ZONE = qs.get('zone') || 'all';
   if (MODE === 'spe') { if (p.spe.card && p.spe.zone) ZONE = p.spe.zone; if (ZONE !== 'all' && !NEV.Zones.get(ZONE)) ZONE = 'all'; }
   const slotOf = () => (MODE === 'spe' ? p.spe : p.daily);
@@ -18,7 +30,7 @@
   let busy = false, countTimer = 0;
 
   /* ----- choix du tirage, avant l'animation : une carte ou la Gacha Box ----- */
-  if (MODE === 'daily' && d0().status === 'none' && qs.get('go') !== '1') {
+  if (!GUEST && MODE === 'daily' && d0().status === 'none' && qs.get('go') !== '1') {
     $('pick').hidden = false; stage.hidden = true;
     $('pkOne').addEventListener('click', () => { $('pick').hidden = true; stage.hidden = false; stage.scrollIntoView({ block: 'center' }); });
   }
@@ -30,6 +42,12 @@
   sndBtn.onclick = () => { NEV.Sfx.toggle(); syncSnd(); };
   syncSnd();
 
+  /* ----- bandeau visiteur ----- */
+  const SIGNUP = 'connexion.html?sex=' + GUEST;
+  if (GUEST) {
+    $('gAlert').innerHTML = '<div class="banner guestBanner"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><div><b>Mode visiteur · ' + (GUEST === 'f' ? 'Femme' : 'Homme') + '.</b> Tu peux tirer une carte pour découvrir le jeu. Pour lancer l\'exercice, gagner des flammes et suivre ta progression, il faut un compte (gratuit). <a href="' + SIGNUP + '" data-go>Créer mon compte</a></div></div>';
+    const od = document.querySelector('details.odds'); if (od) od.remove();
+  }
   /* ----- bandeau de situation ----- */
   const d = p.daily;
   if (MODE === 'spe') {
@@ -51,7 +69,7 @@
   })();
 
   /* ----- probabilités ----- */
-  (function odds() {
+  if (!GUEST) (function odds() {
     const l = NEV.levelFromMax(p.maxPushups);
     const w = NEV.Gacha.weights(l.n, cautious, p.pity || 0).pct;
     $('prob').innerHTML = NEV.Gacha.RARITIES.map((r, i) => '<div style="--c:' + r.color + '"><b>' + (w[i] >= 10 ? Math.round(w[i]) : Math.round(w[i] * 10) / 10) + ' %</b>' + r.name + '</div>').join('');
@@ -248,10 +266,11 @@
       '<div class="rinfo"><span class="rbanner">' + banner + '</span><h2>' + esc(ex.name) + '</h2>' +
       '<div class="rplan">' + plan + '</div>' +
       '<p class="rmeta">' + meta + '</p><div class="chips">' + chips + '</div>' +
-      (dn ? '<a class="btn ghost" href="quete.html" data-go>Voir la quête du jour</a>'
+      (GUEST ? '<div id="rAct"><a class="btn" href="' + SIGNUP + '" data-go id="goLock"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-right:8px"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Créer mon compte pour lancer l\'exercice</a></div><p class="rmeta" style="margin-top:12px">Exercice verrouillé : il ne s\'exécute qu\'avec un compte.</p>'
+      : dn ? '<a class="btn ghost" href="quete.html" data-go>Voir la quête du jour</a>'
           : '<div id="rAct"><a class="btn ok" href="' + GO + '" data-go id="goNow">' + (rest ? 'Faire mon repos' : 'Lancer l\'exercice') + '</a></div>' + (rest ? '' : '<div class="count" id="count" hidden></div>')) + '</div>';
     NEV.Card.mountArt(rv); NEV.Card.tilt(rv.querySelector('.rc'));
-    if ((p.bonusDraws || 0) > 0) {
+    if (!GUEST && (p.bonusDraws || 0) > 0) {
       const bb = document.createElement('button'); bb.type = 'button'; bb.className = 'btn ghost'; bb.id = 'bonusBtn'; bb.style.marginTop = '10px';
       bb.textContent = '🎁 Utiliser un tirage bonus (' + p.bonusDraws + ')';
       bb.onclick = function () {
@@ -261,7 +280,7 @@
       };
       rv.querySelector('.rinfo').appendChild(bb);
     }
-    if (animate) { NEV.Sfx.win(); if (!dn && !rest) setTimeout(startCount, 1800); }
+    if (animate) { NEV.Sfx.win(); if (!GUEST && !dn && !rest) setTimeout(startCount, 1800); }
   }
 
   function startCount() {

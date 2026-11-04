@@ -27,7 +27,14 @@
 <style>
   .auth{min-height:100vh;display:grid;place-items:center;padding:28px 0}
   .auth .box{width:min(460px,92%)}
-  .auth .mark{display:block;width:min(260px,70%);margin:0 auto 6px;filter:drop-shadow(0 0 24px #e0455f55)}
+  .auth .mark{display:block;width:min(150px,46%);height:auto;aspect-ratio:1;margin:0 auto 14px;border-radius:22%;box-shadow:0 14px 40px #0009,0 0 0 1px #ffffff1c;transition:opacity .25s ease,transform .25s ease}
+  .auth .mark.swap{opacity:0;transform:scale(.92)}
+  .visit{margin-top:18px;padding-top:16px;border-top:1px solid #ffffff1c;text-align:center}
+  .visit p{margin:0 0 10px;font-size:.82rem;color:var(--muted)}
+  .visit .vrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .visit a{display:block;padding:11px 8px;border-radius:12px;font-weight:800;font-size:.88rem;text-decoration:none;color:var(--cream);background:#ffffff0d;border:1px solid #ffffff22}
+  .visit a:hover,.visit a:focus-visible{border-color:var(--gold);outline:none;background:#ffffff18}
+  .visit small{display:block;margin-top:9px;font-size:.72rem;color:var(--muted)}
   .auth h1{text-align:center;font-size:1.5rem;font-weight:900;margin:6px 0 4px}
   .auth .sub{text-align:center;color:var(--muted);font-size:.9rem;margin:0 0 22px}
   .auth .row{display:grid;grid-template-columns:1fr 1fr;gap:20px}
@@ -46,7 +53,7 @@
 <body data-nvbg="static">
 <main class="auth" style="position:relative;z-index:1">
   <div class="box">
-    <img class="mark" src="img/mark.svg" alt="neV.BOOSTER">
+    <img class="mark" id="mark" src="img/logo-nvb.webp" width="170" height="170" alt="neV.BOOSTER">
     <div class="panel glow">
       <h1>Bienvenue dans l'arène</h1>
       <p class="sub">Crée ton compte ou reconnecte-toi pour retrouver ton tirage du jour.</p>
@@ -80,6 +87,14 @@
         <button class="btn block" type="submit" id="btnLogin">Me connecter</button>
         <p class="note"><a href="mot-de-passe.html">Mot de passe oublié ?</a></p>
       </form>
+      <div class="visit" id="visit">
+        <p>Envie de découvrir avant de t'inscrire ?</p>
+        <div class="vrow">
+          <a href="gacha.html?visiteur=m" data-go id="visM">Visiteur · Homme</a>
+          <a href="gacha.html?visiteur=f" data-go id="visF">Visiteur · Femme</a>
+        </div>
+        <small>Tu peux tirer une carte, mais l'exercice ne se lance qu'avec un compte.</small>
+      </div>
       <p class="note" id="storeNote">&nbsp;</p>
       <p class="note"><a href="conditions.html">Conditions</a> · <a href="confidentialite.html">Confidentialité</a> · <a href="mentions-legales.html">Mentions légales</a> · <span id="langHost"></span></p>
     </div>

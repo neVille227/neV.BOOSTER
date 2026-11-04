@@ -25,14 +25,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--cream);font-fami
 .on .base.b2{animation:in 1.2s .6s forwards,ospin 55s linear infinite reverse}
 .spark{fill:#ffd8a0;opacity:0;filter:drop-shadow(0 0 6px #ff8a3d)}
 .on .spark{animation:in .6s 1.6s forwards}
-.nvb{position:relative;font:italic 900 clamp(5rem,22vw,11.5rem)/1 Montserrat,sans-serif;letter-spacing:.01em;transform-style:preserve-3d;opacity:0;margin-bottom:6%}
-.nvb span{display:block}
-.nvb .ex{position:absolute;inset:0;color:#3a0a14;text-shadow:1px 1px 0 #4d0e1c,2px 2px 0 #4d0e1c,3px 3px 0 #561020,4px 4px 0 #561020,5px 5px 0 #5e1224,6px 6px 0 #5e1224,7px 7px 0 #661428,8px 8px 0 #661428,10px 12px 22px #000c}
-.nvb .fc2{position:relative;background:linear-gradient(170deg,#fff1f2 0,#f3a6b0 28%,#e0455f 52%,#7a0f26 78%,#f0b24a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 22px #e0455f88)}
-.on .nvb{animation:nvbIn 1.5s 1.5s cubic-bezier(.2,.9,.3,1.1) forwards,nvbFloat 5s 3s ease-in-out infinite alternate}
-@keyframes nvbIn{0%{opacity:0;transform:translateZ(-420px) rotateX(70deg) scale(.4);filter:brightness(3) blur(10px)}60%{opacity:1}100%{opacity:1;transform:translateZ(0) rotateX(0) scale(1);filter:none}}
-@keyframes nvbFloat{from{transform:rotateY(-9deg) rotateX(3deg)}to{transform:rotateY(9deg) rotateX(-2deg)}}
-.burst{position:absolute;left:50%;top:44%;width:60%;aspect-ratio:1;margin:-30% 0 0 -30%;border-radius:50%;border:4px solid #fff1f2;box-shadow:0 0 50px 12px #ff8a3dcc,inset 0 0 40px #e0455f99;opacity:0;pointer-events:none}
+.on .burst{position:absolute;left:50%;top:42%;width:60%;aspect-ratio:1;margin:-30% 0 0 -30%;border-radius:50%;border:4px solid #fff1f2;box-shadow:0 0 50px 12px #ff8a3dcc,inset 0 0 40px #e0455f99;opacity:0;pointer-events:none}
 .on .burst{animation:burst 1.1s 2.15s cubic-bezier(.1,.7,.3,1) forwards}
 @keyframes burst{0%{opacity:1;transform:scale(.15)}100%{opacity:0;transform:scale(1.9)}}
 .wordmark{position:absolute;left:0;right:0;bottom:19%;text-align:center;font-weight:800;font-size:clamp(1.3rem,4.2vw,2.3rem);letter-spacing:.08em;opacity:0;text-shadow:0 4px 18px #000}
@@ -52,7 +45,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--cream);font-fami
 .on .vision p{animation:up .6s forwards}
 .on .vision p:nth-of-type(1){animation-delay:.6s}.on .vision p:nth-of-type(2){animation-delay:2.4s}
 .vision b{color:var(--gold)}
-@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-delay:0s!important}.nvb,.wordmark,.tag,.vision p,.orb,.base,.spark{opacity:1!important}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-delay:0s!important}.logo,.lg-half,.wordmark,.tag,.vision p,.orb,.base,.spark{opacity:1!important}}
 /* fondu vers l'écran de création de compte */
 .nev-leaving body{transition:opacity .7s ease,filter .7s ease;opacity:0;filter:blur(14px) brightness(1.6);pointer-events:none}
 
@@ -70,3 +63,29 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--cream);font-fami
 @keyframes pg{from{width:0}to{width:100%}}
 .step{position:fixed;left:0;right:0;bottom:max(30px,calc(env(safe-area-inset-bottom) + 12px));text-align:center;margin:0;font:600 .68rem Montserrat,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.55);z-index:30;pointer-events:none}
 @media(prefers-reduced-motion:reduce){.prog .now i{animation:none}}
+
+/* ---------- Logo NVB (moitié sombre · moitié claire) : les deux moitiés se rejoignent, éclat, reflet ---------- */
+.logo{position:relative;width:min(340px,62vw,46vh);aspect-ratio:1;margin-bottom:7%;transform-style:preserve-3d;opacity:0}
+.on .logo{opacity:1;animation:lgFloat 6s 3s ease-in-out infinite alternate}
+@keyframes lgFloat{from{transform:rotateY(-7deg) rotateX(2deg) translateY(0)}to{transform:rotateY(7deg) rotateX(-2deg) translateY(-6px)}}
+.lg-card{position:absolute;inset:0;border-radius:11%;overflow:hidden;box-shadow:0 30px 70px #000c,0 0 0 1px #ffffff1a}
+.lg-half{position:absolute;inset:0;width:100%;height:100%;display:block;opacity:0;will-change:transform,opacity}
+.lg-l{clip-path:inset(0 50% 0 0)}
+.lg-r{clip-path:inset(0 0 0 50%)}
+.on .lg-l{animation:lgL 1.5s 1.3s cubic-bezier(.2,.9,.25,1) forwards}
+.on .lg-r{animation:lgR 1.5s 1.3s cubic-bezier(.2,.9,.25,1) forwards}
+@keyframes lgL{0%{opacity:0;transform:translateX(-46%) rotateY(55deg) scale(.7)}60%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes lgR{0%{opacity:0;transform:translateX(46%) rotateY(-55deg) scale(.7)}60%{opacity:1}100%{opacity:1;transform:none}}
+.lg-seam{position:absolute;top:0;bottom:0;left:50%;width:2px;margin-left:-1px;background:linear-gradient(#fff0,#fff,#fff0);box-shadow:0 0 22px 6px #ffd8a0cc;opacity:0}
+.on .lg-seam{animation:lgSeam 1.4s 2.5s ease-out forwards}
+@keyframes lgSeam{0%{opacity:0;transform:scaleY(.2)}30%{opacity:1;transform:scaleY(1)}100%{opacity:0;transform:scaleY(1)}}
+.lg-shine{position:absolute;inset:0;background:linear-gradient(105deg,transparent 38%,#ffffff55 50%,transparent 62%);transform:translateX(-120%);mix-blend-mode:screen}
+.on .lg-shine{animation:lgShine 1.4s 3.1s ease-in-out forwards,lgShine2 7s 7s ease-in-out infinite}
+@keyframes lgShine{to{transform:translateX(120%)}}
+@keyframes lgShine2{0%{transform:translateX(-120%)}25%,100%{transform:translateX(120%)}}
+.lg-glow{position:absolute;inset:-14%;border-radius:50%;background:radial-gradient(circle,#e0455f66 0,#e0455f22 45%,transparent 70%);opacity:0}
+.on .lg-glow{animation:in 1.6s 1.6s forwards,lgPulse 3.6s 3.2s ease-in-out infinite alternate}
+@keyframes lgPulse{from{transform:scale(.94)}to{transform:scale(1.06)}}
+.wordmark{display:none}
+.tag{bottom:13%}
+@media(prefers-reduced-motion:reduce){.lg-glow,.lg-half{opacity:1!important;transform:none!important}.lg-shine,.lg-seam{display:none}}

@@ -25,7 +25,17 @@ NEV.ready(function (mode) {
     $('tabSignup').classList.toggle('on', su); $('tabLogin').classList.toggle('on', !su);
     $('tabSignup').setAttribute('aria-selected', su); $('tabLogin').setAttribute('aria-selected', !su);
   }
-  Array.prototype.forEach.call(document.querySelectorAll('input[name=sex]'), function (r) { r.addEventListener('change', function () { if (NEV.previewSex) NEV.previewSex(r.value); }); });
+  /* logo : mi-sombre mi-clair tant que rien n'est choisi, sombre pour un compte masculin, clair pour un compte féminin */
+  var mark = $('mark'), LOGO = { m: 'img/logo-nvb-m.webp', f: 'img/logo-nvb-f.webp' };
+  function setLogo(sex) {
+    if (!mark) return; var src = LOGO[sex] || 'img/logo-nvb.webp';
+    if (mark.getAttribute('src') === src) return;
+    mark.classList.add('swap');
+    setTimeout(function () { mark.setAttribute('src', src); mark.classList.remove('swap'); }, 230);
+  }
+  function pickSex(v) { var r = v === 'f' ? $('suSexF') : $('suSexM'); if (r) r.checked = true; if (NEV.previewSex) NEV.previewSex(v); setLogo(v); }
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=sex]'), function (r) { r.addEventListener('change', function () { pickSex(r.value); }); });
+  var sexQ = qs.get('sex'); if (sexQ === 'm' || sexQ === 'f') pickSex(sexQ);
   $('tabSignup').onclick = function () { tab('signup'); };
   $('tabLogin').onclick = function () { tab('login'); };
 
