@@ -24,6 +24,10 @@
   /* simple aperçu du thème (choix du sexe à l'inscription) : rien n'est enregistré */
   N.previewSex = function (sex) { apply(sex, false); };
   var s = null; try { s = g.localStorage.getItem('nev.sex'); } catch (e) { /* ignoré */ }
-  apply(s || 'm', !!s);
-  if (g.document.readyState === 'loading') g.document.addEventListener('DOMContentLoaded', function () { apply(s || 'm', !!s); });
+  /* mode visiteur (?visiteur=m|f) : simple aperçu du thème choisi, appareil non marqué, icône neutre */
+  var gq = /[?&]visiteur=([mf])/.exec(g.location.search), vis = gq ? gq[1] : null;
+  N.guest = vis;
+  var sx = s || vis || 'm', kn = !!s;
+  apply(sx, kn);
+  if (g.document.readyState === 'loading') g.document.addEventListener('DOMContentLoaded', function () { apply(sx, kn); });
 })(window);
