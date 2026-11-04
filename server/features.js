@@ -293,6 +293,25 @@ module.exports = function features(ctx) {
       const rows = S.board(ids, per.from).filter((r) => r.xp > 0 || r.id === user.id || scope === 'friends').map((r, i) => ({ rank: i + 1, pseudo: r.pseudo, xp: r.xp, sessions: r.sessions, streak: r.streak, level: r.level, me: r.id === user.id }));
       return send(res, 200, { scope, period: per, rows: rows.slice(0, 50), publicOptIn: !!user.publicBoard, locked: null });
     }
+    /* ---- défis d'exercice ---- */
+    if (route === 'defi/score' && m === 'POST') {
+      const b = await readBody(req, 256), d = policy.defiById(String(b.id || '')), w = limit('ds:' + user.id, 40, HOUR); if (w) return fail(res, 429, 'Trop d\'essais, réessaie plus tard.');
+      const sc = Math.floor(Number(b.score));
+      if (!d || !isFinite(sc) || sc < 1 || sc > d.cap) return fail(res, 400, 'Score refusé.');
+      const ver = b.verified === true;
+      S.addScore(user.id, d.id, sc, ver, today());
+      const me = S.scoreBoard(S.publicIds().filter((id) => id === user.id || !flagged(id)).concat(user.publicBoard ? [] : [user.id]), d.id, '0000-00-00');
+      const rank = ver ? me.findIndex((r) => r.id === user.id) + 1 : 0;
+      return send(res, 200, { ok: true, score: sc, verified: ver, rank: rank || null, total: me.length, mine: S.myScores(user.id) });
+    }
+    if (route === 'defi/mine' && m === 'GET') return send(res, 200, { mine: S.myScores(user.id) });
+    if (route === 'defi/board' && m === 'GET') {
+      const q = url.searchParams, d = policy.defiById(String(q.get('id') || '')); if (!d) return fail(res, 400, 'Défi inconnu.');
+      const per = q.get('period') === 'all' ? { kind: 'all', from: '0000-00-00', label: 'Tous les temps' } : period(q.get('period'), today()), scope = q.get('scope') === 'friends' ? 'friends' : 'public';
+      const ids = scope === 'public' ? S.publicIds().filter((id) => id === user.id || !flagged(id)) : [user.id].concat(S.mutualFriends(user.id).filter((id) => !flagged(id)));
+      const rows = S.scoreBoard(ids, d.id, per.from).map((r, i) => ({ rank: i + 1, pseudo: r.pseudo, score: r.score, me: r.id === user.id }));
+      return send(res, 200, { id: d.id, scope, period: per, rows, publicOptIn: !!user.publicBoard });
+    }
     if (route === 'challenge' && m === 'GET') { const s = challengeState(user); return send(res, 200, { challenge: s.challenge, season: s.season }); }
     if (route === 'challenge/claim' && m === 'POST') {
       const b = await readBody(req, 128), s = challengeState(user), w = limit('cc:' + user.id, 10, HOUR); if (w) return fail(res, 429, 'Trop d\'essais.');
