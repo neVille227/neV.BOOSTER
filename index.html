@@ -24,6 +24,7 @@
 <link rel="stylesheet" href="css/card.css">
 <link rel="stylesheet" href="intro-bg.css">
 <link rel="stylesheet" href="intro.css">
+<link rel="preload" as="image" href="img/logo-nvb.webp">
 </head>
 <body>
 <div id="ember" aria-hidden="true"></div>
@@ -41,8 +42,15 @@
       <circle class="spark" cx="86" cy="196" r="6"/><circle class="spark" cx="712" cy="270" r="5"/><circle class="spark" cx="560" cy="64" r="4"/>
     </svg>
     <div class="burst"></div>
-    <div class="nvb" role="img" aria-label="nVB"><span class="ex" aria-hidden="true">nVB</span><span class="fc2" aria-hidden="true">nVB</span></div>
-    <div class="wordmark"><span class="w1">neV.</span> <span class="w2">BOOSTER</span></div>
+    <div class="logo" role="img" aria-label="neV.BOOSTER — logo">
+      <div class="lg-glow" aria-hidden="true"></div>
+      <div class="lg-card" aria-hidden="true">
+        <img class="lg-half lg-l" src="img/logo-nvb.webp" width="384" height="384" alt="" decoding="async" fetchpriority="high">
+        <img class="lg-half lg-r" src="img/logo-nvb.webp" width="384" height="384" alt="" decoding="async" fetchpriority="high">
+        <span class="lg-seam"></span>
+        <span class="lg-shine"></span>
+      </div>
+    </div>
     <p class="tag">Booste ton quotidien</p>
   </div>
 </section>
