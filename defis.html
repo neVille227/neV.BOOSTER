@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0507">
+<title>neV.BOOSTER — Défis</title>
+<script src="js/theme.js"></script>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="css/nev.css">
+<link rel="stylesheet" href="css/shell.css">
+<link rel="stylesheet" href="css/light.css">
+<link rel="stylesheet" href="css/card.css">
+<link rel="stylesheet" href="css/exercice.css">
+<link rel="stylesheet" href="css/classement.css">
+<link rel="stylesheet" href="css/defis.css">
+</head>
+<body>
+<div class="page"><div class="wrap">
+
+  <!-- 1. Choix du défi -->
+  <section id="dfList">
+    <div class="eyebrow">Défis</div>
+    <h1 class="big">Bats ton <em>record</em></h1>
+    <p class="lead">Choisis un exercice, donne tout, et ton score est enregistré. Avec la caméra, les répétitions sont comptées pour toi et ton score entre au classement.</p>
+    <section class="df-grid" id="dfGrid" aria-label="Défis d'exercice"></section>
+    <h2 class="sec-t">Défi de la semaine et saison</h2>
+    <section class="cl-grid" id="chal" aria-label="Défi de la semaine"></section>
+  </section>
+
+  <!-- 2. Avant de commencer -->
+  <section class="panel xr-brief" id="dfBrief" hidden>
+    <div class="eyebrow" id="bKick">Défi</div>
+    <h2 id="bTitle" class="df-h2"></h2>
+    <div class="xr-brief-grid">
+      <div class="xr-demo" id="bDemo" aria-label="Démonstration animée"></div>
+      <div>
+        <div class="xr-chips" id="bChips"></div>
+        <p class="xr-exec" id="bRule"></p>
+        <div class="xr-cam" id="bCam"></div>
+        <div class="xr-actions">
+          <button type="button" class="btn ok big" id="bStartCam">Démarrer avec la caméra</button>
+          <button type="button" class="btn ghost" id="bStartManual">Sans caméra <small>(score non classé)</small></button>
+          <button type="button" class="btn ghost sm" id="bBack">← Autres défis</button>
+        </div>
+        <p class="muted xr-priv">🔒 La vidéo reste dans ton navigateur : elle n'est jamais envoyée ni enregistrée.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. En cours -->
+  <section class="xr-run" id="dfRun" hidden>
+    <div class="xr-stage">
+      <div class="xr-cambox" id="rCamBox">
+        <div class="xr-mirror" id="rMirror"><video id="rVideo" playsinline muted></video><canvas id="rCanvas"></canvas></div>
+        <div class="xr-nocam" id="rNoCam" hidden><div><div class="xr-demo" id="rNoDemo"></div><p class="muted" style="margin:10px 0 0;font-weight:700">Sans caméra : tu comptes toi-même.</p></div></div>
+        <div class="xr-setpill" id="rName"></div>
+        <div class="xr-status" id="rStatus"></div>
+        <div class="xr-count" id="rCountWrap"><b id="rCount">0</b><span id="rOf"></span></div>
+        <div class="xr-hint" id="rHint" role="status"></div>
+        <div class="xr-go" id="rGo" hidden></div>
+      </div>
+      <div class="xr-side">
+        <div class="panel xr-ctl">
+          <div class="xr-name" id="rTitle"></div>
+          <div class="xr-ring" id="rRingWrap">
+            <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="52" class="bg"/><circle cx="60" cy="60" r="52" class="fg" id="rRing"/></svg>
+            <div><b id="rRingN">0</b><span id="rRingT"></span></div>
+          </div>
+          <div class="xr-actions col">
+            <button type="button" class="btn ghost big" id="rPlus" hidden>+1 répétition</button>
+            <button type="button" class="btn ok big" id="rStop" hidden>Terminer</button>
+            <button type="button" class="btn ghost sm" id="rQuit">Abandonner</button>
+          </div>
+          <p class="muted xr-tip" id="rTip"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Résultat -->
+  <section class="panel glow df-res" id="dfDone" hidden>
+    <div class="eyebrow" id="dKick">Défi terminé</div>
+    <h2 id="dTitle">Bravo !</h2>
+    <div class="df-score"><b id="dScore">0</b><span id="dUnit"></span></div>
+    <p class="muted" id="dMsg"></p>
+    <div class="xr-actions">
+      <a class="btn" href="classement.html" data-go id="dRank">Voir le classement</a>
+      <button type="button" class="btn ghost" id="dAgain">Rejouer</button>
+      <button type="button" class="btn ghost" id="dList">Autres défis</button>
+    </div>
+  </section>
+
+</div></div>
+
+<script src="js/core.js"></script>
+<script src="js/policy.js"></script>
+<script src="js/cloud.js"></script>
+<script src="js/rewards.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/ex-data.js"></script>
+<script src="js/ex-anim.js"></script>
+<script src="js/ex-more.js"></script>
+<script src="js/ex-extra.js"></script>
+<script src="js/exercises.js"></script>
+<script src="js/figure.js"></script>
+<script src="js/card.js"></script>
+<script src="js/sfx.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/vision.js"></script>
+<script src="js/p-defis.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>
