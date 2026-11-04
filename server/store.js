@@ -147,6 +147,12 @@ CREATE TABLE IF NOT EXISTS challenge_claims(
   uid TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, week TEXT NOT NULL, challenge TEXT NOT NULL, t INTEGER NOT NULL,
   PRIMARY KEY(uid, week)
 );
+CREATE TABLE IF NOT EXISTS challenge_scores(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  defi TEXT NOT NULL, score INTEGER NOT NULL, verified INTEGER NOT NULL DEFAULT 0, day TEXT NOT NULL, t INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_scores ON challenge_scores(defi, verified, day, score);
+CREATE INDEX IF NOT EXISTS ix_scores_uid ON challenge_scores(uid, defi);
 CREATE TABLE IF NOT EXISTS exercise_reviews(
   exercise_id TEXT PRIMARY KEY, status TEXT NOT NULL, note TEXT, reviewer TEXT, t INTEGER NOT NULL
 );
@@ -184,10 +190,16 @@ function open(dir) {
   addCol('users', 'muted_until', 'INTEGER NOT NULL DEFAULT 0');
   addCol('users', 'lang', "TEXT NOT NULL DEFAULT 'fr'");
   addCol('users', 'created_ms', 'INTEGER NOT NULL DEFAULT 0');
-  addCol('users', 'public_board', 'INTEGER NOT NULL DEFAULT 0');
+  addCol('users', 'public_board', 'INTEGER NOT NULL DEFAULT 1');
   addCol('users', 'is_admin', 'INTEGER NOT NULL DEFAULT 0');
   addCol('chat_messages', 'hidden', 'INTEGER NOT NULL DEFAULT 0');
   db.exec(SCHEMA2);
+  /* Classement public : tout le monde y figure par défaut (pseudo seulement), chacun peut se retirer.
+     Une seule fois, les comptes déjà existants passent aussi en « public ». */
+  if (!db.prepare("SELECT 1 FROM meta WHERE key = 'public_default_v1'").get()) {
+    db.exec('UPDATE users SET public_board = 1');
+    db.prepare("INSERT OR REPLACE INTO meta(key,value) VALUES('public_default_v1','1')").run();
+  }
   [DATA_FILE, AUTH_FILE].forEach((f) => { try { fs.chmodSync(f, 0o600); } catch (e) { /* ignoré */ } });
 
   const cache = new Map();
@@ -215,7 +227,7 @@ function open(dir) {
   S.userByCode = (c) => userOut(D1(USEL + ' WHERE u.code = ?', String(c)));
   S.codeTaken = (c) => !!D1('SELECT 1 AS x FROM users WHERE code = ?', c);
   S.createUser = (u, salt, hash) => tx(() => {
-    DR('INSERT INTO users(id,email,pseudo,code,ref_by,banned,created,last_login,created_ms,terms_at,terms_ver,lang) VALUES(?,?,?,?,?,0,?,?,?,?,?,?)', u.id, u.email, u.pseudo, u.code, nn(u.refBy), u.created, now(), now(), nn(u.termsAt), nn(u.termsVer), u.lang || 'fr');
+    DR('INSERT INTO users(id,email,pseudo,code,ref_by,banned,created,last_login,created_ms,terms_at,terms_ver,lang,public_board) VALUES(?,?,?,?,?,0,?,?,?,?,?,?,1)', u.id, u.email, u.pseudo, u.code, nn(u.refBy), u.created, now(), now(), nn(u.termsAt), nn(u.termsVer), u.lang || 'fr');
     AR('INSERT OR REPLACE INTO credentials(uid,salt,hash) VALUES(?,?,?)', u.id, salt, hash);
   });
   S.credentials = (uid) => A1('SELECT salt, hash FROM credentials WHERE uid = ?', String(uid)) || null;
@@ -415,6 +427,7 @@ function open(dir) {
     return {
       user: { id: u.id, email: u.email, pseudo: u.pseudo, code: u.code, created: u.created, banned: !!u.banned, refBy: u.ref_by, lastLogin: u.last_login, emailVerified: !!u.email_verified, termsAccepted: u.terms_at, termsVersion: u.terms_ver, lang: u.lang },
       consents: D('SELECT kind, version, t, detail FROM consents WHERE uid = ? ORDER BY t DESC', u.id),
+      defis: S.scoresOf ? S.scoresOf(u.id) : [],
       friends: D('SELECT friend_uid AS id FROM friends WHERE uid = ?', u.id).map((f) => f.id),
       cheatFlags: D('SELECT t, kind, detail FROM cheat_flags WHERE uid = ? ORDER BY t DESC LIMIT 20', u.id),
       stats: pl ? { level: pl.level, maxPushups: pl.max_pushups, xp: pl.xp, streak: pl.streak, best: pl.best_streak, total: pl.sessions_total, flames: pl.flames, flamesTotal: pl.flames_total, loginStreak: pl.login_streak, lastDone: pl.last_done, lastSeen: pl.last_seen, updated: pl.updated } : null,
@@ -495,6 +508,15 @@ function open(dir) {
   S.verifiedCount = (uid, fromDay, toDay) => D1('SELECT COALESCE(SUM(verified),0) AS n FROM workouts WHERE uid = ? AND day >= ? AND day <= ?', uid, fromDay, toDay).n;
   S.claimed = (uid, week) => D1('SELECT challenge, t FROM challenge_claims WHERE uid = ? AND week = ?', uid, week) || null;
   S.claim = (uid, week, challenge) => { try { DR('INSERT INTO challenge_claims(uid,week,challenge,t) VALUES(?,?,?,?)', uid, week, challenge, now()); return true; } catch (e) { return false; } };
+  /* ---- défis d'exercice : meilleur score par joueur (scores validés par caméra pour le classement) ---- */
+  S.addScore = (uid, defi, score, verified, day) => DR('INSERT INTO challenge_scores(uid,defi,score,verified,day,t) VALUES(?,?,?,?,?,?)', uid, defi, score, verified ? 1 : 0, day, now());
+  S.scoreBoard = (uids, defi, sinceDay) => {
+    if (!uids.length) return [];
+    const ph = uids.map(() => '?').join(',');
+    return D('SELECT u.id, u.pseudo, MAX(s.score) AS score, MIN(s.t) AS t0 FROM challenge_scores s JOIN users u ON u.id = s.uid WHERE s.defi = ? AND s.verified = 1 AND s.day >= ? AND s.uid IN (' + ph + ') GROUP BY u.id ORDER BY score DESC, t0 ASC, u.pseudo ASC LIMIT 50', defi, sinceDay, ...uids);
+  };
+  S.myScores = (uid) => D('SELECT defi, MAX(score) AS best, MAX(CASE WHEN verified = 1 THEN score ELSE 0 END) AS bestV, COUNT(*) AS n FROM challenge_scores WHERE uid = ? GROUP BY defi', uid);
+  S.scoresOf = (uid) => D('SELECT defi, score, verified, day FROM challenge_scores WHERE uid = ? ORDER BY t DESC LIMIT 500', uid);
   S.claimCount = (uid) => D1('SELECT COUNT(*) AS n FROM challenge_claims WHERE uid = ?', uid).n;
 
   /* ---------------- relecture des exercices ---------------- */

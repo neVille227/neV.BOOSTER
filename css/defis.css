@@ -1,0 +1,15 @@
+.df-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:22px;margin:34px 0 14px}
+.df-card{display:flex;flex-direction:column;gap:12px;padding:20px;border-radius:20px;background:var(--panel,#ffffff0a);border:1px solid var(--line,#ffffff1c)}
+.df-card .df-art{height:128px;border-radius:14px;background:#0a0507;overflow:hidden;display:grid;place-items:center}
+.df-card h3{margin:0;font-size:1.15rem;font-weight:900}
+.df-card p{margin:0;color:var(--muted);font-size:.88rem}
+.df-best{display:flex;justify-content:space-between;gap:8px;font-weight:800;font-size:.86rem}
+.df-best small{color:var(--muted);font-weight:600}
+.df-card .btn{width:100%}
+.df-h2{margin:6px 0 18px;font-size:1.7rem;font-weight:900}
+.df-res{text-align:center;max-width:560px;margin:30px auto;padding:34px 24px}
+.df-score{display:flex;justify-content:center;align-items:baseline;gap:10px;margin:8px 0}
+.df-score b{font-size:clamp(4rem,18vw,7rem);font-weight:900;line-height:1;background:linear-gradient(170deg,#fff1f2,#e0455f 60%,#f0b24a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.df-score span{font-size:1.3rem;font-weight:800;color:var(--muted)}
+.df-res .xr-actions{justify-content:center;margin-top:18px}
+.df-rec{display:inline-block;padding:6px 14px;border-radius:99px;background:linear-gradient(135deg,#e0455f,#f0b24a);color:#1a0509;font-weight:900;font-size:.85rem;margin-bottom:8px}

@@ -96,5 +96,18 @@
     return { ok: true, text: raw };
   }
 
-  return { TERMS_VERSION, dayMs, addDays, diffDays, weekStart, monthStart, weekId, seasonOf, SEASON_REWARD, SEASON_NAMES, CHALLENGES, challengeFor, CAPS, moderate, REASONS };
+  /* ---------- Défis d'exercice : une même liste pour le site et le serveur (plafonds anti-triche) ----------
+     kind 'reps' : maximum de répétitions en 60 s · kind 'hold' : durée tenue, en secondes. */
+  const DEFIS = [
+    { id: 'pompes', name: 'Pompes', ex: 'pompes-classiques', exF: 'pompes-genoux', kind: 'reps', win: 60, cap: 80 },
+    { id: 'squats', name: 'Squats', ex: 'squats', kind: 'reps', win: 60, cap: 100 },
+    { id: 'gainage', name: 'Gainage', ex: 'planche', exF: 'planche-genoux', kind: 'hold', cap: 1200 },
+    { id: 'chaise', name: 'Chaise contre le mur', ex: 'chaise-mur', kind: 'hold', cap: 900 },
+    { id: 'abdos', name: 'Abdos (crunch)', ex: 'crunch', kind: 'reps', win: 60, cap: 90 },
+    { id: 'fentes', name: 'Fentes arrière', ex: 'fentes-arriere', kind: 'reps', win: 60, cap: 90 },
+    { id: 'montagne', name: 'Mountain climbers', ex: 'mountain-climbers', kind: 'reps', win: 60, cap: 160 }
+  ];
+  const defiById = (id) => DEFIS.find((d) => d.id === id) || null;
+
+  return { DEFIS, defiById, TERMS_VERSION, dayMs, addDays, diffDays, weekStart, monthStart, weekId, seasonOf, SEASON_REWARD, SEASON_NAMES, CHALLENGES, challengeFor, CAPS, moderate, REASONS };
 });

@@ -31,6 +31,7 @@
   I.trophy = svgi('M8 4h8v5a4 4 0 01-8 0zM8 6H4v1.5A3.5 3.5 0 007.5 11M16 6h4v1.5A3.5 3.5 0 0116.5 11M12 13v4M8 20h8M10 17h4');
   I.info = svgi('M12 3a9 9 0 100 18 9 9 0 000-18zM12 11v5M12 8h.01');
   I.coach = svgi('M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.3 7.2 17.9l.9-5.4L4.2 8.7l5.4-.8z');
+  I.target = svgi('M12 3a9 9 0 100 18 9 9 0 000-18zM12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9zM12 11a1 1 0 100 2 1 1 0 000-2');
   I.out = svgi('M9 4H5v16h4M16 8l4 4-4 4M20 12H9');
   // [id, page, nom, icône, barre du haut (ordi), barre du bas (téléphone)]
   const LINKS = [
@@ -45,6 +46,7 @@
     ['alimentation', 'alimentation.html', 'Alimentation', I.apple, 0, 0],
     ['chat', 'chat.html', 'Chat', I.chat, 0, 0],
     ['amis', 'amis.html', 'Amis', I.users, 0, 0],
+    ['defis', 'defis.html', 'Défis', I.target, 0, 0],
     ['classement', 'classement.html', 'Classement', I.trophy, 0, 0],
     ['coachs', 'coachs.html', 'Salon des coachs', I.coach, 0, 0],
     ['recompenses', 'recompenses.html', 'Récompenses', I.gift, 0, 0],
@@ -56,7 +58,7 @@
   const GROUPS = [
     ['Principal', ['accueil', 'quete', 'gacha', 'gacha-box']],
     ['Entraînement', ['specialisation', 'bibliotheque', 'programmes', 'alimentation', 'conseils']],
-    ['Communauté', ['chat', 'amis', 'classement', 'recompenses', 'coachs']],
+    ['Communauté', ['chat', 'amis', 'defis', 'classement', 'recompenses', 'coachs']],
     ['Mon espace', ['apropos', 'tuto', 'compte']]
   ];
 
@@ -65,7 +67,7 @@
   const DESC = {
     accueil: 'Ton tableau de bord', quete: 'Objectifs du jour et combo du coach', gacha: 'Ton tirage quotidien', 'gacha-box': 'La boîte mystère en 3D : 4 cartes', specialisation: 'Cible une zone du corps',
     bibliotheque: 'Tous les exercices, animés', programmes: 'Des enchaînements prêts à faire', conseils: 'Sécurité, sommeil, récupération',
-    alimentation: 'Manger pour progresser', chat: 'Parle au coach et aux joueurs', amis: 'Ajoute des amis par code', coachs: 'Les coachs du site', apropos: 'Toi, le site, les infos légales', recompenses: 'Flammes, badges, parrainage', classement: 'Défi de la semaine et saison', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'
+    alimentation: 'Manger pour progresser', chat: 'Parle au coach et aux joueurs', amis: 'Ajoute des amis par code', coachs: 'Les coachs du site', apropos: 'Toi, le site, les infos légales', recompenses: 'Flammes, badges, parrainage', defis: 'Pompes, squats, gainage : bats ton record', classement: 'Public et entre amis', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'
   };
   I.menu = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 8h16M4 16h16"/></svg>';
   I.close = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';

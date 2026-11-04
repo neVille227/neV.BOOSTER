@@ -243,3 +243,8 @@ Depuis la page de connexion, « Visiteur · Homme / Femme » ouvre `gacha.html?v
 
 ## Logo
 `img/logo-nvb.webp` (mi-sombre, mi-clair) est animé dans l'intro (`index.html`, `intro.css`) ; `logo-nvb-m.webp` / `logo-nvb-f.webp` servent à la page de connexion selon le sexe choisi.
+
+## Défis et classement
+- `classement.html` : classement **public** (par défaut pour tout le monde, pseudo seulement, case pour se retirer) et **entre amis**, en XP ou par défi (pompes, squats, gainage, chaise, abdos, fentes, mountain climbers).
+- `defis.html` : choix d'un exercice, compte à rebours, **caméra** (comptage automatique), score enregistré (table `challenge_scores`). Maximum de répétitions en 60 s, ou durée tenue pour le gainage. Seuls les scores **validés par caméra** entrent au classement ; sans caméra, le score reste sur le profil. Plafonds anti-triche dans `js/policy.js` (`DEFIS`), contrôlés par le serveur.
+- Au premier démarrage avec cette version, les comptes existants passent aussi en « public » (une seule fois).
