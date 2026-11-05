@@ -57,3 +57,54 @@
 .tc-steps b{font-size:10cqw;font-weight:900;line-height:1;color:var(--c);text-shadow:0 0 3cqw color-mix(in srgb,var(--c) 55%,transparent);min-width:12cqw}
 .tc-steps em{font-style:normal;font-size:4.2cqw;font-weight:800;color:#ffb3bd;letter-spacing:.04em;text-transform:uppercase}
 .tc-steps span{font-size:5.8cqw;font-weight:700;color:#ffe1e5;text-align:right;line-height:1.1}
+
+/* ==========================================================
+   Cartes « collector » 3D (version homme) : bordure irisée, fenêtre 3D, compteur, jauge, muscles
+   ========================================================== */
+.tcard.m3d{background:linear-gradient(150deg,color-mix(in srgb,var(--c) 45%,#fff) 0%,var(--c) 28%,var(--c2) 62%,color-mix(in srgb,var(--c) 55%,#fff) 100%);
+  box-shadow:0 0 0 1px #000a,0 22px 50px -22px color-mix(in srgb,var(--g) 70%,transparent),0 2px 0 #ffffff2e inset}
+.tcard.m3d .tc-in{background:linear-gradient(180deg,#1f1021 0%,#130a15 55%,#0d070f 100%);box-shadow:inset 0 0 0 1px #ffffff10;gap:2.6cqw}
+.tcard.m3d .tc-in::after{content:"";position:absolute;inset:0;pointer-events:none;mix-blend-mode:soft-light;opacity:1;
+  background:linear-gradient(115deg,transparent 35%,#ffffff8c 50%,transparent 65%);background-size:260% 100%;background-position:130% 0;animation:m3sheen 7s ease-in-out infinite}
+@keyframes m3sheen{0%,55%{background-position:130% 0}100%{background-position:-30% 0}}
+.tcard.m3d .tc-code{background:linear-gradient(135deg,color-mix(in srgb,var(--c) 55%,#fff),var(--c));box-shadow:0 1cqw 3cqw -1cqw var(--g),inset 0 1px 0 #ffffff80}
+.tcard.m3d .tc-stars{text-shadow:0 0 3cqw var(--g)}
+.tcard.m3d .tc-art{display:block;padding:0;border-radius:4cqw;border:1px solid #ffffff17;
+  background:radial-gradient(120% 90% at 50% 28%,#1f1b2b 0%,#0c0a13 58%,#050409 100%);box-shadow:inset 0 0 9cqw #000a}
+.tcard.m3d .tc-art::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:3;background:linear-gradient(180deg,#0000006b,transparent 22%,transparent 72%,#0000008c)}
+.tcard.m3d .tc-fig{position:absolute;inset:0;width:auto;margin:0}
+.m3{position:absolute;inset:0;overflow:hidden}
+.m3 .m3-fb{position:absolute;inset:0;display:grid;place-items:center;transition:opacity .4s}
+.m3 .m3-fb svg{width:118%;height:auto;display:block}
+.m3.m3-on .m3-fb{opacity:0}
+.m3 .m3-cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.m3 .m3-rep{position:absolute;z-index:4;top:3.2cqw;left:3.2cqw;font-size:3.7cqw;font-weight:800;letter-spacing:.12em;color:#ece3f3;font-variant-numeric:tabular-nums;
+  background:#120c16a0;border:1px solid #ffffff29;border-radius:99px;padding:1.2cqw 3cqw;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.m3 .m3-ok{position:absolute;z-index:4;top:2.6cqw;right:3cqw;width:8.4cqw;height:8.4cqw;border-radius:50%;display:grid;place-items:center;color:#3dff7a;
+  background:radial-gradient(circle,#3dff7a38,#3dff7a0a 70%);border:2px solid #3dff7a;box-shadow:0 0 4cqw #3dff7aa6,inset 0 0 2cqw #3dff7a59}
+.m3 .m3-ok svg{width:50%;height:50%}
+.m3 .m3-ok.pulse{animation:m3pulse .9s ease-out}
+@keyframes m3pulse{0%{box-shadow:0 0 0 0 #3dff7acc,0 0 4cqw #3dff7aa6}100%{box-shadow:0 0 0 4.6cqw #3dff7a00,0 0 4cqw #3dff7aa6}}
+.m3 .m3-hud{position:absolute;z-index:4;left:3.2cqw;right:3.2cqw;bottom:3.2cqw;display:flex;align-items:center;gap:2.6cqw;font-size:2.7cqw;font-weight:800;letter-spacing:.16em;color:#bfb3c8}
+.m3 .gauge{flex:1;height:1.4cqw;border-radius:9px;background:#ffffff1f;overflow:hidden}
+.m3 .gauge b{display:block;height:100%;width:100%;border-radius:inherit;transform-origin:left;transform:scaleX(0);background:hsl(0,96%,54%);box-shadow:0 0 2.6cqw currentColor}
+.m3 .pct{min-width:9cqw;text-align:right;color:#fff;font-variant-numeric:tabular-nums}
+.tcard.m3d .tc-name{font-size:8.4cqw;margin-top:1cqw}
+.tcard.m3d .tc-tags span{display:inline-flex;align-items:center;gap:1.8cqw;background:#2a1a2b;border:1px solid #4a2c45;color:#efdcea;padding:.8cqw 3cqw .8cqw 2.4cqw}
+.tcard.m3d .tc-tags span::before{content:"";width:1.8cqw;height:1.8cqw;border-radius:50%;background:var(--c);box-shadow:0 0 2cqw var(--c)}
+.tcard.m3d .tc-tags .tc-diff{background:linear-gradient(135deg,var(--c),var(--c2));color:#1a0508;border-color:transparent}
+.tcard.m3d .tc-tags .tc-diff::before{display:none}
+.tcard.m3d .tc-foot{border-top:1px solid #ffffff12;padding-top:2.4cqw;font-size:3.8cqw;letter-spacing:.18em;color:var(--c)}
+.tcard.m3d .tc-foot span+span{color:color-mix(in srgb,var(--c) 45%,#6a3a56);opacity:1}
+@media(prefers-reduced-motion:reduce){.tcard.m3d .tc-in::after,.m3 .m3-ok.pulse{animation:none}}
+
+/* ===== Cartes collector 3D — version femme (orchidée violette) ===== */
+.tcard.m3d.m3f{background:linear-gradient(160deg,#eadcff 0%,#a870ff 38%,#4a22a6 72%,#d2b0ff 100%)}
+.tcard.m3d.m3f .tc-in{background:linear-gradient(180deg,#1a1126 0%,#110a1a 55%,#0b0612 100%)}
+.tcard.m3d.m3f .tc-code{background:linear-gradient(135deg,#e4d2ff,#9a5cff);color:#1d0d3a;box-shadow:0 1cqw 3cqw -1cqw #9a5cff,inset 0 1px 0 #ffffff80}
+.tcard.m3d.m3f .tc-stars{color:#b98fff;text-shadow:0 0 3cqw #9a5cff}
+.tcard.m3d.m3f .tc-tags span{background:#231a38;border-color:#45336e;color:#ece3ff}
+.tcard.m3d.m3f .tc-tags span::before{background:#b98fff;box-shadow:0 0 2cqw #b98fff}
+.tcard.m3d.m3f .tc-tags .tc-diff{background:linear-gradient(135deg,#e4d2ff,#9a5cff);color:#1d0d3a}
+.tcard.m3d.m3f .tc-foot{color:#c09bff}
+.tcard.m3d.m3f .tc-foot span+span{color:#8a74b8}
