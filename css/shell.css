@@ -148,3 +148,27 @@ img,video{height:auto}
 .yuki.baki{width:clamp(80px,9vw,120px)}
 .yuki.baki img{max-height:none;object-fit:contain;filter:drop-shadow(0 0 14px #e0455f88)}
 html:not([data-theme=light]) .yuki .yTip{background:#1c0b11;color:#fff1f2;border-color:#e0455f66;box-shadow:0 8px 24px #000a}
+
+/* ---------- Avatars d'évolution réalistes (js/hero-img.js) ---------- */
+.hi{--k:1;--f:0;--boost:1;--a1:#ff3d8b;--a2:#7a0f26;position:relative;height:360px;max-width:300px;margin:0 auto;display:grid;place-items:end center}
+.hi-aura{position:absolute;left:50%;bottom:6%;width:calc(150px + var(--f)*120px);height:calc(240px + var(--f)*100px);transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse at 50% 55%,var(--a1) 0,transparent 68%);opacity:calc((.12 + var(--f)*.5)*var(--boost));filter:blur(14px);animation:hiPulse 3.4s ease-in-out infinite alternate;pointer-events:none}
+.hi-fig{position:absolute;left:0;right:0;bottom:7%;height:90%;z-index:2;transform-origin:50% 100%;transform:scale(calc(.8 + var(--f)*.2),calc(.88 + var(--f)*.12));filter:saturate(calc(.55 + var(--f)*.55)) brightness(calc(.84 + var(--f)*.2)) drop-shadow(0 0 calc(2px + var(--f)*16px*var(--boost)) var(--a1));animation:hiBreath 4s ease-in-out infinite}
+.hi-fig img{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:100%;width:auto;max-width:none;display:block;user-select:none;-webkit-user-drag:none}
+.hi-m .hi-fig img{-webkit-mask-image:radial-gradient(ellipse 60% 55% at 50% 47%,#000 46%,transparent 98%);mask-image:radial-gradient(ellipse 60% 55% at 50% 47%,#000 46%,transparent 98%)}
+.hi-plat{position:absolute;left:50%;bottom:0;width:86%;height:15%;transform:translateX(-50%);z-index:3;pointer-events:none}
+.hi-plat i{position:absolute;inset:0;border-radius:50%;background:radial-gradient(ellipse,#ff5aa0 0,#ff2f86 62%,#c4125f 100%);opacity:.92;box-shadow:0 0 calc(10px + var(--f)*34px) var(--a1)}
+.hi-plat i+i{inset:16% 7%;background:none;border:2px solid #fff;opacity:.7;box-shadow:none}
+.hi-fx b{position:absolute;left:50%;bottom:10%;width:60%;aspect-ratio:1;margin-left:-30%;border-radius:50%;border:3px solid var(--a1);opacity:0;pointer-events:none}
+.hi.pu .hi-fx b{animation:hiRing 1.4s ease-out infinite}
+.hi.pu .hi-fx b:nth-child(2){animation-delay:.45s}.hi.pu .hi-fx b:nth-child(3){animation-delay:.9s}
+.hi.pu .hi-fig{animation:hiShake .12s linear infinite}
+/* l'image de l'homme porte déjà sa lueur bleue : pas d'ombre portée qui dessinerait son cadre */
+.hi-m .hi-fig{filter:saturate(calc(.55 + var(--f)*.55)) brightness(calc(.84 + var(--f)*.22))}
+@keyframes hiPulse{from{transform:translateX(-50%) scale(.94)}to{transform:translateX(-50%) scale(1.06)}}
+@keyframes hiBreath{0%,100%{translate:0 0}50%{translate:0 -4px}}
+@keyframes hiRing{0%{opacity:.9;transform:scale(.3)}100%{opacity:0;transform:scale(1.7)}}
+@keyframes hiShake{0%{translate:-2px 0}50%{translate:2px -1px}100%{translate:-2px 0}}
+@media(prefers-reduced-motion:reduce){.hi-aura,.hi-fig,.hi.pu .hi-fig,.hi.pu .hi-fx b{animation:none}}
+/* version femme : le fond clair garde les contours nets */
+html[data-theme=light] .hi-fig{filter:saturate(calc(.7 + var(--f)*.4)) drop-shadow(0 6px calc(4px + var(--f)*14px) color-mix(in srgb,var(--a1) 55%,transparent))}
+html[data-theme=light] .hi-aura{opacity:calc((.1 + var(--f)*.3)*var(--boost))}
