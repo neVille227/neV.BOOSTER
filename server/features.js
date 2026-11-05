@@ -28,10 +28,12 @@ module.exports = function features(ctx) {
   const T = {
     fr: {
       verify: (n, l) => ['Confirme ton adresse e-mail — neV.BOOSTER', 'Bonjour ' + n + ',\n\nConfirme ton adresse e-mail en ouvrant ce lien (valable 48 h) :\n' + l + '\n\nSi tu n\'as pas créé de compte neV.BOOSTER, ignore ce message.\n'],
+      code: (n, c) => ['Ton code de connexion : ' + c + ' — neV.BOOSTER', 'Bonjour ' + n + ',\n\nTon code de connexion neV.BOOSTER : ' + c + '\n\nIl est valable 10 minutes et ne sert qu\'une fois. Si tu ne l\'as pas demandé, ignore ce message.\n'],
       reset: (n, l) => ['Nouveau mot de passe — neV.BOOSTER', 'Bonjour ' + n + ',\n\nTu as demandé à changer ton mot de passe. Ouvre ce lien (valable 1 heure) :\n' + l + '\n\nSi ce n\'est pas toi, ignore ce message : ton mot de passe reste inchangé.\n']
     },
     en: {
       verify: (n, l) => ['Confirm your e-mail address — neV.BOOSTER', 'Hello ' + n + ',\n\nConfirm your e-mail address by opening this link (valid for 48 hours):\n' + l + '\n\nIf you did not create a neV.BOOSTER account, ignore this message.\n'],
+      code: (n, c) => ['Your sign-in code: ' + c + ' — neV.BOOSTER', 'Hello ' + n + ',\n\nYour neV.BOOSTER sign-in code: ' + c + '\n\nIt is valid for 10 minutes and works once. If you did not ask for it, ignore this message.\n'],
       reset: (n, l) => ['New password — neV.BOOSTER', 'Hello ' + n + ',\n\nYou asked to change your password. Open this link (valid for 1 hour):\n' + l + '\n\nIf this was not you, ignore this message: your password stays unchanged.\n']
     }
   };
@@ -188,7 +190,34 @@ module.exports = function features(ctx) {
   /* ====================================================================
      ROUTES PUBLIQUES (sans session)
      ==================================================================== */
+  /* connexion par code : 6 chiffres envoyés par e-mail, 10 min, 5 essais, usage unique (en mémoire) */
+  const CODES = new Map();
+  const sha = (x) => crypto.createHash('sha256').update(String(x)).digest('hex');
   async function publicRoute(route, m, req, res, ip) {
+    if (route === 'login/code' && m === 'POST') {
+      const w = limit('lc:' + ip, 15, HOUR); if (w) { counters.blocked++; return fail(res, 429, 'Trop de demandes. Réessaie plus tard.'); }
+      const b = await readBody(req, 1024), email = clean(b.email, 254).toLowerCase();
+      if (!emailOk(email)) return fail(res, 400, 'Entre une adresse e-mail valide.', 'email');
+      if (!mailer.configured()) return fail(res, 503, 'L\'envoi d\'e-mails n\'est pas encore activé sur ce site : utilise ton mot de passe.', 'email');
+      const u = S.userByEmail(email);
+      if (u && !u.banned && !limit('lce:' + email, 4, HOUR)) {
+        const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+        CODES.set(email, { h: sha(email + ':' + code), exp: now() + 10 * 60000, tries: 0 });
+        await queueMail(req, 'code', u.id, u.email, () => T[lang(u)].code(u.pseudo, code));
+      }
+      return send(res, 200, { ok: true }); // même réponse que le compte existe ou non
+    }
+    if (route === 'login/verify' && m === 'POST') {
+      const w = limit('lv:' + ip, 30, HOUR); if (w) { counters.blocked++; return fail(res, 429, 'Trop d\'essais. Réessaie plus tard.', 'code'); }
+      const b = await readBody(req, 1024), email = clean(b.email, 254).toLowerCase(), code = String(b.code || '').replace(/\D/g, '').slice(0, 6);
+      const c = CODES.get(email), u = S.userByEmail(email);
+      if (!c || !u || u.banned || c.exp < now() || c.tries >= 5) { CODES.delete(email); return fail(res, 401, 'Code expiré ou incorrect. Demande un nouveau code.', 'code'); }
+      c.tries++;
+      if (!safeEq(sha(email + ':' + code), c.h)) return fail(res, 401, 'Code incorrect.', 'code');
+      CODES.delete(email);
+      S.touchLogin(u.id); S.setUser(u.id, { email_verified: 1 }); startSession(res, req, u.id); logEvent('login', 'connexion', u.id, u.pseudo, { code: true });
+      return send(res, 200, { user: pubUser(S.userById(u.id)), player: S.getPlayer(u.id) });
+    }
     if (route === 'forgot' && m === 'POST') {
       const w = limit('fg:' + ip, 8, HOUR); if (w) { counters.blocked++; return fail(res, 429, 'Trop de demandes. Réessaie plus tard.'); }
       const b = await readBody(req, 1024), email = clean(b.email, 254).toLowerCase();

@@ -254,3 +254,7 @@ Depuis la page de connexion, « Visiteur · Homme / Femme » ouvre `gacha.html?v
 
 ## Cartes collector 3D (homme et femme)
 `js/mannequin3d.js` dessine un mannequin 3D qui exécute l'exercice sur chaque carte (un seul rendu WebGL partagé, copié dans chaque carte, visibilité par IntersectionObserver, repli 2D). Homme : thème sombre rose/bleu inchangé. Femme : carte orchidée violette, silhouette féminine, brassière et cheveux. Les cartes Mannequin sont activées sur Bibliothèque, Gacha, Boîte, Programmes et Spécialisation.
+
+## Inscription et connexion simplifiées
+Inscription : un email, le sexe et une case (conditions + avertissement santé). Le pseudo neutre (`Joueur1234`) et un mot de passe aléatoire sont créés automatiquement ; le compte est ouvert tout de suite.
+Connexion : l'email reçoit un code à 6 chiffres (`/api/login/code` puis `/api/login/verify`, 10 min, 5 essais, usage unique). Le mot de passe reste possible (lien « J'ai un mot de passe » ou « Mot de passe oublié »). Le code demande l'envoi d'e-mails : variables `NEV_SMTP_HOST`, `NEV_SMTP_PORT`, `NEV_SMTP_USER`, `NEV_SMTP_PASS`, `NEV_SMTP_FROM` et `NEV_BASE_URL` sur Render. Sans cela, le site affiche que le code n'est pas disponible.
