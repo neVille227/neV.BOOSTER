@@ -251,3 +251,6 @@ Depuis la page de connexion, « Visiteur · Homme / Femme » ouvre `gacha.html?v
 
 ## Avatars d'évolution réalistes
 `js/hero-img.js` affiche l'avatar réaliste (`img/avatar-m.webp` pour l'homme, `img/avatar-f.webp` pour la femme) à la place du personnage en blocs, sur l'accueil, le bilan de séance et les récompenses. Les 6 paliers se voient par la carrure, la lumière, l'aura et la plateforme rose. Pour une image différente par palier, dépose-les dans `img/evo/` et déclare-les dans l'objet `EVO` en haut de `js/hero-img.js`.
+
+## Cartes collector 3D (homme et femme)
+`js/mannequin3d.js` dessine un mannequin 3D qui exécute l'exercice sur chaque carte (un seul rendu WebGL partagé, copié dans chaque carte, visibilité par IntersectionObserver, repli 2D). Homme : thème sombre rose/bleu inchangé. Femme : carte orchidée violette, silhouette féminine, brassière et cheveux. Les cartes Mannequin sont activées sur Bibliothèque, Gacha, Boîte, Programmes et Spécialisation.
