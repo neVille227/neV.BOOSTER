@@ -164,7 +164,15 @@
       if (!f.terms) return { ok: false, field: 'terms', error: 'Coche la case pour accepter les conditions d\'utilisation et la politique de confidentialité.' };
       return { ok: true, email, pseudo };
     },
+    /* inscription rapide : seul l'e-mail est demandé ; pseudo neutre et mot de passe aléatoire créés ici */
+    quick(f) {
+      const rnd = (n) => { const a = new Uint8Array(n); (g.crypto || {}).getRandomValues ? g.crypto.getRandomValues(a) : a.forEach((_, i) => { a[i] = Math.floor(Math.random() * 256); }); return a; };
+      const pw = Array.prototype.map.call(rnd(18), (b) => (b % 36).toString(36)).join('') + 'A9';
+      const num = Array.prototype.reduce.call(rnd(2), (x, b) => x * 256 + b, 0) % 10000;
+      return Object.assign({}, f, { pseudo: 'Joueur' + String(num).padStart(4, '0'), password: pw, password2: pw, consent: !!f.terms, quick: true });
+    },
     async signup(f) {
+      if (f.quick) f = auth.quick(f);
       const c = auth.check(f);
       if (!c.ok) return c;
       if (NEV.cloud && NEV.cloud.mode === 'server') return NEV.cloud.serverSignup(Object.assign({}, f, { email: c.email, pseudo: c.pseudo }));
@@ -172,7 +180,7 @@
       if (users[c.email]) return { ok: false, field: 'email', error: 'Un compte existe déjà avec cet email. Connecte-toi.' };
       const salt = rng.id();
       const id = 'u' + rng.id();
-      const user = { id, email: c.email, pseudo: c.pseudo, salt, hash: await hashPw(f.password, salt), created: util.todayStr(), code: auth.codeOf(id), refCount: 0 };
+      const user = { id, quick: !!f.quick, email: c.email, pseudo: c.pseudo, salt, hash: await hashPw(f.password, salt), created: util.todayStr(), code: auth.codeOf(id), refCount: 0 };
       { let n = 0; const taken = (c) => Object.keys(users).some((k) => users[k].code === c); while (taken(user.code) && n++ < 500) user.code = String(Math.floor(rng.float ? rng.float() * 10000 : Math.random() * 10000)).padStart(4, '0'); }
       const ref = String(f.ref || '').trim().toUpperCase();
       let refUser = null;
@@ -195,12 +203,19 @@
       const u = auth._users()[email];
       if (!u) return { ok: false, field: 'email', error: 'Aucun compte avec cet email.' };
       if (u.banned) return { ok: false, field: 'email', error: 'Ce compte est suspendu. Écris-nous pour en savoir plus.' };
+      if (u.quick && !password) { NEV.store.set(SESSION, { uid: u.id, email, at: Date.now() }); if (NEV.track) NEV.track('login', {}); return { ok: true, user: auth.current() }; } // mode démo : compte local
       const h = await hashPw(String(password || ''), u.salt);
       if (h !== u.hash) return { ok: false, field: 'password', error: 'Mot de passe incorrect.' };
       NEV.store.set(SESSION, { uid: u.id, email, at: Date.now() });
       if (NEV.track) NEV.track('login', {});
       return { ok: true, user: auth.current() };
     },
+    async code(email) {
+      email = String(email || '').trim().toLowerCase();
+      if (!NEV.cloud || NEV.cloud.mode !== 'server') return { ok: false, field: 'email', error: 'Le code par e-mail n\'existe qu\'en ligne.' };
+      return NEV.cloud.serverCode(email);
+    },
+    async verify(email, code) { return NEV.cloud.serverVerify(String(email || '').trim().toLowerCase(), String(code || '')); },
     current() {
       const s = NEV.store.get(SESSION, null);
       if (!s) return null;

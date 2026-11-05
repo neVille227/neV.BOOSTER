@@ -86,6 +86,16 @@
     cacheServerUser(r.data.user, r.data.player);
     return { ok: true, user: NEV.auth.current() };
   };
+  C.serverCode = async function (email) {
+    const r = await api('login/code', 'POST', { email: email });
+    return r.ok ? { ok: true } : { ok: false, field: 'email', error: r.data.error || 'Envoi impossible pour le moment.' };
+  };
+  C.serverVerify = async function (email, code) {
+    const r = await api('login/verify', 'POST', { email: email, code: code });
+    if (!r.ok) return { ok: false, field: 'code', error: r.data.error || 'Code refusé.' };
+    cacheServerUser(r.data.user, r.data.player);
+    return { ok: true, user: NEV.auth.current() };
+  };
   C.serverLogout = function () { api('logout', 'POST', {}); };
 
   // Au chargement d'une page : on vérifie la session et on récupère la progression du serveur.
