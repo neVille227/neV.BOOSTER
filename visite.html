@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0507">
+<meta name="description" content="Découvre neV.BOOSTER sans créer de compte : la vision, les fonctionnalités, les exercices, le gacha, les parcours et les niveaux.">
+<title>neV.BOOSTER — Visite</title>
+<script src="js/theme.js"></script>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="css/nev.css">
+<link rel="stylesheet" href="css/shell.css">
+<link rel="stylesheet" href="css/light.css">
+<link rel="stylesheet" href="css/card.css">
+<link rel="stylesheet" href="css/exercice.css">
+<link rel="stylesheet" href="css/lib.css">
+<link rel="stylesheet" href="css/bibliotheque.css">
+<link rel="stylesheet" href="css/visite.css">
+</head>
+<body>
+<header class="vh">
+  <div class="vh-in">
+    <a class="vh-logo" href="visite.html"><img src="img/logo-nvb.webp" width="34" height="34" alt="" id="vLogo"><span>neV<i>.</i>BOOSTER</span></a>
+    <span class="vh-pill">Mode visiteur</span>
+    <nav class="vh-nav" id="vNav" aria-label="Étapes de la visite"></nav>
+    <a class="btn vh-cta" href="connexion.html" data-go>Créer un compte</a>
+  </div>
+  <div class="vh-bar"><i id="vBar"></i></div>
+</header>
+
+<main>
+  <section class="vs vs-hero" id="accueil" data-step="1">
+    <div class="vw hero">
+      <div class="hero-t">
+        <div class="eyebrow">Étape 1 · Accueil</div>
+        <h1 class="big">Booste ton <em>quotidien</em></h1>
+        <p class="lead">neV.BOOSTER transforme l'entraînement à la maison en jeu : une carte par jour, un exercice à faire, un corps qui évolue. Pas de salle, pas de matériel obligatoire, juste de la régularité.</p>
+        <div class="cta">
+          <a class="btn" href="#plateforme" id="start">Commencer la visite</a>
+          <a class="btn ghost" href="connexion.html" data-go>Créer mon compte</a>
+        </div>
+        <ul class="kpis" id="kpis"></ul>
+      </div>
+      <div class="hero-i"><div class="hero-ring"></div><img id="heroImg" src="img/avatar-m.webp" alt="Avatar d'évolution neV.BOOSTER" width="320" height="578"></div>
+    </div>
+    <div class="vw vision">
+      <article><b>01</b><h3>Régularité</h3><p>Une seule carte par jour. Pas de programme écrasant : l'objectif est de revenir chaque jour, même cinq minutes.</p></article>
+      <article><b>02</b><h3>Progression</h3><p>Ton niveau fixe la difficulté des cartes. Plus tu progresses, plus les exercices rares et exigeants deviennent probables.</p></article>
+      <article><b>03</b><h3>Plaisir</h3><p>Raretés, flammes, badges, défis et avatar d'évolution : chaque séance fait avancer quelque chose.</p></article>
+    </div>
+  </section>
+
+  <section class="vs" id="plateforme" data-step="2">
+    <div class="vw">
+      <div class="eyebrow">Étape 2 · Découverte de la plateforme</div>
+      <h2 class="h2">Tout ce qu'il faut, <em>au même endroit</em></h2>
+      <p class="lead">Huit espaces complémentaires. Certains se découvrent librement ici ; les autres s'activent avec un compte gratuit.</p>
+      <div class="feat" id="feat"></div>
+    </div>
+  </section>
+
+  <section class="vs" id="exercices" data-step="3">
+    <div class="vw">
+      <div class="eyebrow">Étape 3 · Aperçu des exercices</div>
+      <h2 class="h2">Des exercices pour <em>chaque zone du corps</em></h2>
+      <p class="lead" id="exLead"></p>
+      <div class="fchips" id="exCats" role="group" aria-label="Catégories"></div>
+      <div class="fchips" id="exMus" role="group" aria-label="Groupes musculaires"></div>
+      <p class="muted" id="exCount" aria-live="polite"></p>
+      <div class="xg lib" id="exGrid"></div>
+      <div class="cta" style="justify-content:center"><button type="button" class="btn ghost" id="exMore">Voir d'autres exercices</button></div>
+      <p class="lock-note" id="exNote">Les cartes sont à regarder, pas à exécuter : le lancement d'un exercice demande un compte.</p>
+    </div>
+  </section>
+
+  <section class="vs" id="gacha" data-step="4">
+    <div class="vw">
+      <div class="eyebrow">Étape 4 · Démonstration du Gacha</div>
+      <h2 class="h2">Tire une carte, <em>découvre ton exercice</em></h2>
+      <p class="lead">Chaque jour, le tirage choisit un exercice selon ta rareté et ton niveau. Essaie : la démo est libre et rien n'est enregistré.</p>
+      <div class="gd">
+        <div class="gd-stage" id="gdStage">
+          <button type="button" class="gd-back" id="gdBtn" aria-label="Tirer une carte"><span>NVB</span><small>Touche pour tirer</small></button>
+          <div class="gd-card" id="gdCard" hidden></div>
+        </div>
+        <div class="gd-side">
+          <div class="seg" id="gdLvl" role="group" aria-label="Niveau de la démo"></div>
+          <h3>Chances de tirage <small id="gdLvlName"></small></h3>
+          <ul class="odds" id="gdOdds"></ul>
+          <p class="muted" id="gdInfo">Avec un compte : une carte par jour, des garanties contre la malchance, des cartes spéciales très rares.</p>
+          <button type="button" class="btn ghost" id="gdAgain" hidden>Tirer une autre carte</button>
+          <a class="btn lockbtn" href="connexion.html" data-go id="gdLock"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Lancer l'exercice (compte requis)</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="vs" id="parcours" data-step="5">
+    <div class="vw">
+      <div class="eyebrow">Étape 5 · Les parcours</div>
+      <h2 class="h2">Un parcours <em>masculin</em> et un parcours <em>féminin</em></h2>
+      <p class="lead">Le site garde la même mécanique, mais l'ambiance, l'avatar et les cartes changent selon ton choix. Touche un parcours pour prévisualiser son thème.</p>
+      <div class="pc">
+        <button type="button" class="pc-c" data-sex="m" aria-pressed="true">
+          <img src="img/avatar-m.webp" alt="" width="150" height="270" loading="lazy">
+          <div><h3>Parcours masculin</h3><p>Thème sombre, cartes collector rose et bleu nuit.</p>
+          <ul><li>Avatar d'évolution masculin, de « Maigrichon » à « Légende »</li><li>Mannequin 3D sur les cartes d'exercices</li><li>Intro animée du logo NVB</li></ul></div>
+        </button>
+        <button type="button" class="pc-c" data-sex="f" aria-pressed="false">
+          <img src="img/avatar-f.webp" alt="" width="110" height="298" loading="lazy">
+          <div><h3>Parcours féminin</h3><p>Thème clair, cartes collector orchidée violette.</p>
+          <ul><li>Avatar d'évolution féminin, mêmes six stades</li><li>Silhouette 3D féminine sur les cartes d'exercices</li><li>Intro animée dédiée</li></ul></div>
+        </button>
+      </div>
+      <p class="muted" id="pcNote">Ton choix se fait à l'inscription et peut guider les exercices proposés.</p>
+    </div>
+  </section>
+
+  <section class="vs" id="niveaux" data-step="6">
+    <div class="vw">
+      <div class="eyebrow">Étape 6 · Les niveaux</div>
+      <h2 class="h2">Facile, moyen, <em>difficile</em></h2>
+      <p class="lead">À l'inscription, tu indiques le nombre maximal de pompes que tu fais d'affilée : le site te place au bon niveau et règle la difficulté de tes cartes.</p>
+      <div class="lv" id="lvGrid"></div>
+    </div>
+  </section>
+
+  <section class="vs vs-end" id="inscription" data-step="7">
+    <div class="vw">
+      <div class="eyebrow">Étape 7 · Inscription</div>
+      <h2 class="h2">Prêt à <em>passer à l'action</em> ?</h2>
+      <p class="lead">Un email suffit : ton compte est créé tout de suite et gratuitement.</p>
+      <div class="cmp">
+        <div class="cmp-c off"><h3>Visiteur</h3><ul>
+          <li>Visite guidée et démo du gacha</li><li>Exercices à regarder</li>
+          <li class="no">Pas de sauvegarde de progression</li><li class="no">Pas d'historique personnel</li><li class="no">Pas de statistiques personnelles</li><li class="no">Pas de personnalisation du profil</li><li class="no">Pas de suivi des activités</li></ul></div>
+        <div class="cmp-c on"><h3>Avec un compte</h3><ul>
+          <li>Ton tirage quotidien et tes exercices à lancer</li><li>Progression, série et flammes sauvegardées</li><li>Historique et statistiques personnelles</li><li>Profil personnalisé et avatar d'évolution</li><li>Défis, classement, amis et coachs</li></ul>
+          <div class="cta"><a class="btn" id="signup" href="connexion.html" data-go>Créer mon compte</a><a class="btn ghost" href="connexion.html" data-go id="login">J'ai déjà un compte</a></div></div>
+      </div>
+      <p class="muted center">Mode visiteur : rien de ce que tu fais sur cette page n'est enregistré.</p>
+    </div>
+  </section>
+</main>
+<footer class="vf"><a href="conditions.html">Conditions</a> · <a href="confidentialite.html">Confidentialité</a> · <a href="mentions-legales.html">Mentions légales</a></footer>
+
+<script src="js/core.js"></script>
+<script src="js/cloud.js"></script>
+<script src="js/rewards.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/ex-data.js"></script>
+<script src="js/ex-anim.js"></script>
+<script src="js/ex-more.js"></script>
+<script src="js/ex-extra.js"></script>
+<script src="js/exercises.js"></script>
+<script src="js/zones.js"></script>
+<script src="js/combos.js"></script>
+<script src="js/gachaengine.js"></script>
+<script src="js/figure.js"></script>
+<script src="js/card.js"></script>
+<script src="js/mannequin3d.js"></script>
+<script src="js/p-visite.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

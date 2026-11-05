@@ -258,3 +258,6 @@ Depuis la page de connexion, « Visiteur · Homme / Femme » ouvre `gacha.html?v
 ## Inscription et connexion simplifiées
 Inscription : un email, le sexe et une case (conditions + avertissement santé). Le pseudo neutre (`Joueur1234`) et un mot de passe aléatoire sont créés automatiquement ; le compte est ouvert tout de suite.
 Connexion : l'email reçoit un code à 6 chiffres (`/api/login/code` puis `/api/login/verify`, 10 min, 5 essais, usage unique). Le mot de passe reste possible (lien « J'ai un mot de passe » ou « Mot de passe oublié »). Le code demande l'envoi d'e-mails : variables `NEV_SMTP_HOST`, `NEV_SMTP_PORT`, `NEV_SMTP_USER`, `NEV_SMTP_PASS`, `NEV_SMTP_FROM` et `NEV_BASE_URL` sur Render. Sans cela, le site affiche que le code n'est pas disponible.
+
+## Visite guidée (mode visiteur)
+`visite.html` (+ `js/p-visite.js`, `css/visite.css`) : 7 étapes sans compte — accueil et vision, plateforme, aperçu des exercices (catégories et muscles), démo du gacha (tirage libre, niveaux facile/moyen/difficile, chances de tirage), parcours masculin/féminin (aperçu du thème via `?visiteur=m|f`), niveaux, inscription. Rien n'est enregistré : `NEV.player.blank()` en mémoire, `NEV.track` neutralisé ; pas d'historique, de statistiques, de profil ni de suivi. Lien « Visite guidée » sur `connexion.html`.
