@@ -19,7 +19,8 @@
     const tags = (o.diff ? '<span class="tc-diff">' + esc(o.diff) + '</span>' : '') + (ex.muscles || []).slice(0, o.tagsMax || (o.diff ? 2 : 3)).map((m) => '<span>' + esc(NEV.MUSCLES_FR[m] || m) + '</span>').join('');
     let plan = '';
     if (o.plan) plan = '<div class="tc-plan"><b>' + o.plan.sets + '</b> séries × <b>' + NEV.Ex.amountText(o.plan.unit, o.plan.perSet) + '</b>' + (o.plan.doubled ? ' <em>×2</em>' : '') + '</div>';
-    return '<div class="tcard r-' + r.id + (r.tier >= 3 || r.special ? ' foil' : '') + (r.special ? ' special' : '') + '" style="--c:' + r.color + ';--c2:' + r.color2 + ';--g:' + r.glow + '" data-ex="' + esc(ex.id) + '">' +
+    const m3 = !o.noArt && NEV.Mannequin && NEV.Mannequin.supported();
+    return '<div class="tcard r-' + r.id + (r.tier >= 3 || r.special ? ' foil' : '') + (r.special ? ' special' : '') + (m3 ? ' m3d' + (NEV.sex === 'f' ? ' m3f' : '') : '') + '" style="--c:' + r.color + ';--c2:' + r.color2 + ';--g:' + r.glow + '" data-ex="' + esc(ex.id) + '">' +
       '<div class="tc-in"><div class="tc-top"><span class="tc-code">' + r.code + '</span><span class="tc-stars" aria-label="' + r.name + '">' + stars(r.stars) + '</span></div>' +
       (o.noArt ? '' : '<div class="tc-art"><div class="tc-fig" data-fig="' + esc(ex.id) + '"></div></div>') +
       '<div class="tc-name">' + esc(ex.name) + '</div>' +
@@ -58,7 +59,9 @@
     root.querySelectorAll('.tc-fig[data-fig]').forEach(function (el) {
       if (el.dataset.mounted) return;
       const ex = NEV.Ex.byId(el.dataset.fig);
-      if (ex && NEV.Figure) { el.dataset.mounted = '1'; out.push(NEV.Figure.mount(el, ex, Object.assign({ label: ex.name }, opts || {}))); }
+      if (!ex) return;
+      if (el.closest('.tcard.m3d') && NEV.Mannequin) { el.dataset.mounted = '1'; out.push(NEV.Mannequin.mount(el, ex, opts || {})); }
+      else if (NEV.Figure) { el.dataset.mounted = '1'; out.push(NEV.Figure.mount(el, ex, Object.assign({ label: ex.name }, opts || {}))); }
     });
     return out;
   }
