@@ -38,7 +38,7 @@
   .auth h1{text-align:center;font-size:1.5rem;font-weight:900;margin:6px 0 4px}
   .auth .sub{text-align:center;color:var(--muted);font-size:.9rem;margin:0 0 22px}
   .auth .row{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-  .auth form[hidden]{display:none}
+  .auth form[hidden],.auth .field[hidden]{display:none}
   .sexe{border:0;padding:0;margin:0 0 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .sexe legend{padding:0;margin-bottom:6px;font-size:.82rem;font-weight:700;color:var(--rose)}
   .sexe .pick{display:block;cursor:pointer}
@@ -63,29 +63,24 @@
       </div>
 
       <form id="formSignup" novalidate autocomplete="on">
-        <div class="field"><label for="suPseudo">Pseudo</label><input id="suPseudo" name="pseudo" maxlength="20" autocomplete="nickname" placeholder="Ex. Kévin"></div>
-        <div class="field"><label for="suEmail">Email</label><input id="suEmail" name="email" type="email" autocomplete="email" placeholder="toi@mail.com"></div>
-        <div class="row">
-          <div class="field"><label for="suPw">Mot de passe</label><input id="suPw" name="password" type="password" autocomplete="new-password" placeholder="8 caractères min."></div>
-          <div class="field"><label for="suPw2">Confirmation</label><input id="suPw2" name="password2" type="password" autocomplete="new-password"></div>
-        </div>
+        <div class="field"><label for="suEmail">Email</label><input id="suEmail" name="email" type="email" autocomplete="email" placeholder="toi@mail.com"><span class="hint">Un email suffit : ton compte est créé tout de suite.</span></div>
         <fieldset class="field sexe"><legend>Sexe</legend>
           <label class="pick"><input type="radio" id="suSexM" name="sex" value="m"><span>Masculin</span></label>
           <label class="pick"><input type="radio" id="suSexF" name="sex" value="f"><span>Féminin</span></label>
         </fieldset>
         <div class="field"><label for="suRef">Code de parrainage <span class="muted">(facultatif)</span></label><input id="suRef" name="ref" maxlength="12" autocomplete="off" autocapitalize="characters" placeholder="Ex. 4821"><span class="hint">Un ami t'a invité ? Vous gagnez tous les deux des flammes.</span></div>
-        <label class="check"><input type="checkbox" id="suConsent"><span>Je m'entraîne à mon rythme, je m'arrête en cas de douleur ou de malaise, et je sais que neV.BOOSTER n'est pas un avis médical.</span></label>
-        <label class="check"><input type="checkbox" id="suTerms"><span>J'accepte les <a href="conditions.html" target="_blank" rel="noopener">conditions d'utilisation</a> et la <a href="confidentialite.html" target="_blank" rel="noopener">politique de confidentialité</a>. Si je suis mineur, j'ai l'accord d'un parent ou tuteur.</span></label>
+        <label class="check"><input type="checkbox" id="suTerms"><span>Je m'entraîne à mon rythme (neV.BOOSTER n'est pas un avis médical) et j'accepte les <a href="conditions.html" target="_blank" rel="noopener">conditions d'utilisation</a> et la <a href="confidentialite.html" target="_blank" rel="noopener">politique de confidentialité</a>. Si je suis mineur, j'ai l'accord d'un parent ou tuteur.</span></label>
         <div class="err" id="errSignup" role="alert"></div>
         <button class="btn block" type="submit" id="btnSignup">Créer mon compte</button>
       </form>
 
       <form id="formLogin" novalidate hidden autocomplete="on">
         <div class="field"><label for="liEmail">Email</label><input id="liEmail" name="email" type="email" autocomplete="email" placeholder="toi@mail.com"></div>
-        <div class="field"><label for="liPw">Mot de passe</label><input id="liPw" name="password" type="password" autocomplete="current-password"></div>
+        <div class="field" id="codeBox" hidden><label for="liCode">Code reçu par email</label><input id="liCode" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6 chiffres"><span class="hint" id="codeHint"></span></div>
+        <div class="field" id="pwBox" hidden><label for="liPw">Mot de passe</label><input id="liPw" name="password" type="password" autocomplete="current-password"></div>
         <div class="err" id="errLogin" role="alert"></div>
-        <button class="btn block" type="submit" id="btnLogin">Me connecter</button>
-        <p class="note"><a href="mot-de-passe.html">Mot de passe oublié ?</a></p>
+        <button class="btn block" type="submit" id="btnLogin">Recevoir mon code</button>
+        <p class="note"><a href="#" id="usePw">J'ai un mot de passe</a> · <a href="mot-de-passe.html">Mot de passe oublié ?</a></p>
       </form>
       <div class="visit" id="visit">
         <p>Envie de découvrir avant de t'inscrire ?</p>
