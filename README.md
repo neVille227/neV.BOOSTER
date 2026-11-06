@@ -261,3 +261,13 @@ Connexion : l'email reçoit un code à 6 chiffres (`/api/login/code` puis `/api/
 
 ## Visite guidée (mode visiteur)
 `visite.html` (+ `js/p-visite.js`, `css/visite.css`) : 7 étapes sans compte — accueil et vision, plateforme, aperçu des exercices (catégories et muscles), démo du gacha (tirage libre, niveaux facile/moyen/difficile, chances de tirage), parcours masculin/féminin (aperçu du thème via `?visiteur=m|f`), niveaux, inscription. Rien n'est enregistré : `NEV.player.blank()` en mémoire, `NEV.track` neutralisé ; pas d'historique, de statistiques, de profil ni de suivi. Lien « Visite guidée » sur `connexion.html`.
+
+## Social : profils, recherche, messagerie privée, notifications
+Page `social.html` (Accueil · Recherche · Messages · Profil) — `js/p-social.js`, `css/social.css`, serveur `server/social.js`.
+- **Profil** : @pseudo unique (insensible à la casse), photo ou avatar, biographie, ville/objectif/exercice préféré, parcours (m/f), confidentialité (profil public / contacts / privé ; qui peut écrire ; aperçu des notifications ; accusés de lecture).
+- **Recherche** : par @pseudo (préfixe). Un visiteur peut chercher et lire les profils publics, mais pas écrire. Les profils privés n'apparaissent pas.
+- **Contacts** : demandes d'amis (table `friends`, deux sens = contacts), accepter, refuser, retirer.
+- **Messages privés** : conversations, lu / non lu (✓ / ✓✓), pastille de non lus (menu + onglet + badge d'icône), blocage, signalement (visible dans l'admin, section Modération). Images : désactivées par défaut, `NEV_DM_IMAGES=1` pour les activer.
+- **Temps réel** : Server-Sent Events (`/api/social/stream`), sans dépendance et compatible Render (un WebSocket n'apporterait rien de plus pour recevoir des messages).
+- **Notifications hors application** : Web Push + service worker. Le serveur envoie un signal sans contenu (clés VAPID générées au premier démarrage et gardées en base, jamais sur GitHub) ; le service worker demande l'aperçu à `/api/social/notify-preview`, qui respecte la confidentialité. Disponibilité selon navigateur, appareil et autorisation ; sur iPhone, installer d'abord le site à l'écran d'accueil. Une bulle flottante permanente façon Messenger demande une application native.
+- Variables facultatives : `NEV_PUSH_SUB` (contact VAPID), `NEV_DM_IMAGES`.

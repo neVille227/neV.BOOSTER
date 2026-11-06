@@ -359,6 +359,8 @@ module.exports = function features(ctx) {
      ROUTES ADMIN
      ==================================================================== */
   async function adminRoute(route, m, req, res, ip, url) {
+    if (route === 'social/reports' && m === 'GET') return send(res, 200, { reports: S.dmReports() });
+    if (route === 'social/reports/close' && m === 'POST') { const b = await readBody(req, 256); S.closeDmReport(b.id); return send(res, 200, { ok: true }); }
     if (route === 'moderation' && m === 'GET') {
       const rep = S.reports('open').map((r) => { const au = S.userById(r.author); return Object.assign({}, r, { authorName: au ? au.pseudo : '?', count: S.reportCount(r.msgId), hidden: !!(S.chatMsg(r.msgId) || {}).hidden, muted: !!(au && au.mutedUntil > now()) }); });
       const by = {}; rep.forEach((r) => { if (!by[r.msgId]) by[r.msgId] = Object.assign({}, r, { reporters: 0, reasons: [] }); by[r.msgId].reporters++; if (r.reason) by[r.msgId].reasons.push(r.reason); });

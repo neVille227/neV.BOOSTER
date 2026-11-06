@@ -139,6 +139,7 @@ const adminSess = (req) => { const t = cookies(req).nev_a; return t ? S.getSessi
 const isOwner = (req) => { const s = adminSess(req); return !!(s && s.uid === 'admin'); };
 const isAdmin = (req) => { const s = adminSess(req); if (!s) return false; if (s.uid === 'admin') return true; const u = S.userById(s.uid); return !!(u && !u.banned && u.isAdmin); }; // un rôle retiré coupe l'accès aussitôt
 F = require('./features')({ S, send, fail, readBody, limit, clean, now, rid, scrypt, safeEq, today, addDays, startSession, setCookie, cookies, counters, logEvent, isSecure });
+const SO = require('./social')({ S, send, fail, readBody, limit, clean, now, counters, logEvent, baseUrl: () => F.CFG.baseUrl });
 const pub = (u) => F.pubUser(u);
 
 /* ---------------- joueur : nettoyage ---------------- */
@@ -248,6 +249,7 @@ async function api(req, res, url, ip) {
     }
     return send(res, 200, { ok: true });
   }
+  { const r = await SO(route, m, req, res, ip, url, sessionUser(req)); if (r !== false) return r; }
   const user = sessionUser(req);
   if (!user) return fail(res, 401, 'Connecte-toi.');
   if (route === 'me' && m === 'GET') return send(res, 200, { user: pub(user), player: S.getPlayer(user.id) });

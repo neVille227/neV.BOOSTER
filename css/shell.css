@@ -172,3 +172,6 @@ html:not([data-theme=light]) .yuki .yTip{background:#1c0b11;color:#fff1f2;border
 /* version femme : le fond clair garde les contours nets */
 html[data-theme=light] .hi-fig{filter:saturate(calc(.7 + var(--f)*.4)) drop-shadow(0 6px calc(4px + var(--f)*14px) color-mix(in srgb,var(--a1) 55%,transparent))}
 html[data-theme=light] .hi-aura{opacity:calc((.1 + var(--f)*.3)*var(--boost))}
+
+/* pastille de messages privés non lus (lien Social) */
+a .nb-dot{display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;margin-left:8px;border-radius:99px;background:var(--red);color:#fff;font-style:normal;font-size:.68rem;font-weight:900;vertical-align:middle}

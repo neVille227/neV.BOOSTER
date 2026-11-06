@@ -27,6 +27,7 @@
   I.help = svgi('M9.5 9a2.5 2.5 0 115 0c0 1.6-2.5 2-2.5 3.5M12 17h.01M12 3a9 9 0 100 18 9 9 0 000-18z');
   I.settings = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>';
   I.me = svgi('M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 4-6 8-6s8 2 8 6');
+  I.at = svgi('M12 16a4 4 0 100-8 4 4 0 000 8zM16 8v5a2.5 2.5 0 005 0v-1a9 9 0 10-3.5 7.1');
   I.users = svgi('M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM2.5 20c0-3.6 3-5.5 6.5-5.5s6.5 1.9 6.5 5.5M16 4.5a3.3 3.3 0 010 6.3M18 14.8c2.2.6 3.5 2.2 3.5 5.2');
   I.trophy = svgi('M8 4h8v5a4 4 0 01-8 0zM8 6H4v1.5A3.5 3.5 0 007.5 11M16 6h4v1.5A3.5 3.5 0 0116.5 11M12 13v4M8 20h8M10 17h4');
   I.info = svgi('M12 3a9 9 0 100 18 9 9 0 000-18zM12 11v5M12 8h.01');
@@ -44,6 +45,7 @@
     ['programmes', 'programmes.html', 'Programmes', I.list, 1, 0],
     ['conseils', 'conseils.html', 'Conseils', I.leaf, 0, 0],
     ['alimentation', 'alimentation.html', 'Alimentation', I.apple, 0, 0],
+    ['social', 'social.html', 'Social', I.at, 0, 0],
     ['chat', 'chat.html', 'Chat', I.chat, 0, 0],
     ['amis', 'amis.html', 'Amis', I.users, 0, 0],
     ['defis', 'defis.html', 'Défis', I.target, 0, 0],
@@ -58,7 +60,7 @@
   const GROUPS = [
     ['Principal', ['accueil', 'quete', 'gacha', 'gacha-box']],
     ['Entraînement', ['specialisation', 'bibliotheque', 'programmes', 'alimentation', 'conseils']],
-    ['Communauté', ['chat', 'amis', 'defis', 'classement', 'recompenses', 'coachs']],
+    ['Communauté', ['social', 'chat', 'amis', 'defis', 'classement', 'recompenses', 'coachs']],
     ['Mon espace', ['apropos', 'tuto', 'compte']]
   ];
 
@@ -67,7 +69,7 @@
   const DESC = {
     accueil: 'Ton tableau de bord', quete: 'Objectifs du jour et combo du coach', gacha: 'Ton tirage quotidien', 'gacha-box': 'La boîte mystère en 3D : 4 cartes', specialisation: 'Cible une zone du corps',
     bibliotheque: 'Tous les exercices, animés', programmes: 'Des enchaînements prêts à faire', conseils: 'Sécurité, sommeil, récupération',
-    alimentation: 'Manger pour progresser', chat: 'Parle au coach et aux joueurs', amis: 'Ajoute des amis par code', coachs: 'Les coachs du site', apropos: 'Toi, le site, les infos légales', recompenses: 'Flammes, badges, parrainage', defis: 'Pompes, squats, gainage : bats ton record', classement: 'Public et entre amis', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'
+    alimentation: 'Manger pour progresser', social: 'Profils, messages privés, contacts', chat: 'Parle au coach et aux joueurs', amis: 'Ajoute des amis par code', coachs: 'Les coachs du site', apropos: 'Toi, le site, les infos légales', recompenses: 'Flammes, badges, parrainage', defis: 'Pompes, squats, gainage : bats ton record', classement: 'Public et entre amis', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'
   };
   I.menu = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 8h16M4 16h16"/></svg>';
   I.close = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -177,7 +179,7 @@
     if (opts.needLevel !== false && !p.maxPushups) { NEV.go('niveau.html', 0); return null; }
     let fx = null;
     if (NEV.Rewards && opts.needLevel !== false) fx = NEV.Rewards.run(p, user);
-    if (opts.chrome !== false) chrome(active, p);
+    if (opts.chrome !== false) { chrome(active, p); setTimeout(loadSocialBadge, 400); }
     if (fx && (fx.daily || fx.refs.length || fx.badges.length || (fx.gifts && fx.gifts.length)) && !opts.quiet) setTimeout(function () { NEV.Rewards.popups(fx); }, 700);
     return { user: user, p: p, cfg: cfg };
   }
@@ -210,7 +212,21 @@
   doc.addEventListener('DOMContentLoaded', a11yLater); g.addEventListener('load', a11yLater);
   if (g.MutationObserver) new g.MutationObserver(a11yLater).observe(doc.documentElement, { childList: true, subtree: true });
 
-  NEV.ui = { chrome, toast, icons: I, a11y };
+  /* pastille de messages privés non lus sur le lien « Social » (toutes les pages, connecté, serveur seulement) */
+  function setSocialBadge(n) {
+    Array.prototype.forEach.call(doc.querySelectorAll('a[href="social.html"]'), function (a) {
+      let b = a.querySelector('.nb-dot');
+      if (!n) { if (b) b.remove(); return; }
+      if (!b) { b = doc.createElement('i'); b.className = 'nb-dot'; a.appendChild(b); }
+      b.textContent = n > 99 ? '99+' : String(n);
+    });
+    try { if (navigator.setAppBadge) { n ? navigator.setAppBadge(n) : navigator.clearAppBadge(); } } catch (e) { /* ignoré */ }
+  }
+  function loadSocialBadge() {
+    if (!NEV.cloud || NEV.cloud.mode !== 'server' || !NEV.auth || !NEV.auth.current() || /social\.html/.test(location.pathname)) return;
+    fetch('api/social/unread', { credentials: 'same-origin', cache: 'no-store', headers: { 'X-NEV': '1' } }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { if (j) setSocialBadge(j.unread); }).catch(function () { /* hors ligne */ });
+  }
+  NEV.ui = { chrome, toast, icons: I, a11y, setSocialBadge, loadSocialBadge };
   NEV.boot = boot;
   NEV.bootPublic = bootPublic;
 })(window);
