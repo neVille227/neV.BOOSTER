@@ -284,6 +284,26 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   t('ancien db.json mis de côté', fs.readdirSync(dir2).some((f) => /^db\.json\.migre-/.test(f)) && !fs.existsSync(path.join(dir2, 'db.json')));
   await stop(srv2); fs.rmSync(dir2, { recursive: true, force: true });
 
+  console.log('Social : profils, recherche, messages privés');
+  { const C = new Jar(), E = new Jar(), VV = new Jar();
+    const mk = (n, e) => ({ pseudo: n, email: e, password: 'motdepasse1', consent: true, sex: 'f', terms: true });
+    await call(C, 'POST', '/api/signup', mk('Chloé', 'chloe@test.fr')); await call(E, 'POST', '/api/signup', mk('Emma', 'emma@test.fr'));
+    r = await call(C, 'GET', '/api/social/me'); t('@pseudo créé à partir du pseudo (accents retirés)', r.j.profile && r.j.profile.handle === 'chloe', r.j);
+    r = await call(E, 'PUT', '/api/social/me', { handle: 'CHLOE' }); t('@pseudo unique (insensible à la casse)', r.s === 409);
+    r = await call(VV, 'GET', '/api/social/search?q=@chl'); t('visiteur : recherche et profils publics', r.s === 200 && r.j.results.length === 1);
+    r = await call(VV, 'POST', '/api/social/send', { to: 'chloe', text: 'salut' }); t('visiteur : pas de message sans compte', r.s === 401);
+    r = await call(E, 'POST', '/api/social/send', { to: 'chloe', text: 'Coucou Chloé' }); t('message privé envoyé', r.s === 200);
+    r = await call(C, 'GET', '/api/social/unread'); t('pastille : 1 message non lu', r.j.messages === 1);
+    r = await call(C, 'GET', '/api/social/messages?h=emma&mark=1'); t('lecture : message reçu', r.j.messages.length === 1 && !r.j.messages[0].mine);
+    r = await call(E, 'GET', '/api/social/messages?h=chloe'); t('accusé de lecture visible par l\'expéditeur', r.j.messages[0].read === true);
+    await call(C, 'PUT', '/api/social/me', { dm: 'none' }); r = await call(E, 'POST', '/api/social/send', { to: 'chloe', text: 'x' }); t('réglage « personne ne peut m\'écrire » respecté', r.s === 403);
+    await call(C, 'PUT', '/api/social/me', { dm: 'all' });
+    r = await call(C, 'POST', '/api/social/block', { handle: 'emma', on: true }); r = await call(E, 'POST', '/api/social/send', { to: 'chloe', text: 'x' }); t('joueur bloqué : plus de message', r.s === 403);
+    r = await call(C, 'POST', '/api/social/report', { handle: 'emma', reason: 'test' }); t('signalement enregistré', r.s === 200);
+    await call(C, 'PUT', '/api/social/me', { vis: 'private' }); r = await call(VV, 'GET', '/api/social/search?q=chl'); t('profil privé : introuvable en recherche', r.j.results.length === 0);
+    r = await call(C, 'PUT', '/api/social/me', { avatar: 'data:text/html;base64,AAAA' }); t('avatar non image refusé', r.s === 400);
+  }
+
   await stop(srv); fs.rmSync(dir, { recursive: true, force: true });
   console.log('\n' + ok + ' réussis, ' + ko + ' échoués'); process.exit(ko ? 1 : 0);
 })().catch((e) => { console.error(e); try { srv.kill(); } catch (x) { /* ignoré */ } process.exit(1); });

@@ -42,6 +42,11 @@ const DESCR = {
   chat_reports: 'Signalements de messages du chat par les joueurs.',
   cheat_flags: 'Anti-triche : séances ou totaux jugés impossibles et corrigés par le serveur.',
   friends: 'Amis suivis pour le classement entre amis.',
+  profiles: 'Profils sociaux : @pseudo unique, photo, biographie, informations et confidentialité.',
+  dm_messages: 'Messages privés entre joueurs (lu / non lu, image facultative).',
+  blocks: 'Joueurs bloqués par un joueur (plus de message ni de demande).',
+  dm_reports: 'Signalements de messages privés ou de profils.',
+  push_subs: 'Abonnements aux notifications push (adresse du service du navigateur, sans contenu).',
   challenge_claims: 'Défis hebdomadaires réclamés (un par joueur et par semaine).',
   exercise_reviews: 'Relecture des exercices par un coach ou un kinésithérapeute.',
   referrals: 'Vue : qui a parrainé qui.',
@@ -153,6 +158,26 @@ CREATE TABLE IF NOT EXISTS challenge_scores(
 );
 CREATE INDEX IF NOT EXISTS ix_scores ON challenge_scores(defi, verified, day, score);
 CREATE INDEX IF NOT EXISTS ix_scores_uid ON challenge_scores(uid, defi);
+CREATE TABLE IF NOT EXISTS profiles(
+  uid TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, handle TEXT NOT NULL COLLATE NOCASE UNIQUE,
+  bio TEXT NOT NULL DEFAULT '', avatar TEXT NOT NULL DEFAULT 'evo', info TEXT NOT NULL DEFAULT '{}',
+  vis TEXT NOT NULL DEFAULT 'public', dm TEXT NOT NULL DEFAULT 'all', preview INTEGER NOT NULL DEFAULT 1, receipts INTEGER NOT NULL DEFAULT 1, updated INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS dm_messages(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, conv TEXT NOT NULL, from_uid TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  to_uid TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, text TEXT NOT NULL DEFAULT '', img TEXT, t INTEGER NOT NULL, read_at INTEGER
+);
+CREATE INDEX IF NOT EXISTS ix_dm_conv ON dm_messages(conv, id);
+CREATE INDEX IF NOT EXISTS ix_dm_to ON dm_messages(to_uid, read_at);
+CREATE TABLE IF NOT EXISTS blocks(
+  uid TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, blocked TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, t INTEGER NOT NULL, PRIMARY KEY(uid, blocked)
+);
+CREATE TABLE IF NOT EXISTS dm_reports(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, reporter TEXT NOT NULL, target TEXT NOT NULL, msg_id INTEGER, reason TEXT NOT NULL, t INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'open'
+);
+CREATE TABLE IF NOT EXISTS push_subs(
+  endpoint TEXT PRIMARY KEY, uid TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, t INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS exercise_reviews(
   exercise_id TEXT PRIMARY KEY, status TEXT NOT NULL, note TEXT, reviewer TEXT, t INTEGER NOT NULL
 );
@@ -229,6 +254,7 @@ function open(dir) {
   S.createUser = (u, salt, hash) => tx(() => {
     DR('INSERT INTO users(id,email,pseudo,code,ref_by,banned,created,last_login,created_ms,terms_at,terms_ver,lang,public_board) VALUES(?,?,?,?,?,0,?,?,?,?,?,?,1)', u.id, u.email, u.pseudo, u.code, nn(u.refBy), u.created, now(), now(), nn(u.termsAt), nn(u.termsVer), u.lang || 'fr');
     AR('INSERT OR REPLACE INTO credentials(uid,salt,hash) VALUES(?,?,?)', u.id, salt, hash);
+    if (S.ensureProfile) S.ensureProfile(u.id, u.pseudo);
   });
   S.credentials = (uid) => A1('SELECT salt, hash FROM credentials WHERE uid = ?', String(uid)) || null;
   S.touchLogin = (uid) => DR('UPDATE users SET last_login = ? WHERE id = ?', now(), uid);
@@ -438,6 +464,8 @@ function open(dir) {
       workoutCount: D1('SELECT COUNT(*) AS n FROM workouts WHERE uid = ?', u.id).n,
       loginDays: D('SELECT day FROM logins WHERE uid = ? ORDER BY day DESC LIMIT 60', u.id).map((r) => r.day),
       messages: D('SELECT room, text, t FROM chat_messages WHERE uid = ? ORDER BY t DESC LIMIT 20', u.id),
+      profile: S.profile ? S.profile(u.id) : null,
+      privateMessagesSent: D('SELECT to_uid AS toUser, text, t FROM dm_messages WHERE from_uid = ? ORDER BY id DESC LIMIT 200', u.id),
       setup: data && data.setup ? data.setup : null
     };
   };
@@ -546,6 +574,49 @@ function open(dir) {
     try { fs.renameSync(file, file + '.migre-' + new Date().toISOString().slice(0, 10)); } catch (e) { /* ignoré */ }
     return true;
   };
+
+  /* ---------------- social : profils, messages privés, blocages, notifications ---------------- */
+  const slug = (x) => { let h = String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 16); if (h.length < 3) h = 'joueur' + h; return h; };
+  S.handleTaken = (h, except) => !!D1('SELECT 1 AS x FROM profiles WHERE handle = ? AND uid <> ?', String(h), String(except || ''));
+  S.ensureProfile = (uid, pseudo) => {
+    const ex = D1('SELECT uid FROM profiles WHERE uid = ?', uid); if (ex) return;
+    let base = slug(pseudo), h = base;
+    for (let n = 2; D1('SELECT 1 AS x FROM profiles WHERE handle = ?', h); n++) h = base.slice(0, 16 - String(n).length) + n;
+    DR('INSERT INTO profiles(uid,handle,updated) VALUES(?,?,?)', uid, h, now());
+  };
+  db.prepare('SELECT id, pseudo FROM users WHERE id NOT IN (SELECT uid FROM profiles)').all().forEach((u) => S.ensureProfile(u.id, u.pseudo));
+  const prOut = (r) => (r ? { uid: r.uid, handle: r.handle, bio: r.bio, avatar: r.avatar, info: (() => { try { return JSON.parse(r.info) || {}; } catch (e) { return {}; } })(), vis: r.vis, dm: r.dm, preview: !!r.preview, receipts: !!r.receipts } : null);
+  S.profile = (uid) => prOut(D1('SELECT * FROM profiles WHERE uid = ?', String(uid)));
+  S.profileByHandle = (h) => prOut(D1('SELECT * FROM profiles WHERE handle = ?', String(h)));
+  S.setProfile = (uid, f) => {
+    const cur = S.profile(uid); if (!cur) return false;
+    const n = Object.assign({}, cur, f);
+    DR('UPDATE profiles SET handle=?, bio=?, avatar=?, info=?, vis=?, dm=?, preview=?, receipts=?, updated=? WHERE uid=?', n.handle, n.bio, n.avatar, JSON.stringify(n.info || {}), n.vis, n.dm, n.preview ? 1 : 0, n.receipts ? 1 : 0, now(), uid);
+    return true;
+  };
+  S.searchHandles = (q, limit) => D("SELECT p.*, u.banned FROM profiles p JOIN users u ON u.id = p.uid WHERE u.banned = 0 AND p.vis <> 'private' AND p.handle LIKE ? ESCAPE '\\' ORDER BY length(p.handle), p.handle LIMIT ?", String(q).replace(/[%_\\]/g, (c) => '\\' + c) + '%', limit || 20).map(prOut);
+  S.isBlocked = (a, b) => !!D1('SELECT 1 AS x FROM blocks WHERE (uid = ? AND blocked = ?) OR (uid = ? AND blocked = ?)', a, b, b, a);
+  S.iBlocked = (a, b) => !!D1('SELECT 1 AS x FROM blocks WHERE uid = ? AND blocked = ?', a, b);
+  S.setBlock = (uid, b, on) => { if (on) DR('INSERT OR IGNORE INTO blocks(uid,blocked,t) VALUES(?,?,?)', uid, b, now()); else DR('DELETE FROM blocks WHERE uid = ? AND blocked = ?', uid, b); };
+  S.blockedList = (uid) => D('SELECT p.handle, p.avatar FROM blocks b JOIN profiles p ON p.uid = b.blocked WHERE b.uid = ? ORDER BY b.t DESC', uid);
+  const convKey = (a, b) => (a < b ? a + ':' + b : b + ':' + a);
+  S.convKey = convKey;
+  S.addDm = (from, to, text, img) => { const t = now(); const r = DR('INSERT INTO dm_messages(conv,from_uid,to_uid,text,img,t) VALUES(?,?,?,?,?,?)', convKey(from, to), from, to, text, img || null, t); return { id: Number(r.lastInsertRowid), t }; };
+  S.dmList = (a, b, beforeId, n) => D('SELECT id, from_uid AS \"from\", text, img, t, read_at AS readAt FROM dm_messages WHERE conv = ? AND (? = 0 OR id < ?) ORDER BY id DESC LIMIT ?', convKey(a, b), beforeId || 0, beforeId || 0, n || 60).reverse();
+  S.dmMarkRead = (me, other) => { const t = now(); const r = DR('UPDATE dm_messages SET read_at = ? WHERE conv = ? AND to_uid = ? AND read_at IS NULL', t, convKey(me, other), me); return r.changes; };
+  S.dmUnread = (uid) => D1('SELECT COUNT(*) AS n FROM dm_messages m WHERE m.to_uid = ? AND m.read_at IS NULL AND NOT EXISTS (SELECT 1 FROM blocks b WHERE b.uid = m.to_uid AND b.blocked = m.from_uid)', uid).n;
+  S.dmUnreadFrom = (uid) => D('SELECT m.from_uid AS uid, COUNT(*) AS n, MAX(m.id) AS last FROM dm_messages m WHERE m.to_uid = ? AND m.read_at IS NULL AND NOT EXISTS (SELECT 1 FROM blocks b WHERE b.uid = m.to_uid AND b.blocked = m.from_uid) GROUP BY m.from_uid ORDER BY last DESC', uid);
+  S.dmMessage = (id) => D1('SELECT * FROM dm_messages WHERE id = ?', id) || null;
+  S.dmConvs = (uid) => D(`SELECT CASE WHEN m.from_uid = ? THEN m.to_uid ELSE m.from_uid END AS other, m.id, m.from_uid AS "from", m.text, m.img, m.t, m.read_at AS readAt,
+      (SELECT COUNT(*) FROM dm_messages x WHERE x.conv = m.conv AND x.to_uid = ? AND x.read_at IS NULL) AS unread
+    FROM dm_messages m WHERE m.id IN (SELECT MAX(id) FROM dm_messages WHERE from_uid = ? OR to_uid = ? GROUP BY conv) ORDER BY m.id DESC LIMIT 100`, uid, uid, uid, uid);
+  S.addDmReport = (reporter, target, msgId, reason) => DR('INSERT INTO dm_reports(reporter,target,msg_id,reason,t) VALUES(?,?,?,?,?)', reporter, target, msgId || null, reason, now());
+  S.dmReports = () => D("SELECT r.*, (SELECT handle FROM profiles WHERE uid = r.reporter) AS reporterHandle, (SELECT handle FROM profiles WHERE uid = r.target) AS targetHandle, (SELECT text FROM dm_messages WHERE id = r.msg_id) AS text FROM dm_reports r WHERE r.status = 'open' ORDER BY r.id DESC LIMIT 100");
+  S.closeDmReport = (id) => DR("UPDATE dm_reports SET status = 'closed' WHERE id = ?", Number(id)).changes > 0;
+  S.addPush = (endpoint, uid) => DR('INSERT OR REPLACE INTO push_subs(endpoint,uid,t) VALUES(?,?,?)', endpoint, uid, now());
+  S.delPush = (endpoint) => DR('DELETE FROM push_subs WHERE endpoint = ?', endpoint);
+  S.pushOf = (uid) => D('SELECT endpoint FROM push_subs WHERE uid = ?', uid).map((r) => r.endpoint);
+  S.incomingRequests = (uid) => D('SELECT f.uid AS id FROM friends f WHERE f.friend_uid = ? AND NOT EXISTS (SELECT 1 FROM friends g WHERE g.uid = f.friend_uid AND g.friend_uid = f.uid) ORDER BY f.t DESC', uid).map((r) => r.id);
 
   S.close = () => { try { db.exec('PRAGMA wal_checkpoint(TRUNCATE)'); db.close(); auth.close(); if (ro) ro.close(); } catch (e) { /* ignoré */ } };
   return S;
