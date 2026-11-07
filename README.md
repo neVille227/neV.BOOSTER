@@ -271,3 +271,8 @@ Page `social.html` (Accueil · Recherche · Messages · Profil) — `js/p-social
 - **Temps réel** : Server-Sent Events (`/api/social/stream`), sans dépendance et compatible Render (un WebSocket n'apporterait rien de plus pour recevoir des messages).
 - **Notifications hors application** : Web Push + service worker. Le serveur envoie un signal sans contenu (clés VAPID générées au premier démarrage et gardées en base, jamais sur GitHub) ; le service worker demande l'aperçu à `/api/social/notify-preview`, qui respecte la confidentialité. Disponibilité selon navigateur, appareil et autorisation ; sur iPhone, installer d'abord le site à l'écran d'accueil. Une bulle flottante permanente façon Messenger demande une application native.
 - Variables facultatives : `NEV_PUSH_SUB` (contact VAPID), `NEV_DM_IMAGES`.
+
+## Avatars illustrés et cartes mythiques (V11)
+
+- **Avatars d'évolution illustrés** (`js/avatar-illus.js`, branché dans `js/hero-img.js`) : personnage SVG redessiné en continu selon le palier (1 → 6). Homme : prise de muscle. Femme : silhouette qui s'affine et se tonifie. Aucun fichier image ; l'ancienne image réaliste reste en secours si `avatar-illus.js` n'est pas chargé. Noms de paliers féminins : `NEV.heroFromXp(xp, sexe)` (Débutante, Éveillée, Athlète, Tonique, Sculptée, Légende).
+- **Cartes mythiques** (`mythiques.html`, `js/mythic3d.js`, `js/p-mythiques.js`, `css/mythic.css`) : 7 mouvements d'élite en 3D (aura rouge, rareté MR), corps homme ou femme selon la version. Moteur WebGL partagé (three.js r128 du site), rendu seulement quand la carte est visible. Lien « Cartes mythiques » dans le menu. Page publique.
