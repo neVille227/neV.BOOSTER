@@ -44,3 +44,4 @@
 .mc-ft b:first-child{background:linear-gradient(90deg,#ff2a1f,#ffb08a,#ff2a1f);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent}
 .mc-ft b:last-child{color:#a85a52}
 @media(prefers-reduced-motion:reduce){.mc,.mc::before,.mc::after,.mc-em,.mc-ok.pulse{animation:none}.mc{transition:none}}
+.mc-frame.nogl.lite::before{content:"Mode allégé : 3D désactivée (réglable dans Mon compte)"}
