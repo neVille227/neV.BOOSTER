@@ -282,3 +282,12 @@ Page `social.html` (Accueil · Recherche · Messages · Profil) — `js/p-social
 - **Mode allégé** (`js/theme.js`, `NEV.lite`) : coupe la 3D (`figure3d`, `mannequin3d`, `mythic3d`) et les animations lourdes ; automatique sur appareil modeste / connexion lente, réglable dans Mon compte.
 - **Communauté unique** (`js/ui.js`) : Social, Chat et Amis sont trois onglets d'une seule entrée de menu.
 - **Documents** : `ASSETS.md` (registre des droits des ressources) et `CHECKLIST-MISE-EN-LIGNE.md` (plan d'action de l'audit, ce qui reste à faire de ton côté).
+
+## Administration professionnelle (V13)
+
+- **Rôles vérifiés côté serveur** (`server/server.js`, `adminRole`, `allowed`) : Propriétaire (mot de passe admin) · Administrateur · Modérateur. Le rôle est relu à chaque requête ; un rôle retiré coupe l'accès et ferme les sessions. Le modérateur n'a accès qu'au chat, aux signalements, aux sanctions, à l'anti-triche et à la liste des joueurs **sans e-mails**. Console SQL, suppressions, rôles et déconnexion globale : propriétaire seulement. Chaque refus est journalisé.
+- **Journal d'audit** avec l'auteur de chaque action (`admin_audit.actor`), recherche, filtres et export CSV (onglet Sécurité). **Sessions admin** listées et révocables.
+- **Système** : uptime, mémoire, disque, contrôles de santé (disque durable, SMTP, adresse publique, push, sauvegardes), erreurs récentes, sauvegarde immédiate, **mode maintenance** (inscriptions suspendues + bandeau).
+- **Catalogue et Gacha** : exercice publié / brouillon / désactivé (le Gacha l'ignore) ; multiplicateur de probabilité par rareté (0 à 300 %).
+- **Équipe et rôles** : attribution des rôles par le propriétaire.
+- API : `admin/role`, `team`, `audit`, `sessions`, `sessions/revoke(-all)`, `system`, `settings`. 23 tests ajoutés (`node server/test.js`).

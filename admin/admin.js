@@ -6,7 +6,10 @@
   await C.ready;
   let tab = 'dash', timer = 0;
 
-  const TABS = [['dash', '📊 Tableau de bord'], ['suivi', '🛰️ Suivi du site'], ['base', '🗄️ Base de données'], ['joueurs', '👥 Joueurs'], ['combos', '🧩 Combos'], ['badges', '🏅 Badges'], ['annonce', '📣 Annonce'], ['chat', '💬 Chat'], ['modo', '🛡️ Modération'], ['triche', '🚨 Anti-triche'], ['courriels', '✉️ Courriels'], ['relecture', '🩺 Relecture']];
+  /* [id, titre, rang minimum] : 1 modérateur · 2 administrateur · 3 propriétaire. Simple confort d'affichage : le serveur refuse de toute façon. */
+  const ALL_TABS = [['dash', '📊 Tableau de bord', 1], ['suivi', '🛰️ Suivi du site', 2], ['joueurs', '👥 Joueurs', 1], ['catalogue', '🎰 Catalogue et Gacha', 2], ['combos', '🧩 Combos', 2], ['badges', '🏅 Badges', 2], ['annonce', '📣 Annonce', 2], ['chat', '💬 Chat', 1], ['modo', '🛡️ Modération', 1], ['triche', '🚨 Anti-triche', 1], ['courriels', '✉️ Courriels', 2], ['relecture', '🩺 Relecture', 2], ['securite', '🔐 Sécurité', 2], ['equipe', '🧑‍💼 Équipe et rôles', 3], ['systeme', '⚙️ Système', 2], ['base', '🗄️ Base de données', 2]];
+  let ROLE = 'owner', TABS = ALL_TABS;
+  const RANK = { moderator: 1, admin: 2, owner: 3 };
   const ask = (msg) => new Promise((res) => {
     const m = document.createElement('div'); m.className = 'askm'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
     m.innerHTML = '<div class="panel glow askb"><p style="margin:0 0 14px;font-weight:700">' + esc(msg) + '</p><div class="row" style="margin:0"><button type="button" class="btn" data-y>Oui, confirmer</button><button type="button" class="btn ghost" data-n>Annuler</button></div></div>';
@@ -41,9 +44,11 @@
   g_pagehide();
   function g_pagehide() { window.addEventListener('pagehide', () => { try { A.logout(); } catch (e) { /* ignoré */ } }); }
   $('out').addEventListener('click', async () => { await A.logout(); clearInterval(timer); $('app').hidden = true; gate(); });
-  function start() {
+  async function start() {
+    try { const st = await A.state(); ROLE = st.role || 'owner'; } catch (e) { ROLE = 'owner'; }
+    TABS = ALL_TABS.filter((t) => t[2] <= (RANK[ROLE] || 3)); document.body.setAttribute('data-role', ROLE);
     $('gate').hidden = true; $('app').hidden = false;
-    $('mode').textContent = C.mode === 'server' ? '● Mode serveur' : '● Mode démo (ce navigateur)';
+    $('mode').textContent = C.mode === 'server' ? '● Serveur · ' + ({ owner: 'Propriétaire', admin: 'Administrateur', moderator: 'Modérateur' }[ROLE] || '') : '● Mode démo (ce navigateur)';
     $('nav').innerHTML = TABS.map((t) => '<button type="button" data-t="' + t[0] + '">' + t[1] + '</button>').join('');
     show((location.hash || '').slice(1).split(':')[0] || 'dash');
   }
@@ -409,6 +414,118 @@
       } catch (er) { toast(er.message, 1); }
     }
     $('main').onchange = (e) => { const s = e.target.closest('select[data-id]'); if (s) { const id = s.dataset.id, note = ($('rvl').querySelector('input[data-n="' + id + '"]') || {}).value || ''; save(id, s.value, note).then(draw); } const i = e.target.closest('input[data-n]'); if (i && rv[i.dataset.n]) save(i.dataset.n, rv[i.dataset.n].status, i.value); };
+  };
+
+  /* =====================================================================
+     ADMINISTRATION PROFESSIONNELLE : système, sécurité, catalogue, équipe
+     (l'interface masque ce que ton rôle ne permet pas, mais c'est le SERVEUR qui refuse : voir server.js)
+     ===================================================================== */
+  const dtl = (t) => new Date(t).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const upt = (s) => { const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return (d ? d + ' j ' : '') + h + ' h ' + m + ' min'; };
+  const okb = (v, yes, no) => '<span class="' + (v ? 'ok-t' : 'bad-t') + '">' + (v ? '● ' + yes : '○ ' + no) + '</span>';
+  const csvCell = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const saveFile = (name, text, type) => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + text], { type: type || 'text/csv;charset=utf-8' })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); };
+
+  /* ---------- système ---------- */
+  VIEWS.systeme = async function () {
+    if (C.mode !== 'server') { $('main').innerHTML = '<h1>Système</h1>' + needServer(); return; }
+    async function draw() {
+      const [s, st] = await Promise.all([srv('system'), srv('settings')]);
+      const c = s.counters || {}, mt = st.maintenance || {};
+      $('main').innerHTML = '<h1>Système</h1><p class="lead">État du serveur, de la base de données et des sauvegardes.</p>' +
+        (mt.on ? '<div class="warnbar">🚧 <b>Mode maintenance actif</b> : les nouvelles inscriptions sont suspendues. ' + esc(mt.msg || '') + '</div>' : '') +
+        kpi([[upt(s.uptimeS), 'En ligne depuis'], [s.memMB + ' Mo', 'Mémoire'], [bytesFmt(s.db.sizeBytes), 'Base de données'], [s.disk ? s.disk.freeMB + ' Mo' : '—', 'Disque libre'], [c.requests || 0, 'Requêtes'], [c.errors5xx || 0, 'Erreurs serveur']]) +
+        '<div class="panel f"><h3 style="margin:0 0 8px">Contrôles de santé</h3><div class="tw"><table class="t wrapc"><tbody>' +
+        '<tr><td>Stockage durable (disque Render)</td><td>' + okb(s.persistent, 'Configuré', 'Non : les données peuvent disparaître') + '</td></tr>' +
+        '<tr><td>Envoi d\'e-mails (SMTP)</td><td>' + okb(s.smtp, 'Configuré', 'Non : pas de code par e-mail') + '</td></tr>' +
+        '<tr><td>Adresse publique (NEV_BASE_URL)</td><td>' + okb(!!s.baseUrl, esc(s.baseUrl), 'Non renseignée') + '</td></tr>' +
+        '<tr><td>Notifications push</td><td>' + okb(s.push, 'Clés générées', 'Pas encore') + '</td></tr>' +
+        '<tr><td>Sauvegardes</td><td>' + okb(s.db.backups.length > 0, s.db.backups.length + ' copie(s)', 'Aucune') + '</td></tr>' +
+        '<tr><td>Moteur</td><td>' + esc(s.db.engine) + ' · ' + esc(s.db.journal) + ' · ' + s.db.tables + ' tables</td></tr>' +
+        '<tr><td>Serveur</td><td>Node ' + esc(s.node) + ' · ' + esc(s.platform) + '</td></tr></tbody></table></div></div>' +
+        '<div class="panel f" style="margin-top:14px"><h3 style="margin:0 0 8px">Mode maintenance</h3><p class="muted" style="margin-top:0">Suspend les nouvelles inscriptions et affiche un bandeau aux joueurs connectés. Les joueurs déjà inscrits continuent de s\'entraîner.</p>' +
+        '<label class="lb" for="mtm">Message affiché</label><input id="mtm" style="width:100%" maxlength="200" value="' + esc(mt.msg || '') + '" placeholder="Ex. Mise à jour en cours, retour à 18 h."><div class="row"><label style="display:flex;gap:8px;align-items:center;font-weight:700"><input type="checkbox" id="mto"' + (mt.on ? ' checked' : '') + '> Maintenance activée</label><button type="button" class="btn" id="mts">Enregistrer</button></div></div>' +
+        '<h2>Sauvegardes</h2><div class="row"><button type="button" class="btn" id="bk">Sauvegarder maintenant</button><a class="btn ghost" href="../api/admin/db/backup">Télécharger la base complète</a></div>' +
+        (s.db.backups.length ? '<div class="tw"><table class="t"><thead><tr><th>Fichier</th><th>Taille</th></tr></thead><tbody>' + s.db.backups.map((b) => '<tr><td>' + esc(b.name) + '</td><td>' + bytesFmt(b.size) + '</td></tr>').join('') + '</tbody></table></div>' : '<p class="muted">Aucune copie automatique pour l\'instant (une par jour, 7 conservées).</p>') +
+        '<h2>Dernières erreurs</h2>' + (s.errors.length ? '<div class="tw"><table class="t"><thead><tr><th>Heure</th><th>Page</th><th>Détail</th></tr></thead><tbody>' + s.errors.map((e) => '<tr><td>' + esc(dtl(e.t)) + '</td><td>' + esc(e.page || '—') + '</td><td>' + esc(JSON.stringify(e.data || {}).slice(0, 160)) + '</td></tr>').join('') + '</tbody></table></div>' : '<p class="muted">Aucune erreur récente. 👌</p>');
+      $('mts').onclick = async () => { try { await srv('settings', { maintenance: { on: $('mto').checked, msg: $('mtm').value } }); toast($('mto').checked ? 'Maintenance activée 🚧' : 'Maintenance coupée'); draw(); } catch (e) { toast(e.message, 1); } };
+      $('bk').onclick = async () => { try { await srv('db/backup-now', {}); toast('Sauvegarde créée ✅'); draw(); } catch (e) { toast(e.message, 1); } };
+    }
+    await draw();
+  };
+
+  /* ---------- sécurité : journal d'audit, connexions, sessions ---------- */
+  VIEWS.securite = async function () {
+    if (C.mode !== 'server') { $('main').innerHTML = '<h1>Sécurité</h1>' + needServer(); return; }
+    let q = '', kind = '';
+    const KIND = { '': 'Toutes les actions', conn: 'Connexions', refus: 'Refus et alertes', admin: 'Rôles et réglages' };
+    const isK = (a) => kind === 'conn' ? /^(login|login-refuse|logout|session)/.test(a) : kind === 'refus' ? /(refuse|refus)/.test(a) : kind === 'admin' ? /^(nomme|retire|maintenance|gacha|catalogue|announce|sessions)/.test(a) : true;
+    async function draw() {
+      const [a, ss] = await Promise.all([srv('audit?q=' + encodeURIComponent(q) + '&limit=400'), srv('sessions')]);
+      const rows = a.rows.filter((r) => isK(r.action)), bad = a.rows.filter((r) => /refuse|refus/.test(r.action)).length;
+      $('main').innerHTML = '<h1>Sécurité</h1><p class="lead">Qui a fait quoi, et qui est connecté à l\'administration. Les sessions admin expirent après ' + ss.minutes + ' minutes.</p>' +
+        kpi([[ss.sessions.length, 'Sessions admin ouvertes'], [bad, 'Refus (400 dernières lignes)'], [a.rows.length, 'Actions journalisées']]) +
+        '<h2>Sessions admin ouvertes</h2><div class="tw"><table class="t"><thead><tr><th>Qui</th><th>Rôle</th><th>Ouverte</th><th>Expire</th><th></th></tr></thead><tbody>' +
+        ss.sessions.map((x) => '<tr><td><b>' + esc(x.who) + '</b>' + (x.current ? ' <span class="pill">cette session</span>' : '') + '</td><td>' + esc({ owner: 'Propriétaire', admin: 'Administrateur', moderator: 'Modérateur' }[x.role] || x.role) + '</td><td>' + esc(dtl(x.opened)) + '</td><td>' + esc(dtl(x.exp)) + '</td><td>' + (x.current ? '' : '<button type="button" class="btn ghost sm" data-rv="' + esc(x.id) + '">Déconnecter</button>') + '</td></tr>').join('') + '</tbody></table></div>' +
+        (ROLE === 'owner' ? '<div class="row"><button type="button" class="btn ghost" id="rva">Déconnecter toutes les autres sessions</button></div>' : '') +
+        '<h2>Journal d\'audit</h2><div class="row"><input type="search" id="aq" placeholder="Rechercher (auteur, action, cible…)" value="' + esc(q) + '"><select id="ak" aria-label="Type">' + Object.keys(KIND).map((k) => '<option value="' + k + '"' + (k === kind ? ' selected' : '') + '>' + KIND[k] + '</option>').join('') + '</select><button type="button" class="btn ghost" id="ax">Exporter en CSV</button></div>' +
+        '<div class="tw"><table class="t"><thead><tr><th>Date</th><th>Auteur</th><th>Action</th><th>Cible</th><th>Détail</th></tr></thead><tbody>' + (rows.length ? rows.map((r) => '<tr class="' + (/refus/.test(r.action) ? 'ban' : '') + '"><td>' + esc(dtl(r.t)) + '</td><td>' + esc(r.actor || '—') + '</td><td><b>' + esc(r.action) + '</b></td><td>' + esc(r.target || '') + '</td><td>' + esc(r.detail || '') + '</td></tr>').join('') : '<tr><td colspan="5" class="muted">Aucune ligne.</td></tr>') + '</tbody></table></div>';
+      $('aq').onchange = () => { q = $('aq').value; draw(); };
+      $('ak').onchange = () => { kind = $('ak').value; draw(); };
+      $('ax').onclick = () => saveFile('nev-journal-audit-' + new Date().toISOString().slice(0, 10) + '.csv', 'Date;Auteur;Action;Cible;Detail\n' + rows.map((r) => [dtl(r.t), r.actor, r.action, r.target, r.detail].map(csvCell).join(';')).join('\n'));
+      $('main').onclick = async (e) => { const b = e.target.closest('[data-rv]'); if (b && await ask('Déconnecter cette session admin ?')) { try { await srv('sessions/revoke', { id: b.dataset.rv }); toast('Session fermée'); draw(); } catch (er) { toast(er.message, 1); } } };
+      if ($('rva')) $('rva').onclick = async () => { if (await ask('Fermer toutes les autres sessions admin ?')) { try { await srv('sessions/revoke-all', {}); toast('Sessions fermées'); draw(); } catch (er) { toast(er.message, 1); } } };
+    }
+    await draw();
+  };
+
+  /* ---------- catalogue : statut des exercices et probabilités du Gacha ---------- */
+  VIEWS.catalogue = async function () {
+    if (C.mode !== 'server') { $('main').innerHTML = '<h1>Catalogue et Gacha</h1>' + needServer(); return; }
+    const st = await srv('settings'), all = NEV.Ex.list(), RN = ['Commun', 'Rare', 'Épique', 'Légendaire', 'Mythique'];
+    let q = '', f = '', ex = Object.assign({}, st.exStatus), w = st.gachaWeights.slice();
+    function drawList() {
+      const list = all.filter((e) => (!q || (e.name + ' ' + e.id).toLowerCase().indexOf(q) >= 0) && (!f || (ex[e.id] || 'published') === f));
+      const n = { published: 0, draft: 0, disabled: 0 }; all.forEach((e) => { n[ex[e.id] || 'published']++; });
+      $('ck').innerHTML = kpi([[all.length, 'Exercices'], [n.published, 'Publiés'], [n.draft, 'Brouillons'], [n.disabled, 'Désactivés']]);
+      $('cl').innerHTML = list.slice(0, 300).map((e) => { const v = ex[e.id] || 'published'; return '<tr><td><b>' + esc(e.name) + '</b><br><small class="muted">' + esc(e.group || '') + ' · ' + esc(e.tierName || '') + (e.for ? ' · version ' + (e.for === 'f' ? 'femme' : 'homme') : ' · mixte') + '</small></td><td><select data-ex="' + esc(e.id) + '" aria-label="Statut de ' + esc(e.name) + '">' + [['published', 'Publié'], ['draft', 'Brouillon'], ['disabled', 'Désactivé']].map((o) => '<option value="' + o[0] + '"' + (o[0] === v ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select></td></tr>'; }).join('') || '<tr><td colspan="2" class="muted">Aucun exercice.</td></tr>';
+    }
+    const tot = () => w.reduce((a, b) => a + b, 0) || 1;
+    $('main').innerHTML = '<h1>Catalogue et Gacha</h1><p class="lead">Contrôle ce qui peut sortir au tirage et la rareté des cartes. Un exercice en brouillon ou désactivé ne sort plus ; les joueurs gardent leur historique.</p>' +
+      '<div class="panel f"><h3 style="margin:0 0 6px">Probabilités du Gacha</h3><p class="muted" style="margin-top:0">Multiplicateur appliqué à chaque rareté (100 % = réglage normal, 0 % = ne sort plus). Le niveau du joueur et la pitié restent pris en compte.</p>' +
+      '<div class="g2" id="gw">' + RN.map((n, i) => '<div><label class="lb" for="gw' + i + '">' + n + ' : <b id="gv' + i + '">' + Math.round(w[i] * 100) + ' %</b></label><input type="range" id="gw' + i + '" min="0" max="300" step="10" value="' + Math.round(w[i] * 100) + '" data-i="' + i + '"></div>').join('') + '</div>' +
+      '<div class="row"><button type="button" class="btn" id="gs">Enregistrer les probabilités</button><button type="button" class="btn ghost" id="gr">Revenir au réglage normal</button></div></div>' +
+      '<h2>Exercices</h2><div id="ck"></div><div class="row"><input type="search" id="cq" placeholder="Chercher un exercice…"><select id="cf" aria-label="Filtrer"><option value="">Tous</option><option value="published">Publiés</option><option value="draft">Brouillons</option><option value="disabled">Désactivés</option></select></div>' +
+      '<div class="tw"><table class="t"><thead><tr><th>Exercice</th><th>Statut</th></tr></thead><tbody id="cl"></tbody></table></div>';
+    drawList();
+    $('cq').oninput = () => { q = $('cq').value.trim().toLowerCase(); drawList(); };
+    $('cf').onchange = () => { f = $('cf').value; drawList(); };
+    $('gw').oninput = (e) => { const i = e.target.dataset.i; if (i == null) return; w[i] = Number(e.target.value) / 100; $('gv' + i).textContent = e.target.value + ' %'; };
+    $('gs').onclick = async () => { try { const r = await srv('settings', { gachaWeights: w }); w = r.gachaWeights.slice(); toast('Probabilités enregistrées 🎰'); } catch (e) { toast(e.message, 1); } };
+    $('gr').onclick = async () => { try { await srv('settings', { gachaWeights: [1, 1, 1, 1, 1] }); toast('Réglage normal rétabli'); show('catalogue'); } catch (e) { toast(e.message, 1); } };
+    $('cl').onchange = async (e) => { const s = e.target.closest('select[data-ex]'); if (!s) return; const body = {}; body[s.dataset.ex] = s.value; try { const r = await srv('settings', { exStatus: body }); ex = Object.assign({}, r.exStatus); toast('Statut enregistré ✓'); drawList(); } catch (er) { toast(er.message, 1); } };
+  };
+
+  /* ---------- équipe : rôles (propriétaire seulement) ---------- */
+  VIEWS.equipe = async function () {
+    if (C.mode !== 'server') { $('main').innerHTML = '<h1>Équipe</h1>' + needServer(); return; }
+    async function draw() {
+      const [t, users] = await Promise.all([srv('team'), A.users()]);
+      const RL = { admin: 'Administrateur', moderator: 'Modérateur' };
+      $('main').innerHTML = '<h1>Équipe et rôles</h1><p class="lead">Seul le propriétaire (mot de passe admin) attribue les rôles. Chaque membre entre avec <b>son</b> mot de passe de compte ; le serveur relit son rôle à chaque action.</p>' +
+        '<div class="g2"><div class="panel f"><h3 style="margin:0 0 6px">Ce que chaque rôle peut faire</h3><div class="tw"><table class="t wrapc"><thead><tr><th>Rôle</th><th>Accès</th></tr></thead><tbody>' +
+        '<tr><td><b>Propriétaire</b></td><td>Tout, y compris rôles, console SQL, suppressions et déconnexion globale.</td></tr>' +
+        '<tr><td><b>Administrateur</b></td><td>Gestion quotidienne : joueurs, catalogue, Gacha, annonces, e-mails, base (lecture et export), sécurité.</td></tr>' +
+        '<tr><td><b>Modérateur</b></td><td>Chat, signalements, messages privés signalés, sanctions, anti-triche. Pas d\'e-mails de joueurs, pas de réglages.</td></tr></tbody></table></div></div>' +
+        '<div class="panel f"><h3 style="margin:0 0 6px">Nommer quelqu\'un</h3><label class="lb" for="eu">Joueur</label><select id="eu"><option value="">Choisir un joueur…</option>' + users.filter((u) => !u.admin && !u.banned).map((u) => '<option value="' + esc(u.id) + '">' + esc(u.pseudo) + '</option>').join('') + '</select>' +
+        '<label class="lb" for="er">Rôle</label><select id="er"><option value="moderator">Modérateur</option><option value="admin">Administrateur</option></select><div class="row"><button type="button" class="btn" id="eg">Attribuer</button></div></div></div>' +
+        '<h2>Membres de l\'équipe</h2><div class="tw"><table class="t"><thead><tr><th>Pseudo</th><th>Rôle</th><th></th></tr></thead><tbody>' + (t.team.length ? t.team.map((m) => '<tr><td><b>' + esc(m.pseudo) + '</b><br><small class="muted">' + esc(m.email) + '</small></td><td><select data-m="' + esc(m.id) + '" aria-label="Rôle de ' + esc(m.pseudo) + '">' + Object.keys(RL).map((k) => '<option value="' + k + '"' + (k === m.role ? ' selected' : '') + '>' + RL[k] + '</option>').join('') + '</select></td><td><button type="button" class="btn ghost sm" data-x="' + esc(m.id) + '">Retirer le rôle</button></td></tr>').join('') : '<tr><td colspan="3" class="muted">Aucun membre pour l\'instant : tu es seul(e) propriétaire.</td></tr>') + '</tbody></table></div>';
+      const setRole = async (uid, role, msg) => { try { await srv('role', { uid: uid, role: role }); toast(msg); draw(); } catch (e) { toast(e.message, 1); } };
+      $('eg').onclick = () => { if (!$('eu').value) { toast('Choisis un joueur.', 1); return; } setRole($('eu').value, $('er').value, 'Rôle attribué ✓'); };
+      $('main').onchange = (e) => { const s = e.target.closest('select[data-m]'); if (s) setRole(s.dataset.m, s.value, 'Rôle modifié ✓'); };
+      $('main').onclick = async (e) => { const b = e.target.closest('[data-x]'); if (b && await ask('Retirer son rôle à ce membre ? Sa session admin sera fermée.')) setRole(b.dataset.x, '', 'Rôle retiré'); };
+    }
+    await draw();
   };
 
   gate();

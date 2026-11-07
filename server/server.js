@@ -13,6 +13,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { AsyncLocalStorage } = require('async_hooks');
 const store = require('./store');
 const mailer = require('./mail');
 
@@ -137,7 +138,16 @@ function sessionUser(req) {
    uid « admin » = propriétaire (mot de passe admin) ; sinon uid = joueur nommé admin (son propre mot de passe de compte). */
 const adminSess = (req) => { const t = cookies(req).nev_a; return t ? S.getSession(t, 'admin') : null; };
 const isOwner = (req) => { const s = adminSess(req); return !!(s && s.uid === 'admin'); };
-const isAdmin = (req) => { const s = adminSess(req); if (!s) return false; if (s.uid === 'admin') return true; const u = S.userById(s.uid); return !!(u && !u.banned && u.isAdmin); }; // un rôle retiré coupe l'accès aussitôt
+/* RÔLES : owner (mot de passe admin) · admin · moderator. Le rôle est relu à CHAQUE requête : retirer un rôle coupe l'accès aussitôt. */
+const adminRole = (req) => { const s = adminSess(req); if (!s) return null; if (s.uid === 'admin') return 'owner'; const u = S.userById(s.uid); if (!u || u.banned || !u.isAdmin) return null; return u.adminRole === 'moderator' ? 'moderator' : 'admin'; };
+const isAdmin = (req) => !!adminRole(req);
+const ROLE_FR = { owner: 'Propriétaire', admin: 'Administrateur', moderator: 'Modérateur' };
+/* Permissions vérifiées CÔTÉ SERVEUR (masquer un bouton dans l'interface ne protège rien). */
+const MOD_OK = /^(state|stats|users|ban|moderation|moderation\/act|social\/reports|social\/reports\/close|chat|chat\/threads|cheat|users\/mute|me)$/;
+const OWNER_ONLY = /^(role|team|db\/query|db\/delete-user|db\/delete-row|sessions\/revoke-all)$/;
+function allowed(role, route) { if (role === 'owner') return true; if (role === 'moderator') return MOD_OK.test(route); return !OWNER_ONLY.test(route); }
+const als = new AsyncLocalStorage();
+S.actorFn = () => { const c = als.getStore(); return c ? c.actor : null; };
 F = require('./features')({ S, send, fail, readBody, limit, clean, now, rid, scrypt, safeEq, today, addDays, startSession, setCookie, cookies, counters, logEvent, isSecure });
 const SO = require('./social')({ S, send, fail, readBody, limit, clean, now, counters, logEvent, baseUrl: () => F.CFG.baseUrl });
 const pub = (u) => F.pubUser(u);
@@ -232,12 +242,12 @@ async function api(req, res, url, ip) {
   if (route.indexOf('admin/') === 0 || route === 'admin') return adminApi(req, res, route.slice(6), ip);
 
   { const r = await F.publicRoute(route, m, req, res, ip); if (r !== false) return r; }
-  if (route === 'signup' && m === 'POST') { const w = limit('su:' + ip, 8, 3600000); if (w) { counters.blocked++; return fail(res, 429, 'Trop d\'inscriptions depuis cette connexion. Réessaie plus tard.'); } return signup(req, res, ip); }
+  if (route === 'signup' && m === 'POST') { const mt = S.meta('maintenance'); if (mt && mt.on) return fail(res, 503, mt.msg || 'Maintenance en cours : les inscriptions reviennent bientôt.'); const w = limit('su:' + ip, 8, 3600000); if (w) { counters.blocked++; return fail(res, 429, 'Trop d\'inscriptions depuis cette connexion. Réessaie plus tard.'); } return signup(req, res, ip); }
   if (route === 'login' && m === 'POST') { const w = limit('li:' + ip, 20, 10 * 60000); if (w) { counters.blocked++; return fail(res, 429, 'Trop d\'essais. Réessaie dans quelques minutes.', 'password'); } return login(req, res, ip); }
   if (route === 'logout' && m === 'POST') { const t = cookies(req).nev_s; if (t) S.delSession(t); setCookie(res, req, 'nev_s', '', 0); return send(res, 200, { ok: true }); }
   if (route === 'config' && m === 'GET') {
     if (!sessionUser(req)) return fail(res, 401, 'Connecte-toi.');
-    return send(res, 200, { combos: S.combos(true), badges: S.badges(), announce: S.meta('announce'), reviews: F.reviewsMap(), challenge: F.challengeState(sessionUser(req)).challenge });
+    return send(res, 200, { maintenance: S.meta('maintenance'), gachaWeights: S.meta('gacha_weights'), exStatus: S.meta('ex_status') || {}, combos: S.combos(true), badges: S.badges(), announce: S.meta('announce'), reviews: F.reviewsMap(), challenge: F.challengeState(sessionUser(req)).challenge });
   }
   if (route === 'event' && m === 'POST') {
     const w = limit('ev:' + ip, 60, 60000); if (w) return send(res, 200, { ok: true });
@@ -329,13 +339,25 @@ async function adminDb(req, res, route, url, ip, m) {
   }
   return fail(res, 404, 'Introuvable.');
 }
-async function adminApi(req, res, route, ip) {
+function siteSettings() { return { maintenance: S.meta('maintenance') || { on: false, msg: '' }, gachaWeights: S.meta('gacha_weights') || [1, 1, 1, 1, 1], exStatus: S.meta('ex_status') || {} }; }
+function systemInfo() {
+  const mem = process.memoryUsage(), inf = S.info(), errs = S.events('error', 12);
+  const st = (() => { try { const x = fs.statfsSync(DATA_DIR); return { freeMB: Math.round(x.bavail * x.bsize / 1048576), totalMB: Math.round(x.blocks * x.bsize / 1048576) }; } catch (e) { return null; } })();
+  return { node: process.version, platform: process.platform + ' ' + process.arch, uptimeS: Math.round((Date.now() - STARTED) / 1000), memMB: Math.round(mem.rss / 1048576), heapMB: Math.round(mem.heapUsed / 1048576), disk: st,
+    db: { engine: inf.engine, sizeBytes: inf.sizeBytes, journal: inf.journal, tables: inf.tables, backups: inf.backups || [] }, counters: Object.assign({}, counters), smtp: mailer.configured(), push: !!S.meta('vapid'), baseUrl: F.CFG.baseUrl || '',
+    persistent: /^\/var\/data/.test(DATA_DIR) || !!process.env.NEV_DATA, dataDir: path.basename(DATA_DIR), errors: errs, maintenance: S.meta('maintenance') || { on: false } };
+}
+function adminApi(req, res, route, ip) {
+  const role = adminRole(req), sess = adminSess(req), who = sess ? (sess.uid === 'admin' ? 'propriétaire' : ((S.userById(sess.uid) || {}).pseudo || sess.uid)) : '';
+  return als.run({ actor: who ? who + ' (' + (ROLE_FR[role] || '') + ')' : '' }, () => adminApiInner(req, res, route, ip, role));
+}
+async function adminApiInner(req, res, route, ip, role) {
   const m = req.method, url = new URL(req.url, 'http://x');
-  if (route === 'state' && m === 'GET') return send(res, 200, { hasPassword: true, authed: isAdmin(req), owner: isOwner(req) });
+  if (route === 'state' && m === 'GET') return send(res, 200, { hasPassword: true, authed: !!role, owner: role === 'owner', role: role || '', roleLabel: ROLE_FR[role] || '' });
   if (route === 'login' && m === 'POST') {
     const w = limit('al:' + ip, 5, 15 * 60000); if (w) { counters.blocked++; return fail(res, 429, 'Trop d\'essais. Réessaie dans ' + Math.ceil(w / 60) + ' min.'); }
     const b = await readBody(req, 1024), adm = S.getAdmin(), pw = String(b.password || '').slice(0, 200), h = await scrypt(pw, adm.salt);
-    const open = (uid, who) => { const tok = crypto.randomBytes(32).toString('base64url'); S.addSession(tok, uid, 'admin', now() + ADMIN_MS); setCookie(res, req, 'nev_a', tok, null); S.audit('login', who, sha(ip).slice(0, 8)); return send(res, 200, { ok: true, role: uid === 'admin' ? 'owner' : 'admin' }); };
+    const open = (uid, who) => { const tok = crypto.randomBytes(32).toString('base64url'); S.addSession(tok, uid, 'admin', now() + ADMIN_MS); setCookie(res, req, 'nev_a', tok, null); S.audit('login', who, sha(ip).slice(0, 8), uid === 'admin' ? 'Propriétaire' : who); return send(res, 200, { ok: true, role: uid === 'admin' ? 'owner' : 'admin' }); };
     if (safeEq(h, adm.hash)) return open('admin', 'admin');
     // joueur nommé admin : son mot de passe de compte (e-mail donné, ou joueur actuellement connecté)
     const em = clean(b.email, 254).toLowerCase(), cand = em ? S.userByEmail(em) : sessionUser(req);
@@ -343,13 +365,14 @@ async function adminApi(req, res, route, ip) {
       const cred = S.credentials(cand.id), hh = await scrypt(pw, cred ? cred.salt : '00'.repeat(16));
       if (cred && safeEq(hh, cred.hash)) return open(cand.id, cand.pseudo);
     }
-    counters.adminBadLogins++; logEvent('error', 'admin', null, null, { msg: 'admin login refusé', ip: sha(ip).slice(0, 8) }); S.audit('login-refuse', 'admin', sha(ip).slice(0, 8)); return fail(res, 401, 'Mot de passe refusé.');
+    counters.adminBadLogins++; logEvent('error', 'admin', null, null, { msg: 'admin login refusé', ip: sha(ip).slice(0, 8) }); S.audit('login-refuse', 'admin', sha(ip).slice(0, 8), 'inconnu'); return fail(res, 401, 'Mot de passe refusé.');
   }
   if (route === 'logout' && m === 'POST') { const t = cookies(req).nev_a; if (t) S.delSession(t); setCookie(res, req, 'nev_a', '', 0); return send(res, 200, { ok: true }); }
-  if (!isAdmin(req)) return fail(res, 401, 'Accès réservé.');
+  if (!role) return fail(res, 401, 'Accès réservé.');
+  if (!allowed(role, route)) { S.audit('droit-refuse', route, m); return fail(res, 403, 'Ton rôle (' + ROLE_FR[role] + ') ne permet pas cette action.'); }
   const wa = limit('ad:' + ip, 240, 60000); if (wa) return fail(res, 429, 'Trop de requêtes admin. Patiente un instant.');
   if (route.indexOf('db/') === 0) return adminDb(req, res, route, url, ip, m);
-  if (route === 'users' && m === 'GET') return send(res, 200, { users: S.userRows() });
+  if (route === 'users' && m === 'GET') return send(res, 200, { users: role === 'moderator' ? S.userRows().map((u) => Object.assign({}, u, { email: '' })) : S.userRows() });
   if (route === 'stats' && m === 'GET') return send(res, 200, stats());
   if (route === 'events' && m === 'GET') return send(res, 200, { events: S.events(url.searchParams.get('type') || '', 150) });
   if (route === 'ban' && m === 'POST') { const b = await readBody(req, 512), u = S.userById(String(b.uid)); if (!u) return fail(res, 404, 'Joueur introuvable.'); S.setBanned(u.id, !!b.banned); S.audit(b.banned ? 'ban' : 'unban', u.id, u.pseudo); return send(res, 200, { ok: true }); }
@@ -364,10 +387,29 @@ async function adminApi(req, res, route, ip) {
     if (fl < 0 || dr < 0 || fl > 10000 || dr > 50 || fl + dr === 0) return fail(res, 400, 'Cadeau invalide : 1 à 10 000 flammes et/ou 1 à 50 tirages.');
     S.giftPlayer(u.id, { id: rid(5), flames: fl, draws: dr, note: clean(b.note, 80) }); S.audit('cadeau', u.id, '+' + fl + ' flammes, +' + dr + ' tirage(s)'); return send(res, 200, { ok: true });
   }
-  if (route === 'role' && m === 'POST') {
-    if (!isOwner(req)) return fail(res, 403, 'Seul le propriétaire (connecté avec le mot de passe admin) peut nommer ou retirer un admin.');
+  if (route === 'role' && m === 'POST') {   // propriétaire seulement (OWNER_ONLY)
     const b = await readBody(req, 256), u = S.userById(String(b.uid || '')); if (!u) return fail(res, 404, 'Joueur introuvable.');
-    S.setUser(u.id, { is_admin: b.admin ? 1 : 0 }); S.audit(b.admin ? 'nomme-admin' : 'retire-admin', u.id, u.pseudo); return send(res, 200, { ok: true });
+    const r = b.role !== undefined ? String(b.role) : (b.admin ? 'admin' : '');
+    if (!['', 'admin', 'moderator'].includes(r)) return fail(res, 400, 'Rôle inconnu.');
+    S.setUser(u.id, { is_admin: r ? 1 : 0, admin_role: r }); if (!r) S.purgeAdminSessionsOf(u.id);
+    S.audit(r ? 'nomme-' + r : 'retire-role', u.id, u.pseudo); return send(res, 200, { ok: true });
+  }
+  if (route === 'team' && m === 'GET') return send(res, 200, { team: S.userRows().filter((u) => u.isAdm).map((u) => ({ id: u.id, pseudo: u.pseudo, email: u.email, role: u.adminRole || 'admin', lastLogin: u.lastLogin })) });
+  if (route === 'audit' && m === 'GET') return send(res, 200, { rows: S.auditRows(url.searchParams.get('q'), url.searchParams.get('limit')) });
+  if (route === 'sessions' && m === 'GET') {
+    const mine = adminSess(req), ids = S.adminSessions().map((x) => { const u = x.uid === 'admin' ? null : S.userById(x.uid); return { id: x.id, who: x.uid === 'admin' ? 'Propriétaire' : (u ? u.pseudo : x.uid), role: x.uid === 'admin' ? 'owner' : (u ? (u.adminRole === 'moderator' ? 'moderator' : 'admin') : '?'), opened: x.exp - ADMIN_MS, exp: x.exp, current: !!(mine && S.sessionId(cookies(req).nev_a) === x.id) }; });
+    return send(res, 200, { sessions: ids, minutes: ADMIN_MS / 60000 });
+  }
+  if (route === 'sessions/revoke' && m === 'POST') { const b = await readBody(req, 200); S.delSessionById(b.id); S.audit('session-revoquee', String(b.id).slice(0, 8), null); return send(res, 200, { ok: true }); }
+  if (route === 'sessions/revoke-all' && m === 'POST') { S.delAdminSessionsExcept(S.sessionId(cookies(req).nev_a)); S.audit('sessions-revoquees', 'toutes sauf la mienne', null); return send(res, 200, { ok: true }); }
+  if (route === 'system' && m === 'GET') return send(res, 200, systemInfo());
+  if (route === 'settings' && m === 'GET') return send(res, 200, siteSettings());
+  if (route === 'settings' && m === 'POST') {
+    const b = await readBody(req, 16384);
+    if (b.maintenance) { const mt = { on: !!b.maintenance.on, msg: clean(b.maintenance.msg, 200), t: now() }; S.setMeta('maintenance', mt.on || mt.msg ? mt : null); S.audit(mt.on ? 'maintenance-on' : 'maintenance-off', null, mt.msg.slice(0, 80)); }
+    if (b.gachaWeights) { const w = (Array.isArray(b.gachaWeights) ? b.gachaWeights : []).slice(0, 5).map((v) => Math.max(0, Math.min(3, Number(v) || 0))); if (w.length === 5) { S.setMeta('gacha_weights', w.every((v) => v === 1) ? null : w); S.audit('gacha-probas', null, w.join(' / ')); } }
+    if (b.exStatus && typeof b.exStatus === 'object') { const cur = S.meta('ex_status') || {}; Object.keys(b.exStatus).slice(0, 400).forEach((id) => { if (!/^[a-z0-9-]{2,60}$/.test(id)) return; const v = b.exStatus[id]; if (v === 'draft' || v === 'disabled') cur[id] = v; else delete cur[id]; }); S.setMeta('ex_status', Object.keys(cur).length ? cur : null); S.audit('catalogue', Object.keys(b.exStatus).length + ' exercice(s)', null); }
+    return send(res, 200, siteSettings());
   }
   if (route === 'announce' && m === 'POST') { const b = await readBody(req, 1024), t = clean(b.text, 280); S.setMeta('announce', t ? { text: t, t: now() } : null); S.audit('announce', null, t.slice(0, 80)); return send(res, 200, { ok: true }); }
   if (route === 'combos' && m === 'GET') return send(res, 200, { combos: S.combos(false) });

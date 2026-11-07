@@ -217,6 +217,8 @@ function open(dir) {
   addCol('users', 'created_ms', 'INTEGER NOT NULL DEFAULT 0');
   addCol('users', 'public_board', 'INTEGER NOT NULL DEFAULT 1');
   addCol('users', 'is_admin', 'INTEGER NOT NULL DEFAULT 0');
+  addCol('users', 'admin_role', 'TEXT');           // 'admin' | 'moderator' (le propriétaire n'est pas un joueur)
+  addCol('admin_audit', 'actor', 'TEXT');          // qui a fait l'action (journal d'audit)
   addCol('chat_messages', 'hidden', 'INTEGER NOT NULL DEFAULT 0');
   db.exec(SCHEMA2);
   /* Classement public : tout le monde y figure par défaut (pseudo seulement), chacun peut se retirer.
@@ -234,6 +236,7 @@ function open(dir) {
   const DR = (sql, ...a) => P(db, sql).run(...a);
   const A1 = (sql, ...a) => P(auth, sql).get(...a);
   const AR = (sql, ...a) => P(auth, sql).run(...a);
+  const AA = (sql, ...a) => P(auth, sql).all(...a);
   let depth = 0; // transactions imbriquées : seule la plus externe ouvre/ferme
   function tx(fn) {
     if (depth) return fn();
@@ -245,7 +248,7 @@ function open(dir) {
 
   /* ---------------- comptes ---------------- */
   const userOut = (r) => (r ? { id: r.id, email: r.email, pseudo: r.pseudo, created: r.created, createdMs: r.created_ms || 0, code: r.code, banned: !!r.banned, refBy: r.ref_by || null, refCount: r.refCount || 0,
-    verified: !!r.email_verified, termsAt: r.terms_at || null, termsVer: r.terms_ver || null, mutedUntil: r.muted_until || 0, lang: r.lang || 'fr', publicBoard: !!r.public_board, isAdmin: !!r.is_admin } : null);
+    verified: !!r.email_verified, termsAt: r.terms_at || null, termsVer: r.terms_ver || null, mutedUntil: r.muted_until || 0, lang: r.lang || 'fr', publicBoard: !!r.public_board, isAdmin: !!r.is_admin, adminRole: r.admin_role || (r.is_admin ? 'admin' : '') } : null);
   const USEL = 'SELECT u.*, (SELECT COUNT(*) FROM users f WHERE f.ref_by = u.id) AS refCount FROM users u';
   S.userById = (id) => userOut(D1(USEL + ' WHERE u.id = ?', String(id)));
   S.userByEmail = (e) => userOut(D1(USEL + ' WHERE u.email = ?', String(e)));
@@ -344,13 +347,20 @@ function open(dir) {
   S.addEvent = (e) => { DR('INSERT INTO events(t,type,page,uid,name,data) VALUES(?,?,?,?,?,?)', e.t, e.type, e.page, nn(e.uid), nn(e.name), JSON.stringify(e.data || {})); if (++evN % 200 === 0) DR('DELETE FROM events WHERE id <= (SELECT MAX(id) FROM events) - 20000'); };
   S.events = (type, limit) => D('SELECT t, type, page, uid, name, data FROM events' + (type ? ' WHERE type = ?' : '') + ' ORDER BY id DESC LIMIT ?', ...(type ? [type, limit || 150] : [limit || 150])).map((r) => { let d = {}; try { d = JSON.parse(r.data); } catch (e) { /* ignoré */ } return { t: r.t, type: r.type, page: r.page, uid: r.uid, name: r.name, data: d }; });
   S.countEvents = (type, since) => D1('SELECT COUNT(*) AS n FROM events WHERE type = ? AND t > ?', type, since).n;
-  S.audit = (action, target, detail) => DR('INSERT INTO admin_audit(t,action,target,detail) VALUES(?,?,?,?)', now(), String(action).slice(0, 40), target == null ? null : String(target).slice(0, 80), detail == null ? null : String(detail).slice(0, 300));
+  S.actorFn = () => null;   // branché par server.js (AsyncLocalStorage) : l'admin qui fait la requête
+  S.audit = (action, target, detail, actor) => DR('INSERT INTO admin_audit(t,action,target,detail,actor) VALUES(?,?,?,?,?)', now(), String(action).slice(0, 40), target == null ? null : String(target).slice(0, 80), detail == null ? null : String(detail).slice(0, 240), String(actor || S.actorFn() || '').slice(0, 60));
+  S.auditRows = (q, lim) => { q = String(q || '').trim().toLowerCase(); const L = Math.max(1, Math.min(2000, lim | 0 || 300)); return (q ? D("SELECT id,t,action,target,detail,actor FROM admin_audit WHERE lower(action||' '||coalesce(target,'')||' '||coalesce(detail,'')||' '||coalesce(actor,'')) LIKE ? ORDER BY id DESC LIMIT ?", '%' + q + '%', L) : D('SELECT id,t,action,target,detail,actor FROM admin_audit ORDER BY id DESC LIMIT ?', L)); };
+  S.adminSessions = () => AA('SELECT token_hash AS id, uid, exp FROM sessions WHERE kind = ? AND exp > ? ORDER BY exp DESC', 'admin', now());
+  S.delSessionById = (id) => AR('DELETE FROM sessions WHERE token_hash = ? AND kind = ?', String(id), 'admin');
+  S.delAdminSessionsExcept = (keep) => AR("DELETE FROM sessions WHERE kind = 'admin' AND token_hash <> ?", String(keep || ''));
+  S.sessionId = (tok) => sha(tok);
+  S.purgeAdminSessionsOf = (uid) => AR("DELETE FROM sessions WHERE kind = 'admin' AND uid = ?", uid);
 
   /* ---------------- vues admin : joueurs et statistiques ---------------- */
   S.userRows = () => D(`SELECT u.id, u.email, u.pseudo, u.created, u.banned, u.code, u.last_login AS lastLogin,
         (SELECT COUNT(*) FROM users f WHERE f.ref_by = u.id) AS refCount,
         p.level, p.max_pushups AS maxPushups, p.streak, p.best_streak AS best, p.sessions_total AS total, p.xp, p.flames, p.login_streak AS loginStreak,
-        p.last_done AS lastDone, p.last_seen AS lastSeen, u.email_verified AS verified, u.muted_until AS mutedUntil, u.lang, u.is_admin AS isAdm
+        p.last_done AS lastDone, p.last_seen AS lastSeen, u.email_verified AS verified, u.muted_until AS mutedUntil, u.lang, u.is_admin AS isAdm, u.admin_role AS adminRole
       FROM users u LEFT JOIN players p ON p.uid = u.id ORDER BY u.created DESC, u.rowid DESC`).map((r) => ({
     id: r.id, email: r.email, pseudo: r.pseudo, created: r.created, banned: !!r.banned, code: r.code, refCount: r.refCount,
     level: r.level, maxPushups: r.maxPushups, streak: r.streak || 0, best: r.best || 0, total: r.total || 0, xp: r.xp || 0, flames: r.flames || 0,
@@ -479,7 +489,7 @@ function open(dir) {
 
 
   /* ---------------- profil : champs modifiables (liste blanche) ---------------- */
-  const USER_FIELDS = { email_verified: 'int', terms_at: 'int', terms_ver: 'str', muted_until: 'int', lang: 'str', public_board: 'int', is_admin: 'int' };
+  const USER_FIELDS = { email_verified: 'int', terms_at: 'int', terms_ver: 'str', muted_until: 'int', lang: 'str', public_board: 'int', is_admin: 'int', admin_role: 'str' };
   S.setUser = (uid, f) => {
     const keys = Object.keys(f).filter((k) => USER_FIELDS[k]); if (!keys.length) return false;
     DR('UPDATE users SET ' + keys.map((k) => k + ' = ?').join(', ') + ' WHERE id = ?', ...keys.map((k) => (USER_FIELDS[k] === 'int' ? int(f[k], 0) : nn(f[k]))), uid);

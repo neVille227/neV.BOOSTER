@@ -140,6 +140,8 @@
     menu.querySelector('.navclose').addEventListener('click', function () { setMenu(false); });
     menu.addEventListener('click', function (e) { if (e.target === menu) setMenu(false); });
     doc.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !menu.hidden) setMenu(false); });
+    const mt = NEV.cfg && NEV.cfg.maintenance;
+    if (mt && mt.on) { const mb = doc.createElement('div'); mb.className = 'announce'; mb.setAttribute('role', 'status'); mb.innerHTML = '<b>Maintenance</b><span></span>'; mb.querySelector('span').textContent = mt.msg || 'Mise à jour en cours : les inscriptions reviennent bientôt.'; hdr.after(mb); }
     const a = NEV.cfg && NEV.cfg.announce;
     if (a && a.text) {
       let seen = null; try { seen = g.sessionStorage.getItem('nev.ann'); } catch (e) { /* ignoré */ }
