@@ -276,3 +276,9 @@ Page `social.html` (Accueil · Recherche · Messages · Profil) — `js/p-social
 
 - **Avatars d'évolution illustrés** (`js/avatar-illus.js`, branché dans `js/hero-img.js`) : personnage SVG redessiné en continu selon le palier (1 → 6). Homme : prise de muscle. Femme : silhouette qui s'affine et se tonifie. Aucun fichier image ; l'ancienne image réaliste reste en secours si `avatar-illus.js` n'est pas chargé. Noms de paliers féminins : `NEV.heroFromXp(xp, sexe)` (Débutante, Éveillée, Athlète, Tonique, Sculptée, Légende).
 - **Cartes mythiques** (`mythiques.html`, `js/mythic3d.js`, `js/p-mythiques.js`, `css/mythic.css`) : 7 mouvements d'élite en 3D (aura rouge, rareté MR), corps homme ou femme selon la version. Moteur WebGL partagé (three.js r128 du site), rendu seulement quand la carte est visible. Lien « Cartes mythiques » dans le menu. Page publique.
+
+## Audit : corrections (V12)
+
+- **Mode allégé** (`js/theme.js`, `NEV.lite`) : coupe la 3D (`figure3d`, `mannequin3d`, `mythic3d`) et les animations lourdes ; automatique sur appareil modeste / connexion lente, réglable dans Mon compte.
+- **Communauté unique** (`js/ui.js`) : Social, Chat et Amis sont trois onglets d'une seule entrée de menu.
+- **Documents** : `ASSETS.md` (registre des droits des ressources) et `CHECKLIST-MISE-EN-LIGNE.md` (plan d'action de l'audit, ce qui reste à faire de ton côté).
