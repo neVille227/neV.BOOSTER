@@ -1,0 +1,46 @@
+/* neV.BOOSTER — cartes mythiques (aura rouge). Tout est préfixé .mc pour ne rien changer ailleurs. */
+.mc-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:40px 34px;margin:26px auto 10px}
+.mc-note{text-align:center;max-width:560px;margin:26px auto 0}
+.mc{--hl:hsl(0,96%,54%);position:relative;isolation:isolate;flex:1 1 300px;max-width:356px;border-radius:30px;padding:3px;
+ background:linear-gradient(150deg,#fff0e8 0%,#ff4a3a 24%,#8c0710 58%,#ff7a5a 100%);
+ box-shadow:0 0 0 1px rgba(255,60,40,.55),0 0 34px 4px rgba(255,30,20,.55),0 0 90px 14px rgba(255,20,10,.32);
+ animation:mcGlow 2.6s ease-in-out infinite;transition:transform .35s cubic-bezier(.2,.7,.2,1);color:#fff}
+.mc::before{content:"";position:absolute;inset:-34px;border-radius:64px;z-index:-1;pointer-events:none;background:radial-gradient(closest-side,rgba(255,40,22,.5) 55%,rgba(255,40,22,0) 100%);animation:mcBreathe 2.6s ease-in-out infinite}
+@keyframes mcBreathe{0%,100%{opacity:.55;transform:scale(.97)}50%{opacity:1;transform:scale(1.03)}}
+@keyframes mcGlow{0%,100%{box-shadow:0 0 0 1px rgba(255,60,40,.55),0 0 30px 3px rgba(255,30,20,.5),0 0 80px 10px rgba(255,20,10,.28)}50%{box-shadow:0 0 0 1px rgba(255,90,60,.8),0 0 46px 8px rgba(255,40,24,.75),0 0 120px 22px rgba(255,20,10,.4)}}
+.mc::after{content:"";position:absolute;inset:0;border-radius:inherit;z-index:3;pointer-events:none;mix-blend-mode:soft-light;
+ background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.6) 50%,transparent 65%);background-size:260% 100%;background-position:130% 0;animation:mcSheen 6s ease-in-out infinite}
+@keyframes mcSheen{0%,55%{background-position:130% 0}100%{background-position:-30% 0}}
+@media(hover:hover){.mc:hover{transform:translateY(-5px)}}
+.mc-in{position:relative;border-radius:27px;padding:14px 14px 16px;background:linear-gradient(180deg,#240a0d 0%,#150608 55%,#0d0405 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.mc-top{display:flex;justify-content:space-between;align-items:center;margin:0 2px 12px}
+.mc-sr{background:linear-gradient(135deg,#ffd0b8,#ff2a1f 55%,#b00510);color:#fff;font-weight:900;font-size:17px;letter-spacing:1px;border-radius:10px;padding:6px 14px;text-shadow:0 1px 6px rgba(80,0,0,.6);box-shadow:0 4px 18px -2px rgba(255,40,24,.7)}
+.mc-st{display:flex;gap:3px;color:#ff3a2a;font-size:17px;line-height:1;text-shadow:0 0 12px rgba(255,50,30,.95)}
+.mc-frame{position:relative;aspect-ratio:4/5;border-radius:18px;overflow:hidden;border:1px solid rgba(255,90,70,.22);
+ background:radial-gradient(75% 62% at 50% 56%,rgba(255,38,26,.34) 0%,rgba(90,6,10,.22) 52%,transparent 80%),radial-gradient(120% 90% at 50% 28%,#241418 0%,#0e0709 58%,#050304 100%);
+ box-shadow:inset 0 0 60px rgba(0,0,0,.65),inset 0 0 40px rgba(255,30,20,.12)}
+.mc-frame::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.45),transparent 22%,transparent 72%,rgba(0,0,0,.6))}
+.mc-em{position:absolute;inset:0;z-index:1;pointer-events:none;mix-blend-mode:screen;opacity:.8;
+ background-image:radial-gradient(circle,#ff7a4a 0 1.3px,transparent 1.9px),radial-gradient(circle,#ffb08a 0 1px,transparent 1.6px),radial-gradient(circle,#ff3a1a 0 1.6px,transparent 2.4px);
+ background-size:83px 119px,131px 157px,61px 97px;background-position:10px 0,40px 30px,0 60px;animation:mcRise 9s linear infinite}
+@keyframes mcRise{to{background-position:10px -119px,40px -127px,0 -37px}}
+.mc-frame canvas{position:absolute;inset:0;display:block;width:100%;height:100%}
+.mc-frame.nogl::before{content:"Aperçu 3D indisponible sur cet appareil";position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:#b79a9a;font-size:13px;font-weight:600}
+.mc-rep{position:absolute;z-index:2;top:12px;left:12px;font-size:11px;font-weight:800;letter-spacing:1.2px;color:#f6e6e3;font-variant-numeric:tabular-nums;background:rgba(24,8,10,.64);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:5px 10px}
+.mc-ok{position:absolute;z-index:2;top:10px;right:11px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#3dff7a;background:radial-gradient(circle,rgba(61,255,122,.22),rgba(61,255,122,.04) 70%);border:2px solid #3dff7a}
+.mc-ok svg{width:15px;height:15px}
+.mc-ok.pulse{animation:mcPulse .9s ease-out}
+@keyframes mcPulse{0%{box-shadow:0 0 0 0 rgba(61,255,122,.8),0 0 14px rgba(61,255,122,.65)}100%{box-shadow:0 0 0 16px rgba(61,255,122,0),0 0 14px rgba(61,255,122,.65)}}
+.mc-hud{position:absolute;z-index:2;left:12px;right:12px;bottom:12px;display:flex;align-items:center;gap:10px;font-size:10px;font-weight:800;letter-spacing:1.6px;color:#cdb3b0}
+.mc-gauge{flex:1;height:5px;border-radius:9px;background:rgba(255,255,255,.12);overflow:hidden}
+.mc-gauge b{display:block;height:100%;width:100%;border-radius:inherit;transform-origin:left;transform:scaleX(.04);background:var(--hl);box-shadow:0 0 10px var(--hl)}
+.mc-pct{min-width:34px;text-align:right;color:#fff;font-variant-numeric:tabular-nums}
+.mc-name{text-align:center;font-size:22px;font-weight:800;letter-spacing:.2px;margin:18px 6px 4px;line-height:1.2;color:#fff}
+.mc-en{margin:0 0 12px;text-align:center;font-size:11px;font-weight:700;letter-spacing:2.2px;color:#c47a72;text-transform:uppercase}
+.mc-tags{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:7px;justify-content:center}
+.mc-tags li{display:flex;align-items:center;gap:7px;background:#2b1114;border:1px solid #5a1d22;border-radius:999px;padding:6px 13px 6px 11px;font-size:12px;font-weight:700;color:#f6dcd8}
+.mc-tags li::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--hl);box-shadow:0 0 8px var(--hl)}
+.mc-ft{display:flex;justify-content:space-between;align-items:center;margin:20px 4px 0;padding-top:13px;border-top:1px solid rgba(255,255,255,.07);font-size:11px;font-weight:800;letter-spacing:1.8px}
+.mc-ft b:first-child{background:linear-gradient(90deg,#ff2a1f,#ffb08a,#ff2a1f);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent}
+.mc-ft b:last-child{color:#a85a52}
+@media(prefers-reduced-motion:reduce){.mc,.mc::before,.mc::after,.mc-em,.mc-ok.pulse{animation:none}.mc{transition:none}}
