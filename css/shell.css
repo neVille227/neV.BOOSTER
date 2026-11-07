@@ -169,6 +169,11 @@ html:not([data-theme=light]) .yuki .yTip{background:#1c0b11;color:#fff1f2;border
 @keyframes hiRing{0%{opacity:.9;transform:scale(.3)}100%{opacity:0;transform:scale(1.7)}}
 @keyframes hiShake{0%{translate:-2px 0}50%{translate:2px -1px}100%{translate:-2px 0}}
 @media(prefers-reduced-motion:reduce){.hi-aura,.hi-fig,.hi.pu .hi-fig,.hi.pu .hi-fx b{animation:none}}
+/* avatars illustrés (SVG) */
+.hi-ill::before{content:'';position:absolute;inset:4% 0 8%;background:radial-gradient(58% 46% at 50% 52%,rgba(98,84,210,.32),transparent 72%);pointer-events:none}
+.hi-ill .hi-fig,.hi-ill.hi-m .hi-fig{transform:scale(calc(.95 + var(--f)*.05));filter:drop-shadow(0 0 calc(2px + var(--f)*14px*var(--boost)) var(--a1))}
+.hi-ill .hi-fig svg{position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:100%;width:auto;aspect-ratio:314/418;overflow:visible;display:block}
+html[data-theme=light] .hi-ill .hi-fig{filter:drop-shadow(0 6px calc(4px + var(--f)*14px) color-mix(in srgb,var(--a1) 45%,transparent))}
 /* version femme : le fond clair garde les contours nets */
 html[data-theme=light] .hi-fig{filter:saturate(calc(.7 + var(--f)*.4)) drop-shadow(0 6px calc(4px + var(--f)*14px) color-mix(in srgb,var(--a1) 55%,transparent))}
 html[data-theme=light] .hi-aura{opacity:calc((.1 + var(--f)*.3)*var(--boost))}
