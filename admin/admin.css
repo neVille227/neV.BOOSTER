@@ -122,3 +122,9 @@ table.t th,table.t td{padding:14px 16px}
   .side{padding:16px}
   #nav button{padding:11px 14px;white-space:nowrap}
 }
+
+/* modérateur : pas de cadeaux ni de badges offerts (le serveur refuse aussi) */
+body[data-role=moderator] [data-g],body[data-role=moderator] [data-gf]{display:none}
+input[type=range]{width:100%;accent-color:#e0455f}
+#nav{overflow-y:auto}
+table.wrapc td,table.wrapc th{white-space:normal;vertical-align:top}
