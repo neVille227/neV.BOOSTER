@@ -40,6 +40,7 @@
     ['quete', 'quete.html', 'Quête', I.quest, 1, 1],
     ['gacha', 'gacha.html', 'Gacha', I.gacha, 1, 1],
     ['gacha-box', 'gacha-box.html', 'Gacha Box', I.cube, 1, 0],
+    ['mythiques', 'mythiques.html', 'Cartes mythiques', I.trophy, 0, 0],
     ['specialisation', 'specialisation.html', 'Spécialisation', I.body, 1, 1],
     ['bibliotheque', 'bibliotheque.html', 'Exercices', I.book, 1, 0],
     ['programmes', 'programmes.html', 'Programmes', I.list, 1, 0],
@@ -58,7 +59,7 @@
   ];
   /* Barre latérale : tout le menu, rangé par thème. */
   const GROUPS = [
-    ['Principal', ['accueil', 'quete', 'gacha', 'gacha-box']],
+    ['Principal', ['accueil', 'quete', 'gacha', 'gacha-box', 'mythiques']],
     ['Entraînement', ['specialisation', 'bibliotheque', 'programmes', 'alimentation', 'conseils']],
     ['Communauté', ['social', 'chat', 'amis', 'defis', 'classement', 'recompenses', 'coachs']],
     ['Mon espace', ['apropos', 'tuto', 'compte']]
@@ -68,6 +69,7 @@
 
   const DESC = {
     accueil: 'Ton tableau de bord', quete: 'Objectifs du jour et combo du coach', gacha: 'Ton tirage quotidien', 'gacha-box': 'La boîte mystère en 3D : 4 cartes', specialisation: 'Cible une zone du corps',
+    mythiques: 'Les 7 mouvements d\'élite, en 3D',
     bibliotheque: 'Tous les exercices, animés', programmes: 'Des enchaînements prêts à faire', conseils: 'Sécurité, sommeil, récupération',
     alimentation: 'Manger pour progresser', social: 'Profils, messages privés, contacts', chat: 'Parle au coach et aux joueurs', amis: 'Ajoute des amis par code', coachs: 'Les coachs du site', apropos: 'Toi, le site, les infos légales', recompenses: 'Flammes, badges, parrainage', defis: 'Pompes, squats, gainage : bats ton record', classement: 'Public et entre amis', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'
   };

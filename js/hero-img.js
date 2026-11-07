@@ -1,6 +1,6 @@
 /* ==========================================================
    neV.BOOSTER — hero-img.js
-   Avatars d'évolution RÉALISTES : l'image de l'homme (dark) ou de la femme (clair) remplace le personnage en blocs.
+   Avatars d'évolution ILLUSTRÉS (js/avatar-illus.js : SVG, homme = prise de muscle, femme = silhouette qui s'affine). Image réaliste en secours.
    Même interface que NEV.Hero.mount : {setStage, growTo, powerUp, setAura, destroy}.
    L'évolution (paliers 1 → 6) se voit par la carrure, la lumière, l'aura et la plateforme.
    Une image par palier ? Dépose-les dans img/evo/ et déclare-les dans EVO ci-dessous : elles remplacent l'image de base.
@@ -14,6 +14,7 @@
   /* Exemple : EVO.m = { 1: 'img/evo/m1.webp', 2: 'img/evo/m2.webp', … } — les paliers non listés gardent l'image de base. */
   const EVO = { m: {}, f: {} };
   const hexOf = (id) => { try { const a = NEV.Rewards && NEV.Rewards.aura(id); return a && a.c ? a.c : ['#ff3d8b', '#7a0f26']; } catch (e) { return ['#ff3d8b', '#7a0f26']; } };
+  const ILL = !!NEV.Illus;   // avatars illustrés (js/avatar-illus.js) ; sinon l'image réaliste sert de secours
   const clampK = (n) => Math.max(1, Math.min(6, Number(n) || 1));
 
   NEV.Hero.mount = function (el, o) {
@@ -23,10 +24,12 @@
     el.classList.add('hero-wrap');
     el.innerHTML = '<div class="hi hi-' + sex + '" role="img" aria-label="Ton avatar, palier ' + Math.round(k) + '">' +
       '<div class="hi-aura" aria-hidden="true"></div>' +
-      '<div class="hi-fig"><img alt="" decoding="async" draggable="false"></div>' +
+      '<div class="hi-fig">' + (ILL ? '<svg viewBox="' + NEV.Illus.VIEW + '" preserveAspectRatio="xMidYMax meet" aria-hidden="true" focusable="false"><g></g></svg>' : '<img alt="" decoding="async" draggable="false">') + '</div>' +
       '<div class="hi-plat" aria-hidden="true"><i></i><i></i></div>' +
       '<div class="hi-fx" aria-hidden="true"><b></b><b></b><b></b></div></div>';
-    const root = el.firstChild, img = root.querySelector('img');
+    const root = el.firstChild, img = root.querySelector('img'), gEl = root.querySelector('svg g'), uid = ILL ? NEV.Illus.uid('h') : '';
+    if (ILL) root.classList.add('hi-ill');
+    let lastM = -9;
     const srcFor = (kk) => EVO[sex][Math.round(kk)] || BASE[sex];
     let curSrc = '';
     const apply = (kk, boost) => {
@@ -36,6 +39,7 @@
       root.style.setProperty('--boost', String(boost || 1));
       root.style.setProperty('--a1', c[0]); root.style.setProperty('--a2', c[1]);
       root.setAttribute('aria-label', 'Ton avatar, palier ' + Math.round(kk));
+      if (ILL) { const m = f; if (Math.abs(m - lastM) > 0.0004) { lastM = m; gEl.innerHTML = NEV.Illus.body(sex, m, uid); } return; }
       const s = srcFor(kk); if (s !== curSrc) { curSrc = s; img.src = s; }
     };
     apply(k);

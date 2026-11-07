@@ -152,7 +152,7 @@
     const p = r.j.profile; let h = '<button class="back" type="button" data-back>← Retour</button><div class="pf">' + av(p.avatar, p.handle, p.sex, 'xl') + '<div><h2>@' + esc(p.handle) + '</h2></div>';
     if (p.locked) h += '<div class="lockbox">' + (p.vis === 'friends' ? 'Ce profil est réservé à ses contacts.' : 'Ce profil est privé.') + '</div>';
     else {
-      const hero = p.xp != null && NEV.heroFromXp ? NEV.heroFromXp(p.xp) : null, i = p.info || {};
+      const hero = p.xp != null && NEV.heroFromXp ? NEV.heroFromXp(p.xp, p.sex) : null, i = p.info || {};
       if (p.bio) h += '<p>' + esc(p.bio) + '</p>';
       h += '<div class="chips"><span class="chip">' + (p.sex === 'f' ? 'Parcours féminin' : 'Parcours masculin') + '</span>' + (hero ? '<span class="chip">' + esc(hero.stage.name) + '</span>' : '') + (p.streak ? '<span class="chip">🔥 série de ' + p.streak + ' j</span>' : '') + (i.city ? '<span class="chip">' + esc(i.city) + '</span>' : '') + (i.fav ? '<span class="chip">Aime : ' + esc(i.fav) + '</span>' : '') + (p.since ? '<span class="chip">Membre depuis ' + new Date(p.since).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) + '</span>' : '') + '</div>' + (i.goal ? '<p class="muted">Objectif : ' + esc(i.goal) + '</p>' : '');
     }

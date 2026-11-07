@@ -246,15 +246,18 @@
     return LEVELS[n - 1];
   };
   const HERO = [
-    { n: 1, name: 'Maigrichon', xp: 0 }, { n: 2, name: 'Éveillé', xp: 100 }, { n: 3, name: 'Athlète', xp: 300 },
-    { n: 4, name: 'Costaud', xp: 700 }, { n: 5, name: 'Colosse', xp: 1400 }, { n: 6, name: 'Légende', xp: 2600 }
+    { n: 1, name: 'Maigrichon', nameF: 'Débutante', xp: 0 }, { n: 2, name: 'Éveillé', nameF: 'Éveillée', xp: 100 }, { n: 3, name: 'Athlète', nameF: 'Athlète', xp: 300 },
+    { n: 4, name: 'Costaud', nameF: 'Tonique', xp: 700 }, { n: 5, name: 'Colosse', nameF: 'Sculptée', xp: 1400 }, { n: 6, name: 'Légende', nameF: 'Légende', xp: 2600 }
   ];
   NEV.HERO_STAGES = HERO;
-  NEV.heroFromXp = function (xp) {
+  /* sex : 'm' | 'f' (par défaut, celui du joueur) : change seulement le nom affiché du palier */
+  NEV.heroFromXp = function (xp, sex) {
+    const f = (sex || NEV.sex) === 'f';
+    const nm = (h) => (f && h.nameF ? Object.assign({}, h, { name: h.nameF }) : h);
     let s = HERO[0];
     for (const h of HERO) if (xp >= h.xp) s = h;
     const next = HERO[s.n] || null;
-    return { stage: s, next, pct: next ? util.clamp((xp - s.xp) / (next.xp - s.xp), 0, 1) : 1 };
+    return { stage: nm(s), next: next ? nm(next) : null, pct: next ? util.clamp((xp - s.xp) / (next.xp - s.xp), 0, 1) : 1 };
   };
 
   /* ---------- profil du joueur : réglages, série, jour raté ---------- */
