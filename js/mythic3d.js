@@ -9,7 +9,7 @@
 'use strict';
 var NEV = (g.NEV = g.NEV || {}), doc = g.document;
 var T = null, PI = Math.PI, R = null, failed = false, loading = null, API = null;
-function webgl() { try { var c = doc.createElement('canvas'); return !!(g.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); } catch (e) { return false; } }
+function webgl() { if (NEV.lite) return false; try { var c = doc.createElement('canvas'); return !!(g.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); } catch (e) { return false; } }
 function load() {
   if (g.THREE) return Promise.resolve(g.THREE);
   if (NEV.Fig3D && NEV.Fig3D.load) return NEV.Fig3D.load();
@@ -379,7 +379,7 @@ function mount(cv, id, o) {
   var E = { cv: cv, ctx: cv.getContext('2d'), card: card, frame: cv.parentNode, vis: false, last: -1, lp: -1 };
   if (card) { E.rep = card.querySelector('.mc-rep'); E.ok = card.querySelector('.mc-ok'); E.bar = card.querySelector('.mc-gauge b'); E.pct = card.querySelector('.mc-pct'); }
   var ctl = { destroy: function () { entries.delete(E); if (io) io.unobserve(cv); } };
-  if (!supported()) { cv.parentNode.classList.add('nogl'); return ctl; }
+  if (!supported()) { cv.parentNode.classList.add('nogl'); if (NEV.lite) cv.parentNode.classList.add('lite'); return ctl; }
   load().then(function () {
     T = g.THREE; if (!initGL()) { cv.parentNode.classList.add('nogl'); return; }
     E.S = scenes[id] || (scenes[id] = API.makeScene(id)); entries.add(E);

@@ -15,6 +15,7 @@
     (server ? '<section><h2>Classement</h2><p>Par défaut, tu n\'apparais que dans le classement entre amis (quand vous avez chacun ajouté le code de l\'autre). Tu peux aussi apparaître dans le classement public, avec ton seul pseudo.</p><label class="check"><input type="checkbox" id="cBoard"' + (u.publicBoard ? ' checked' : '') + '><span>Apparaître dans le classement public</span></label></section>' : '') +
     '<section><h2>Appli et rappel</h2><p>Installe neV.BOOSTER sur l\'écran d\'accueil : il s\'ouvre en plein écran et les pages déjà vues restent consultables sans réseau.</p><button type="button" class="btn ghost" id="bInst" hidden>Installer l\'appli</button><p class="muted" id="mInst"></p>' +
     '<div id="rem" hidden><label class="check"><input type="checkbox" id="cRem"><span>Me rappeler ma séance du jour</span></label><div class="field" style="max-width:220px;margin-top:12px"><label for="rHour">À partir de</label><select id="rHour">' + [6,8,10,12,14,16,17,18,19,20,21].map((h) => '<option value="' + h + '">' + h + ' h</option>').join('') + '</select></div><p class="muted">Honnêtement : le rappel s\'affiche quand tu ouvres l\'appli après cette heure et que ta séance n\'est pas faite. Un navigateur ne peut pas réveiller ton téléphone tout seul sans service d\'envoi dédié.</p></div></section>' +
+    '<section><h2>Mode allégé</h2><p>Coupe la 3D et les animations lourdes : utile sur un téléphone modeste ou avec une connexion lente. Il s\'active tout seul sur ces appareils.</p><label class="check"><input type="checkbox" id="cLite"><span>Activer le mode allégé sur cet appareil</span></label> <span id="mLite" class="muted"></span></section>' +
     '<section><h2>Télécharger mes données</h2><p>Un fichier contenant tout ce que neV.BOOSTER conserve à ton sujet : compte, séances, badges, messages.</p><button type="button" class="btn ghost" id="bExp">Télécharger mes données</button></section>' +
     '<section><h2>Supprimer mon compte</h2><p>Cette action est <b>définitive</b> : ta progression, tes badges et tes messages sont effacés.</p>' +
     (server ? '<div class="field" style="max-width:340px"><label for="dpw">Mot de passe</label><input id="dpw" type="password" autocomplete="current-password"></div>' : '') +
@@ -35,6 +36,11 @@
       const apply = async () => { const r = await P.setReminder(cr.checked, rh.value); cr.checked = r.on; };
       cr.addEventListener('change', apply); rh.addEventListener('change', () => { if (cr.checked) apply(); });
     }
+  })();
+  (function lite() {
+    const c = $('cLite'); if (!c) return; c.checked = !!NEV.lite;
+    $('mLite').textContent = NEV.liteAuto && NEV.liteAuto() ? '(détecté automatiquement sur cet appareil)' : '';
+    c.addEventListener('change', () => { NEV.setLite(c.checked); $('mLite').textContent = c.checked ? 'Activé : recharge la page pour voir la différence.' : 'Désactivé : recharge la page.'; });
   })();
   function save(name, text) { const b = new Blob([text], { type: 'application/json' }), a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
   $('bExp').addEventListener('click', () => {
