@@ -183,7 +183,7 @@
   }
 
   A.state = async function () { // { hasPassword, authed }
-    if (C.mode === 'server') { const r = await api('admin/state'); return r.ok ? r.data : { hasPassword: true, authed: false }; }
+    if (C.mode === 'server') { const r = await api('admin/state'); return r.ok ? r.data : { hasPassword: true, authed: false, role: '' }; }
     let ok = false; try { ok = g.sessionStorage.getItem(LAS) === '1'; } catch (e) { /* ignoré */ }
     return { hasPassword: !!store.get(LA, null), authed: ok };
   };
@@ -248,6 +248,8 @@
     };
   }
 
+  /* appel générique de l'API admin (mode serveur seulement) : { ok, data } */
+  A.raw = async function (route, method, body) { if (C.mode !== 'server') return { ok: false, data: { error: 'Disponible seulement avec le serveur (mode démo : non).' } }; return api('admin/' + route, method || 'GET', body); };
   A.users = async function () {
     if (C.mode === 'server') { const r = await api('admin/users'); return r.ok ? r.data.users : []; }
     return localUsers();

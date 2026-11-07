@@ -105,6 +105,24 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     r = await call(B, 'GET', '/api/admin/users'); t('le joueur nommé accède à l\'admin', r.s === 200 && r.j.users.some((u) => u.id === idB && u.admin), r.j);
     r = await call(B, 'POST', '/api/admin/gift', { uid: idA, flames: 1, draws: 0 }); t('un admin-joueur peut offrir', r.s === 200);
     r = await call(B, 'POST', '/api/admin/role', { uid: idA, admin: true }); t('un admin-joueur ne nomme pas d\'autre admin', r.s === 403, r.j);
+    console.log('Rôles et permissions (côté serveur)');
+    r = await call(ADM, 'POST', '/api/admin/role', { uid: idB, role: 'moderator' }); t('le propriétaire nomme un modérateur', r.s === 200, r.j);
+    r = await call(B, 'GET', '/api/admin/state'); t('rôle modérateur reconnu', r.j.role === 'moderator' && r.j.owner === false, r.j);
+    r = await call(B, 'GET', '/api/admin/users'); t('modérateur : liste des joueurs sans e-mails', r.s === 200 && r.j.users.every((u) => !u.email), r.j);
+    r = await call(B, 'GET', '/api/admin/moderation'); t('modérateur : accès à la modération', r.s === 200);
+    for (const [m, p] of [['GET', '/api/admin/db/info'], ['POST', '/api/admin/gift'], ['GET', '/api/admin/audit'], ['GET', '/api/admin/system'], ['POST', '/api/admin/settings'], ['POST', '/api/admin/announce'], ['GET', '/api/admin/mails']]) { r = await call(B, m, p, m === 'POST' ? { uid: idA, flames: 1 } : undefined); t('modérateur refusé (403) : ' + p.slice(11), r.s === 403, r.j); }
+    r = await call(B, 'POST', '/api/admin/role', { uid: idA, role: 'admin' }); t('modérateur ne nomme personne', r.s === 403);
+    r = await call(ADM, 'POST', '/api/admin/role', { uid: idB, role: 'root' }); t('rôle inconnu refusé', r.s === 400);
+    r = await call(ADM, 'POST', '/api/admin/role', { uid: idB, role: 'admin' }); t('passage en administrateur', r.s === 200);
+    r = await call(B, 'GET', '/api/admin/audit'); t('administrateur : journal d\'audit', r.s === 200 && r.j.rows.length > 0 && r.j.rows.some((x) => /Administrateur|propriétaire/.test(x.actor || '')), r.j && r.j.rows && r.j.rows[0]);
+    r = await call(B, 'POST', '/api/admin/db/query', { sql: 'SELECT 1' }); t('administrateur : console SQL réservée au propriétaire', r.s === 403);
+    r = await call(B, 'GET', '/api/admin/system'); t('administrateur : état du système', r.s === 200 && r.j.node && r.j.db && 'smtp' in r.j, r.j);
+    r = await call(B, 'GET', '/api/admin/sessions'); t('sessions admin listées (la mienne repérée)', r.s === 200 && r.j.sessions.some((x) => x.current), r.j);
+    r = await call(B, 'POST', '/api/admin/sessions/revoke-all', {}); t('administrateur : révocation globale réservée au propriétaire', r.s === 403);
+    r = await call(B, 'POST', '/api/admin/settings', { exStatus: { 'pompes-mur': 'disabled', 'Bad Id!': 'draft' }, gachaWeights: [1, 1, 2, 9, 0] }); t('réglages du catalogue et du Gacha', r.s === 200 && r.j.exStatus['pompes-mur'] === 'disabled' && !r.j.exStatus['Bad Id!'] && r.j.gachaWeights.join() === '1,1,2,3,0', r.j);
+    r = await call(ADM, 'POST', '/api/admin/settings', { maintenance: { on: true, msg: 'Retour à 18 h' } }); t('mode maintenance activé', r.s === 200 && r.j.maintenance.on === true);
+    r = await call(new Jar(), 'POST', '/api/signup', { pseudo: 'Zed', email: 'zed@test.fr', password: 'motdepasse9', consent: true, sex: 'm', terms: true }); t('maintenance : inscriptions suspendues (503)', r.s === 503 && /18 h/.test(r.j.error || ''), r.j);
+    r = await call(ADM, 'POST', '/api/admin/settings', { maintenance: { on: false, msg: '' } }); t('mode maintenance coupé', r.s === 200 && r.j.maintenance.on === false);
     r = await call(ADM, 'POST', '/api/admin/role', { uid: idB, admin: false }); t('retrait du rôle', r.s === 200);
     r = await call(B, 'GET', '/api/admin/users'); t('plus d\'accès après retrait', r.s === 401);
     await call(ADM, 'POST', '/api/admin/role', { uid: idB, admin: true }); r = await call(B, 'POST', '/api/admin/logout', {}); r = await call(B, 'GET', '/api/admin/users'); t('après « Quitter », le code est redemandé', r.s === 401); await call(ADM, 'POST', '/api/admin/role', { uid: idB, admin: false }); }

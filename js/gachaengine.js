@@ -47,6 +47,8 @@
 
   function weights(level, cautious, pity) {
     const w = (WEIGHTS[level] || WEIGHTS[1]).slice();
+    const gm = NEV.cfg && NEV.cfg.gachaWeights;   // multiplicateurs réglés par l'admin (0 à 3 par rareté)
+    if (gm && gm.length === 5) for (let i = 0; i < 5; i++) w[i] *= gm[i];
     if (cautious) { w[3] = 0; w[4] = 0; }
     if (pity >= PITY_SOFT) {
       const boost = 1 + 0.6 * (pity - PITY_SOFT + 1);
@@ -68,6 +70,7 @@
   function eligible(ex, setup, opts) {
     opts = opts || {};
     if (ex.for && ex.for !== (NEV.sex || 'm')) return false; // exercices propres à une version
+    if (NEV.cfg && NEV.cfg.exStatus && NEV.cfg.exStatus[ex.id]) return false; // masqué par l'admin (brouillon ou désactivé)
     if (ex.special) return false; // Repos et Tractions ne sortent que par les cartes spéciales
     const gachaOk = ex.gacha !== false || (opts.zone && ex.group === 'mobilite');
     if (!gachaOk || !ex.cam) return false;
