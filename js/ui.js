@@ -46,7 +46,7 @@
     ['programmes', 'programmes.html', 'Programmes', I.list, 1, 0],
     ['conseils', 'conseils.html', 'Conseils', I.leaf, 0, 0],
     ['alimentation', 'alimentation.html', 'Alimentation', I.apple, 0, 0],
-    ['social', 'social.html', 'Social', I.at, 0, 0],
+    ['social', 'social.html', 'Communauté', I.at, 0, 0],
     ['chat', 'chat.html', 'Chat', I.chat, 0, 0],
     ['amis', 'amis.html', 'Amis', I.users, 0, 0],
     ['defis', 'defis.html', 'Défis', I.target, 0, 0],
@@ -61,10 +61,13 @@
   const GROUPS = [
     ['Principal', ['accueil', 'quete', 'gacha', 'gacha-box', 'mythiques']],
     ['Entraînement', ['specialisation', 'bibliotheque', 'programmes', 'alimentation', 'conseils']],
-    ['Communauté', ['social', 'chat', 'amis', 'defis', 'classement', 'recompenses', 'coachs']],
+    ['Communauté', ['social', 'defis', 'classement', 'recompenses', 'coachs']],
     ['Mon espace', ['apropos', 'tuto', 'compte']]
   ];
 
+  /* Espace communautaire unique : Profils et messages, Chat et Amis sont trois onglets d'une même entrée de menu. */
+  const COMMU = [['social', 'social.html', 'Profils et messages'], ['chat', 'chat.html', 'Chat'], ['amis', 'amis.html', 'Amis']];
+  const inCommu = (id) => COMMU.some((c) => c[0] === id);
   const lk = (l, inner, active) => '<a href="' + l[1] + '" data-go' + (l[0] === active ? ' class="on" aria-current="page"' : '') + '>' + inner + '</a>';
 
   const DESC = {
@@ -82,7 +85,7 @@
     const p = pp || (user && !pub ? NEV.player.load() : null);
     const streak = p ? p.progress.streak : 0;
     const tile = (l) => '<a class="mt' + (l[0] === active ? ' on' : '') + '" href="' + l[1] + '" data-go' + (l[0] === active ? ' aria-current="page"' : '') + '>' + l[3] + '<b>' + l[2] + '</b><small>' + (DESC[l[0]] || '') + '</small></a>';
-    const tiles = LINKS.map(tile).join('') +
+    const tiles = LINKS.filter((l) => l[0] !== 'chat' && l[0] !== 'amis').map(tile).join('') +
       (user ? '<a class="mt" href="niveau.html?step=2" data-go>' + I.settings + '<b>Réglages</b><small>Niveau, matériel, séries</small></a><button type="button" class="mt sheetOut">' + I.out + '<b>Quitter</b><small>Se déconnecter</small></button>' : '');
     const hdr = doc.createElement('header');
     hdr.className = 'hdr';
@@ -102,7 +105,7 @@
       const lv = p && p.maxPushups ? NEV.levelFromMax(p.maxPushups) : null;
       side = doc.createElement('aside'); side.className = 'side'; side.id = 'sideNav'; side.setAttribute('aria-label', 'Navigation principale');
       side.innerHTML = '<div class="sideTop"><a class="logo" href="accueil.html" data-go>neV<span>.</span>BOOSTER</a><button type="button" class="sideX" aria-label="Fermer le menu">' + I.close + '</button></div>' +
-        '<nav class="sideNav">' + GROUPS.map((gp) => '<div class="sg"><div class="sgt">' + gp[0] + '</div>' + gp[1].map((id) => { const l = byId[id]; return '<a class="si' + (id === active ? ' on' : '') + '" href="' + l[1] + '" data-go' + (id === active ? ' aria-current="page"' : '') + '>' + l[3] + '<span>' + l[2] + '</span></a>'; }).join('') + '</div>').join('') + '</nav>' +
+        '<nav class="sideNav">' + GROUPS.map((gp) => '<div class="sg"><div class="sgt">' + gp[0] + '</div>' + gp[1].map((id) => { const l = byId[id]; return '<a class="si' + (id === active || (id === 'social' && inCommu(active)) ? ' on' : '') + '" href="' + l[1] + '" data-go' + (id === active || (id === 'social' && inCommu(active)) ? ' aria-current="page"' : '') + '>' + l[3] + '<span>' + l[2] + '</span></a>'; }).join('') + '</div>').join('') + '</nav>' +
         '<div class="sideMe"><div class="av" aria-hidden="true">' + esc((user.pseudo || '?').slice(0, 1).toUpperCase()) + '</div><div class="who"><b>' + esc(user.pseudo) + '</b><small>' + (lv ? 'Niveau ' + lv.n + ' · ' + esc(lv.name) : 'Bienvenue') + '</small></div><button type="button" class="sideOut" aria-label="Se déconnecter" title="Se déconnecter">' + I.out + '</button></div>';
       doc.body.appendChild(side); menu.remove();
       const scrim = doc.createElement('div'); scrim.className = 'sideScrim'; doc.body.appendChild(scrim);
@@ -115,6 +118,10 @@
       doc.addEventListener('keydown', (e) => { if (e.key === 'Escape') setSide(false); });
       const cur = side.querySelector('.si.on'); if (cur && cur.scrollIntoView) { try { cur.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignoré */ } }
       loadCompanion(active);
+    }
+    if (inCommu(active)) {
+      const w = doc.querySelector('.page .wrap');
+      if (w) { const tb = doc.createElement('nav'); tb.className = 'subtabs'; tb.setAttribute('aria-label', 'Espace communauté'); tb.innerHTML = COMMU.map((c) => '<a href="' + c[1] + '" data-go' + (c[0] === active ? ' class="on" aria-current="page"' : '') + '>' + c[2] + '</a>').join(''); w.insertBefore(tb, w.firstChild); }
     }
     if (active !== 'tuto') doc.body.appendChild(help);
     if (!doc.querySelector('.sitefoot')) {

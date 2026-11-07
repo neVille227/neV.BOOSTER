@@ -23,6 +23,15 @@
   N.setSex = function (sex) { try { g.localStorage.setItem('nev.sex', sex === 'f' ? 'f' : 'm'); } catch (e) { /* ignoré */ } apply(sex, true); };
   /* simple aperçu du thème (choix du sexe à l'inscription) : rien n'est enregistré */
   N.previewSex = function (sex) { apply(sex, false); };
+  /* MODE ALLÉGÉ : coupe la 3D et les animations lourdes. Automatique sur un appareil modeste ou une connexion lente,
+     ou choisi dans « Mon compte » (nev.lite = '1' / '0'). NEV.lite est lu par les modules 3D. */
+  N.liteAuto = function () {
+    var n = g.navigator || {}, c = n.connection || {};
+    return !!(c.saveData || /(^|-)2g$|3g/.test(c.effectiveType || '') || (n.deviceMemory && n.deviceMemory <= 2) || (n.hardwareConcurrency && n.hardwareConcurrency <= 2));
+  };
+  N.setLite = function (v) { try { if (v === null) g.localStorage.removeItem('nev.lite'); else g.localStorage.setItem('nev.lite', v ? '1' : '0'); } catch (e) { /* ignoré */ } N.lite = liteNow(); g.document.documentElement.toggleAttribute('data-lite', N.lite); };
+  function liteNow() { var v = null; try { v = g.localStorage.getItem('nev.lite'); } catch (e) { /* ignoré */ } return v === '1' ? true : v === '0' ? false : N.liteAuto(); }
+  N.lite = liteNow(); if (N.lite) g.document.documentElement.setAttribute('data-lite', '');
   var s = null; try { s = g.localStorage.getItem('nev.sex'); } catch (e) { /* ignoré */ }
   /* mode visiteur (?visiteur=m|f) : simple aperçu du thème choisi, appareil non marqué, icône neutre */
   var gq = /[?&]visiteur=([mf])/.exec(g.location.search), vis = gq ? gq[1] : null;

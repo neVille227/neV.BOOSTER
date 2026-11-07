@@ -21,6 +21,7 @@
 
   /* ---------- chargement de three.js (r128, vendor/three) ---------- */
   function webgl() {
+    if (NEV.lite) return false;   // mode allégé
     try { const c = doc.createElement('canvas'); return !!(g.WebGLRenderingContext && (c.getContext('webgl2') || c.getContext('webgl'))); } catch (e) { return false; }
   }
   function load() {
