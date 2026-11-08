@@ -291,3 +291,12 @@ Page `social.html` (Accueil · Recherche · Messages · Profil) — `js/p-social
 - **Catalogue et Gacha** : exercice publié / brouillon / désactivé (le Gacha l'ignore) ; multiplicateur de probabilité par rareté (0 à 300 %).
 - **Équipe et rôles** : attribution des rôles par le propriétaire.
 - API : `admin/role`, `team`, `audit`, `sessions`, `sessions/revoke(-all)`, `system`, `settings`. 23 tests ajoutés (`node server/test.js`).
+
+## V14 — Espace Social professionnel (d'après les maquettes)
+- **Messages en 3 volets** (liste · conversation · fiche du contact) sur ordinateur ; une colonne + retour sur mobile. Pastilles Récents / Contacts / Demandes, pastille « en ligne », bouton « Défier ».
+- **Recherche** : filtres Niveau et Zone, résultats en cartes, recherches récentes (stockées sur l'appareil) et joueurs suggérés (`GET social/suggest`).
+- **Profil** : niveau et barre d'XP, 4 compteurs, badges (débloqués / verrouillés), cartes mythiques, contacts, repères. Nouveau champ « Zone d'entraînement ».
+- **Clans** (`clans.html`, `social/clans`, `clans/create`, `clans/join`, `clans/leave`) : 30 membres max, un clan par joueur, XP du clan = somme de l'XP des membres.
+- **Classement** : bandeau avec compte à rebours jusqu'à la fin de la semaine, podium du top 3.
+- Onglets Communauté : Social · Classement · Clans · Défis. Barre d'onglets fixe en bas sur mobile.
+- Tests : 277 réussis (le seul échec connu : `assetlinks.json`). Service worker `nev-v24`.
