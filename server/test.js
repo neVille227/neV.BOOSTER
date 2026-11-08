@@ -320,6 +320,24 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     r = await call(C, 'POST', '/api/social/report', { handle: 'emma', reason: 'test' }); t('signalement enregistré', r.s === 200);
     await call(C, 'PUT', '/api/social/me', { vis: 'private' }); r = await call(VV, 'GET', '/api/social/search?q=chl'); t('profil privé : introuvable en recherche', r.j.results.length === 0);
     r = await call(C, 'PUT', '/api/social/me', { avatar: 'data:text/html;base64,AAAA' }); t('avatar non image refusé', r.s === 400);
+    console.log('Clans et suggestions');
+    { const K1 = C, K2 = E, KV = new Jar(); await call(K1, 'PUT', '/api/social/me', { vis: 'public' });
+      r = await call(KV, 'GET', '/api/social/clans'); t('liste des clans publique', r.s === 200 && Array.isArray(r.j.clans));
+      r = await call(KV, 'POST', '/api/social/clans/create', { name: 'Les Titans' }); t('créer un clan demande un compte', r.s === 401);
+      r = await call(K1, 'POST', '/api/social/clans/create', { name: 'x' }); t('nom de clan trop court refusé', r.s === 400);
+      r = await call(K1, 'POST', '/api/social/clans/create', { name: 'Les Titans', descr: 'Fonte et sueur' }); t('clan créé', r.s === 200 && r.j.id, r.j);
+      const cid = r.j && r.j.id;
+      r = await call(K2, 'POST', '/api/social/clans/create', { name: 'les titans' }); t('nom de clan unique (insensible à la casse)', r.s === 409);
+      r = await call(K1, 'POST', '/api/social/clans/create', { name: 'Autre clan' }); t('un seul clan par joueur', r.s === 400);
+      r = await call(K2, 'POST', '/api/social/clans/join', { id: cid }); t('rejoindre un clan', r.s === 200);
+      r = await call(K2, 'GET', '/api/social/clans'); t('clan : 2 membres, le mien', r.j.clans[0].members === 2 && r.j.clans[0].mine === true && r.j.mine === cid, r.j);
+      r = await call(KV, 'GET', '/api/social/profile?h=chloe'); t('profil : nom du clan et contacts', r.j.profile.clan === 'Les Titans' && typeof r.j.profile.contacts === 'number');
+      r = await call(K2, 'GET', '/api/social/suggest'); t('suggestions : sans moi', r.s === 200 && r.j.results.every((x) => x.handle !== 'emma'));
+      r = await call(KV, 'GET', '/api/social/suggest'); t('suggestions : compte requis', r.s === 401);
+      await call(K1, 'POST', '/api/social/clans/leave', {}); r = await call(K2, 'GET', '/api/social/clans'); t('le propriétaire part : le clan reste', r.j.clans.length === 1 && r.j.clans[0].owner === true);
+      await call(K2, 'POST', '/api/social/clans/leave', {}); r = await call(K2, 'GET', '/api/social/clans'); t('dernier membre parti : clan supprimé', r.j.clans.length === 0);
+      await call(K1, 'PUT', '/api/social/me', { info: { zone: 'jambes' } }); r = await call(KV, 'GET', '/api/social/search?q=chloe'); t('zone visible en recherche', r.j.results[0].zone === 'jambes' && 'online' in r.j.results[0], r.j);
+    }
   }
 
   await stop(srv); fs.rmSync(dir, { recursive: true, force: true });

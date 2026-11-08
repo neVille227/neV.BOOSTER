@@ -17,6 +17,18 @@
       pers.map((x) => '<button type="button" data-per="' + x[0] + '" class="' + (per === x[0] ? 'on' : '') + '">' + x[1] + '</button>').join('') + '</div>' +
       '<div class="cl-seg cl-kinds" role="group" aria-label="Quel classement">' + chips.map((x) => '<button type="button" data-kind="' + x[0] + '" class="' + (kind === x[0] ? 'on' : '') + '">' + esc(x[1]) + '</button>').join('') + '</div>';
   }
+  /* bandeau de fin de semaine : compte à rebours jusqu'au prochain lundi (UTC, comme le classement) */
+  let tmr = 0;
+  function banner() {
+    return '<div class="cl-ban"><div><b>Classement de la semaine</b><small>Les points repartent de zéro chaque lundi. Prends la tête avant la fin !</small></div><div class="cd" id="cd" aria-label="Temps restant"><div><b>–</b><span>JOURS</span></div><div><b>–</b><span>HEURES</span></div><div><b>–</b><span>MIN</span></div></div><a class="btn" href="defis.html" data-go>Relever le défi</a></div>';
+  }
+  function tick() {
+    const el = $('cd'); if (!el) return;
+    const end = Date.parse(P.addDays(P.weekStart(NEV.util.todayStr()), 7) + 'T00:00:00Z'), ms = Math.max(0, end - Date.now());
+    const v = [Math.floor(ms / 864e5), Math.floor(ms % 864e5 / 36e5), Math.floor(ms % 36e5 / 6e4)];
+    Array.prototype.forEach.call(el.querySelectorAll('b'), (b, i) => { b.textContent = v[i]; });
+    clearTimeout(tmr); tmr = setTimeout(tick, 30000);
+  }
   async function drawBoard() {
     if (!server) {
       const st = localStats(P.weekStart(NEV.util.todayStr()), '9999-12-31');
@@ -29,10 +41,13 @@
     const d = r.ok ? r.data : { rows: [], period: { label: '' } };
     $('boardNote').textContent = (d.period && d.period.label ? d.period.label + ' · ' : '') + (dd ? 'meilleurs scores validés par la caméra · ' : '') + (scope === 'friends' ? 'toi et tes amis réciproques.' : 'tous les joueurs qui n\'ont pas choisi de se retirer.');
     const fmt = (v) => (dd && dd.kind === 'hold' ? (v >= 60 ? Math.floor(v / 60) + ' min ' + (v % 60) + ' s' : v + ' s') : v + (dd ? ' rép.' : ' XP'));
-    const rows = (d.rows || []).map((x) => '<div class="cl-row' + (x.me ? ' me' : '') + '"><b class="rk">' + x.rank + '</b><div><div class="nm">' + esc(x.pseudo) + (x.me ? ' (toi)' : '') + '</div><small>' + (dd ? 'Défi ' + esc(dd.name.toLowerCase()) : x.sessions + ' séance' + (x.sessions > 1 ? 's' : '') + ' · série ' + x.streak) + '</small></div><div class="xp">' + fmt(dd ? x.score : x.xp) + '</div></div>').join('');
+    const rowOf = (x) => '<div class="cl-row' + (x.me ? ' me' : '') + '"><b class="rk">' + x.rank + '</b><div><div class="nm">' + esc(x.pseudo) + (x.me ? ' (toi)' : '') + '</div><small>' + (dd ? 'Défi ' + esc(dd.name.toLowerCase()) : x.sessions + ' séance' + (x.sessions > 1 ? 's' : '') + ' · série ' + x.streak) + '</small></div><div class="xp">' + fmt(dd ? x.score : x.xp) + '</div></div>';
+    const R = d.rows || [], pod = R.length >= 3 && !dd ? R.slice(0, 3) : [];
+    const podium = pod.length ? '<div class="podium" aria-label="Podium">' + [1, 0, 2].map((k) => { const x = pod[k]; return '<div class="pd r' + (k + 1) + (x.me ? ' me' : '') + '"><span class="rk">' + x.rank + '</span><span class="nm">' + esc(x.pseudo) + (x.me ? ' (toi)' : '') + '</span><span class="xp">' + fmt(x.xp) + '</span><small>série ' + x.streak + '</small></div>'; }).join('') + '</div>' : '';
+    const rows = podium + R.slice(pod.length).map(rowOf).join('');
     const empty = dd ? '<p class="cl-empty">Aucun score pour l\'instant. <a href="defis.html" data-go><b>Lance le défi</b></a> et prends la première place !</p>' : '<p class="cl-empty">Personne à afficher pour le moment.</p>';
     const optin = scope === 'public' ? '<label class="cl-opt"><input type="checkbox" id="optin"' + (d.publicOptIn ? ' checked' : '') + '><span>Apparaître dans le classement public avec mon pseudo (activé par défaut, tu peux te retirer quand tu veux).</span></label>' : '';
-    $('board').innerHTML = seg() + (rows || empty) + optin;
+    $('board').innerHTML = banner() + seg() + (rows || empty) + optin; tick();
   }
   if ($('board')) $('board').addEventListener('click', (e) => { const b = e.target.closest('[data-scope],[data-per],[data-kind]'); if (!b) return; if (b.dataset.scope) scope = b.dataset.scope; if (b.dataset.per) per = b.dataset.per; if (b.dataset.kind) kind = b.dataset.kind; drawBoard(); });
   if ($('board')) $('board').addEventListener('change', async (e) => { if (e.target.id !== 'optin') return; const r = await NEV.cloud.api('account/board', 'POST', { public: e.target.checked }); if (!r.ok) e.target.checked = false; drawBoard(); });
