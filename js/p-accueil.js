@@ -9,18 +9,23 @@
   $('date').textContent = NEV.util.frDate(d.date);
   $('hello').innerHTML = 'Salut ' + esc(user.pseudo) + ', prêt à <em>booster</em> ?';
 
+  $('pFl').textContent = 'Flammes · ' + (p.flames || 0);
+  $('pXp').textContent = 'XP · ' + p.progress.xp;
+  var al = $('alert');
   if (d.double && d.status !== 'done') {
-    $('alert').innerHTML = '<div class="banner"><span style="font-size:1.5rem">⚠️</span><div>Tu as raté ' + (d.missed > 1 ? d.missed + ' jours' : 'une journée') + ' : l\'enchaînement d\'aujourd\'hui est <b>doublé (×2)</b>. Respire, hydrate-toi, et fais-le proprement.</div></div>';
+    al.innerHTML = '<b>Enchaînement ×' + 2 + '</b>Tu as raté ' + (d.missed > 1 ? d.missed + ' jours' : 'une journée') + '. Respire, hydrate-toi, et fais-le proprement : la séance d\'aujourd\'hui est doublée.';
   } else if (d.status === 'done') {
-    $('alert').innerHTML = '<div class="banner ok"><span style="font-size:1.5rem">✅</span><div>Séance du jour validée. Reviens demain pour une nouvelle carte !</div></div>';
+    al.className = 'chain ok c-chain'; al.innerHTML = '<b>Séance validée</b>Bravo ! Reviens demain pour une nouvelle carte.';
+  } else {
+    al.innerHTML = '<b>Série en cours</b>' + (p.progress.streak ? p.progress.streak + ' jour' + (p.progress.streak > 1 ? 's' : '') + ' d\'affilée. Continue !' : 'Lance ta première séance pour démarrer une série.');
   }
+  var an = NEV.cfg && NEV.cfg.announce; if (an && an.text) $('coachT').textContent = an.text;
 
   // carte du jour
   var t = '<div class="eyebrow">Ta carte du jour</div>';
   if (d.status === 'none') {
-    t += '<h2 class="big" style="font-size:clamp(1.7rem,4vw,2.4rem);margin:8px 0">Une carte t\'attend.</h2><p class="muted">Un seul tirage par jour, totalement aléatoire. Choisis ton tirage :</p>' +
-      '<div class="pickrow"><a class="pk" href="gacha.html?go=1" data-go><div class="pkh">' + I.gacha + '<b>Tirer une carte</b></div><span>1 carte parmi 5, une séance claire.</span><span class="chip red">Tirage du jour</span></a>' +
-      '<a class="pk" href="gacha-box.html" data-go><div class="pkh">' + I.cube + '<b>Gacha Box</b></div><span>La boîte 3D : 4 cartes, un combo.</span><span class="chip gold">4 cartes</span></a></div>';
+    t += '<h2 style="margin:8px 0">Une carte t\'attend.</h2><p class="muted">Un seul tirage par jour, totalement aléatoire.</p>' +
+      '<div class="acts"><a class="b1" href="gacha.html?go=1" data-go>Tirage du jour</a><a class="b2" href="gacha-box.html" data-go>Gacha Box · 4 cartes</a></div>';
   } else {
     var r = NEV.Gacha.rarity(d.card.rarity);
     var pl = d.card.plan;
@@ -49,9 +54,9 @@
     var done = function (q) { return q.auto || !!qs[q.id]; };
     function draw() {
       var n = Q.filter(done).length;
-      $('qd').innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2 id="qdT" style="font-size:1.2rem">Quêtes du jour <span class="muted" style="font-weight:600">· ' + n + '/' + Q.length + '</span></h2><a class="btn ghost sm" href="quete.html" data-go>Tout voir</a></div>' +
-        '<div class="bar" style="margin-top:12px"><i style="width:' + Math.round(n / Q.length * 100) + '%"></i></div><ul class="qd">' +
-        Q.map(function (q) { return '<li class="' + (done(q) ? 'done' : '') + '"><button type="button" class="ck" data-q="' + q.id + '"' + (q.auto ? ' disabled' : '') + ' aria-pressed="' + done(q) + '" aria-label="' + esc(q.t) + '">' + (done(q) ? '✓' : '') + '</button><div class="t"><b>' + esc(q.t) + '</b><span>' + esc(q.s) + '</span></div></li>'; }).join('') + '</ul>';
+      $('qd').innerHTML = '<div class="hd"><h2 id="qdT">Quêtes du jour</h2><span class="muted" style="font-weight:800">' + n + '/' + Q.length + '</span></div>' +
+        '<div class="bar"><i style="width:' + Math.round(n / Q.length * 100) + '%"></i></div><ul class="qd">' +
+        Q.map(function (q) { return '<li class="' + (done(q) ? 'done' : '') + '"><button type="button" class="ck" data-q="' + q.id + '"' + (q.auto ? ' disabled' : '') + ' aria-pressed="' + done(q) + '" aria-label="' + esc(q.t) + '">' + (done(q) ? '✓' : '') + '</button><b>' + esc(q.t) + '</b></li>'; }).join('') + '</ul><p style="margin:14px 0 0"><a class="more" href="quete.html" data-go style="color:var(--red);font-weight:800;font-size:.85rem;text-decoration:none">Tout voir</a></p>';
     }
     $('qd').addEventListener('click', function (e) { var b = e.target.closest('.ck[data-q]'); if (b && !b.disabled) { qs[b.dataset.q] = !qs[b.dataset.q]; NEV.store.set(qk, qs); draw(); } });
     draw();
@@ -64,9 +69,15 @@
   $('heroXp').textContent = h.next ? p.progress.xp + ' / ' + h.next.xp + ' XP avant « ' + h.next.name + ' »' : p.progress.xp + ' XP · palier maximum';
   if (NEV.Hero) NEV.Hero.mount($('hero'), { stage: h.stage.n, aura: p.aura });
 
-  // stats
-  $('stats').innerHTML = [
-    [p.progress.streak, 'Série (jours)'], [p.progress.best, 'Record'], [p.progress.total, 'Séances'], [lvl.name, 'Niveau ' + lvl.n]
-  ].map(function (s) { return '<div class="stat"><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div>'; }).join('');
+  // messages récents (serveur seulement)
+  (async function () {
+    var box = $('rec'); if (!box) return;
+    var list = [];
+    if (NEV.cloud && NEV.cloud.mode === 'server') {
+      try { var r = await fetch('api/social/conversations', { credentials: 'same-origin', cache: 'no-store', headers: { 'X-NEV': '1' } }); if (r.ok) list = (await r.json()).conversations || []; } catch (e) { /* hors ligne */ }
+    }
+    box.innerHTML = '<div class="hd"><h2>Messages récents</h2></div>' + (list.length ? '<ul class="rl">' + list.slice(0, 3).map(function (c) { return '<li><a href="social.html#/messages/' + encodeURIComponent(c.handle) + '" data-go><span class="ini">' + esc(c.handle.slice(0, 1).toUpperCase()) + '</span><div class="t"><b>@' + esc(c.handle) + '</b><span>' + esc(c.text) + '</span></div></a></li>'; }).join('') + '</ul>' : '<p class="muted" style="margin:0">Aucun message pour le moment.</p>') +
+      '<p style="margin:14px 0 0"><a href="social.html" data-go style="color:var(--red);font-weight:800;font-size:.85rem;text-decoration:none">Ouvrir la communauté</a></p>';
+  })();
 
 })();

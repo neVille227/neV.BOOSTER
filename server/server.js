@@ -143,7 +143,7 @@ const adminRole = (req) => { const s = adminSess(req); if (!s) return null; if (
 const isAdmin = (req) => !!adminRole(req);
 const ROLE_FR = { owner: 'Propriétaire', admin: 'Administrateur', moderator: 'Modérateur' };
 /* Permissions vérifiées CÔTÉ SERVEUR (masquer un bouton dans l'interface ne protège rien). */
-const MOD_OK = /^(state|stats|users|ban|moderation|moderation\/act|social\/reports|social\/reports\/close|chat|chat\/threads|cheat|users\/mute|me)$/;
+const MOD_OK = /^(state|stats|stats\/series|users|ban|moderation|moderation\/act|social\/reports|social\/reports\/close|chat|chat\/threads|cheat|users\/mute|me)$/;
 const OWNER_ONLY = /^(role|team|db\/query|db\/delete-user|db\/delete-row|sessions\/revoke-all)$/;
 function allowed(role, route) { if (role === 'owner') return true; if (role === 'moderator') return MOD_OK.test(route); return !OWNER_ONLY.test(route); }
 const als = new AsyncLocalStorage();
@@ -374,6 +374,25 @@ async function adminApiInner(req, res, route, ip, role) {
   if (route.indexOf('db/') === 0) return adminDb(req, res, route, url, ip, m);
   if (route === 'users' && m === 'GET') return send(res, 200, { users: role === 'moderator' ? S.userRows().map((u) => Object.assign({}, u, { email: '' })) : S.userRows() });
   if (route === 'stats' && m === 'GET') return send(res, 200, stats());
+  if (route === 'stats/series' && m === 'GET') return send(res, 200, S.series(today(), addDays, parseInt(url.searchParams.get('n'), 10) || 7));
+  if (route === 'tasks' && m === 'GET') return send(res, 200, { tasks: S.tasks() });
+  if (route === 'tasks' && m === 'POST') {
+    const b = await readBody(req, 2048), title = clean(b.title, 90), detail = clean(b.detail, 160), due = /^\d{4}-\d{2}-\d{2}$/.test(String(b.due || '')) ? String(b.due) : today();
+    if (!title) return fail(res, 400, 'Donne un titre à la tâche.');
+    if (S.tasks().length >= 100) return fail(res, 400, 'Limite de 100 tâches : supprime les anciennes.');
+    const id = S.taskAdd(title, detail, due, S.actorFn()); S.audit('task-add', String(id), title.slice(0, 80)); return send(res, 200, { ok: true, id: Number(id) });
+  }
+  if (route === 'tasks/status' && m === 'POST') {
+    const b = await readBody(req, 256), id = parseInt(b.id, 10);
+    if (['todo', 'doing', 'done'].indexOf(b.status) < 0 || !id) return fail(res, 400, 'Statut invalide.');
+    if (!S.taskSet(id, b.status)) return fail(res, 404, 'Tâche introuvable.');
+    S.audit('task-status', String(id), b.status); return send(res, 200, { ok: true });
+  }
+  if (route === 'tasks/delete' && m === 'POST') {
+    const b = await readBody(req, 256), id = parseInt(b.id, 10);
+    if (!id || !S.taskDel(id)) return fail(res, 404, 'Tâche introuvable.');
+    S.audit('task-delete', String(id), ''); return send(res, 200, { ok: true });
+  }
   if (route === 'events' && m === 'GET') return send(res, 200, { events: S.events(url.searchParams.get('type') || '', 150) });
   if (route === 'ban' && m === 'POST') { const b = await readBody(req, 512), u = S.userById(String(b.uid)); if (!u) return fail(res, 404, 'Joueur introuvable.'); S.setBanned(u.id, !!b.banned); S.audit(b.banned ? 'ban' : 'unban', u.id, u.pseudo); return send(res, 200, { ok: true }); }
   if (route === 'grant' && m === 'POST') {

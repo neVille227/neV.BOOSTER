@@ -26,6 +26,7 @@ const nn = (v) => (v === undefined || v === null ? null : v);
 const int = (v, d) => { v = Math.floor(Number(v)); return Number.isFinite(v) ? v : d === undefined ? null : d; };
 
 const DESCR = {
+  admin_tasks: 'Tâches de l\'équipe admin (tableau de bord).',
   users: 'Comptes : e-mail, pseudo, code de parrainage, parrain, suspension.',
   players: 'Progression de chaque joueur (niveau, XP, séries, flammes) + sauvegarde complète en JSON.',
   workouts: 'Journal permanent de toutes les séances (une ligne par carte jouée).',
@@ -113,6 +114,9 @@ CREATE INDEX IF NOT EXISTS ix_events_type ON events(type, t);
 CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE IF NOT EXISTS admin_audit(
   id INTEGER PRIMARY KEY AUTOINCREMENT, t INTEGER NOT NULL, action TEXT NOT NULL, target TEXT, detail TEXT
+);
+CREATE TABLE IF NOT EXISTS admin_tasks(
+  id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, detail TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'todo', due TEXT NOT NULL DEFAULT '', created INTEGER NOT NULL, actor TEXT
 );
 CREATE VIEW IF NOT EXISTS referrals AS
   SELECT r.id AS referrer_id, r.pseudo AS referrer, u.id AS referee_id, u.pseudo AS referee, u.created AS day
@@ -392,6 +396,21 @@ function open(dir) {
       errors24h: S.countEvents('error', n - day), views24h: S.countEvents('view', n - day)
     };
   };
+
+  /* séries journalières (joueurs actifs, séances, validées, inscriptions) sur n jours + total avant la période */
+  S.series = (today, addDays, n) => {
+    n = Math.max(7, Math.min(365, n | 0)); const days = []; for (let i = n - 1; i >= 0; i--) days.push(addDays(today, -i));
+    const from = days[0], idx = {}; days.forEach((d, i) => { idx[d] = i; });
+    const z = () => days.map(() => 0), active = z(), sessions = z(), verified = z(), signups = z();
+    D('SELECT day, COUNT(*) AS n FROM (SELECT day, uid FROM workouts WHERE day >= ? UNION SELECT day, uid FROM logins WHERE day >= ?) GROUP BY day', from, from).forEach((r) => { if (r.day in idx) active[idx[r.day]] = r.n; });
+    D('SELECT day, COUNT(*) AS n, COALESCE(SUM(verified),0) AS v FROM workouts WHERE day >= ? GROUP BY day', from).forEach((r) => { if (r.day in idx) { sessions[idx[r.day]] = r.n; verified[idx[r.day]] = r.v; } });
+    D('SELECT created AS day, COUNT(*) AS n FROM users WHERE created >= ? GROUP BY created', from).forEach((r) => { if (r.day in idx) signups[idx[r.day]] = r.n; });
+    return { days, active, sessions, verified, signups, playersBefore: D1('SELECT COUNT(*) AS n FROM users WHERE created < ?', from).n };
+  };
+  S.tasks = () => D("SELECT id, title, detail, status, due, created, actor FROM admin_tasks ORDER BY CASE status WHEN 'doing' THEN 0 WHEN 'todo' THEN 1 ELSE 2 END, id DESC LIMIT 100");
+  S.taskAdd = (title, detail, due, actor) => DR('INSERT INTO admin_tasks(title,detail,status,due,created,actor) VALUES(?,?,?,?,?,?)', title, detail, 'todo', due, now(), actor || null).lastInsertRowid;
+  S.taskSet = (id, status) => DR('UPDATE admin_tasks SET status = ? WHERE id = ?', status, id).changes;
+  S.taskDel = (id) => DR('DELETE FROM admin_tasks WHERE id = ?', id).changes;
 
   /* ---------------- base de données : outils admin ---------------- */
   const objects = () => D("SELECT name, type FROM sqlite_master WHERE type IN ('table','view') AND name NOT LIKE 'sqlite_%' ORDER BY type DESC, name");
