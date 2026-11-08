@@ -44,7 +44,15 @@
     if (NEV.ui.setSocialBadge) NEV.ui.setSocialBadge(n);
     document.title = (n ? '(' + n + ') ' : '') + 'neV.BOOSTER — Social';
   }
-  function tabs(t) { Array.prototype.forEach.call($('socTabs').querySelectorAll('a'), (a) => { a.classList.toggle('on', a.dataset.t === t); if (a.dataset.t === t) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); }); }
+  const TITLES = { home: 'neV.BOOSTER <em>Social</em>', search: 'Recherche', messages: 'Messages', profile: 'Profil' };
+  function tabs(t) {
+    Array.prototype.forEach.call($('socTabs').querySelectorAll('a'), (a) => { a.classList.toggle('on', a.dataset.t === t); if (a.dataset.t === t) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    const so = $('soc'), nn0 = $('socNotif'); if (nn0 && nn0.parentNode !== so) so.insertBefore(nn0, $('socBody'));
+    so.dataset.v = t; so.classList.remove('chatopen'); document.body.classList.remove('pg-chat'); $('socT').innerHTML = TITLES[t] || TITLES.home;
+    const mi = $('socMe'); if (me) mi.textContent = (me.handle || '?').slice(0, 1).toUpperCase();
+  }
+  document.body.classList.add('pg-social');
+  $('socBurger').addEventListener('click', () => { const b = document.querySelector('.hdr .menuBtn'); if (b) b.click(); });
   const needAccount = (what) => '<div class="empty"><b>Un compte est nécessaire</b>' + esc(what) + '<div class="acts" style="justify-content:center;margin-top:14px"><a class="b" href="' + SIGN + '" data-go>Créer un compte</a><a class="b g" href="connexion.html" data-go>Se connecter</a></div></div>';
 
   /* ---------- notifications ---------- */
@@ -114,7 +122,7 @@
   const lvlTxt = (xp, sex) => { const h = stageOf(xp, sex); return 'Niveau ' + h.stage.n + ' · ' + h.stage.name; };
   function xpbar(xp, sex) {
     const h = stageOf(xp, sex);
-    return '<div class="sp-xp"><div class="sp-xp-t"><b>' + (xp || 0) + (h.next ? ' / ' + h.next.xp : '') + ' XP</b><span>' + (h.next ? 'Prochain niveau : ' + esc(h.next.name) : 'Palier maximal atteint') + '</span></div><div class="sp-bar"><i style="width:' + Math.round(h.pct * 100) + '%"></i></div></div>';
+    return '<div class="sp-xp"><div class="sp-xp-t"><b>XP</b><span>' + (xp || 0) + (h.next ? ' / ' + h.next.xp : '') + '</span></div><div class="sp-bar"><i style="width:' + Math.round(h.pct * 100) + '%"></i></div></div>';
   }
   const BADGES = [
     ['Première séance', (p) => p.sessions >= 1], ['Série de 3 jours', (p) => p.streak >= 3], ['Série de 7 jours', (p) => p.streak >= 7],
@@ -142,20 +150,25 @@
   async function viewHome() {
     cur = { view: 'home', handle: '' }; tabs('home');
     if (guest) {
-      body.innerHTML = '<h2>Bienvenue</h2><p class="muted">Cherche un joueur par son @pseudo et découvre les profils publics. Pour envoyer et recevoir des messages, il faut un compte gratuit.</p>' +
-        '<div class="acts" style="margin:14px 0"><a class="b" href="#/search">Rechercher un @pseudo</a><a class="b g" href="' + SIGN + '" data-go>Créer un compte</a></div>';
+      body.innerHTML = '<div class="pn"><h2>Bienvenue</h2><p class="muted">Cherche un joueur par son @pseudo et découvre les profils publics. Pour envoyer et recevoir des messages, il faut un compte gratuit.</p>' +
+        '<div class="acts" style="margin-top:14px"><a class="b" href="#/search">Rechercher un @pseudo</a><a class="b g" href="' + SIGN + '" data-go>Créer un compte</a></div></div>';
       return;
     }
     const [f, c] = await Promise.all([api('friends'), api('conversations')]);
     requests = (f.j.incoming || []).length; unread = c.j.unread || 0; setBadge(); renderNotif();
-    let h = '<h2>Salut @' + esc(me.handle) + '</h2><p class="muted">Ton espace pour discuter avec les autres joueurs, même hors séance.</p>' +
-      '<div class="acts" style="margin:12px 0 4px"><a class="b g" href="classement.html" data-go>Classement</a><a class="b g" href="clans.html" data-go>Clans</a><a class="b g" href="defis.html" data-go>Défis</a><a class="b g" href="chat.html" data-go>Chat</a><a class="b g" href="amis.html" data-go>Amis par code</a></div>';
-    if ((f.j.incoming || []).length) h += '<h3>Demandes de contact</h3><ul class="rows">' + f.j.incoming.map(reqRow).join('') + '</ul>';
-    const convs = (c.j.conversations || []).slice(0, 3);
-    h += '<h3>Messages récents</h3>' + (convs.length ? '<ul class="rows">' + convs.map(convRow).join('') + '</ul>' : '<div class="empty"><b>Aucune conversation</b>Cherche un joueur pour commencer.<div class="acts" style="justify-content:center;margin-top:12px"><a class="b" href="#/search">Rechercher</a></div></div>');
-    if ((f.j.friends || []).length) h += '<h3>Mes contacts (' + f.j.friends.length + ')</h3><ul class="rows">' + f.j.friends.map((p) => '<li>' + row(p, '<span class="b g">Écrire</span>').replace('href="#/u/' + enc(p.handle) + '"', 'href="#/messages/' + enc(p.handle) + '"') + '</li>').join('') + '</ul>';
-    if ((f.j.outgoing || []).length) h += '<h3>Demandes envoyées</h3><ul class="rows">' + f.j.outgoing.map((p) => '<li>' + row(p, '<span class="muted">en attente</span>') + '</li>').join('') + '</ul>';
+    const convs = (c.j.conversations || []).slice(0, 3), fl = f.j.friends || [], inc = f.j.incoming || [], out = f.j.outgoing || [];
+    const lv = stageOf(me.xp, me.sex);
+    let h = '<div class="hm"><form class="qs span2" id="qf" role="search"><label class="sbar"><input id="qh" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="20" placeholder="Trouver un joueur par @pseudo" aria-label="Trouver un joueur par @pseudo"></label><button class="b" type="submit">OK</button></form>' +
+      '<div class="span2" id="notifMove"></div>';
+    h += '<section class="pn"><div class="hd"><h3>Messages récents</h3><a href="#/messages">Tout voir</a></div>' + (convs.length ? '<ul class="rows">' + convs.map(convRow).join('') + '</ul>' : '<p class="muted" style="margin:0">Aucune conversation. <a href="#/search"><b>Cherche un joueur</b></a> pour écrire.</p>') + '</section>';
+    h += '<section class="pn"><div class="hd"><h3>Mes contacts (' + fl.length + ')</h3></div>' + (fl.length ? '<div class="cts">' + fl.slice(0, 6).map((p) => '<a class="ct" href="#/messages/' + enc(p.handle) + '">' + avo(p.avatar, p.handle, p.sex, p.online, 'lg') + '<b>@' + esc(p.handle) + '</b><small>Niv. ' + stageOf(p.xp, p.sex).stage.n + '</small></a>').join('') + '</div>' : '<p class="muted" style="margin:0">Aucun contact pour le moment.</p>') + '</section>';
+    if (inc.length) h += '<section class="pn"><div class="hd"><h3>Demandes d\'amis (' + inc.length + ')</h3></div><div class="rows">' + inc.map((p) => '<div class="rq">' + av(p.avatar, p.handle, p.sex, 'sm') + '<b>@' + esc(p.handle) + '</b><button type="button" class="b" data-fa="accept" data-h="' + esc(p.handle) + '">Accepter</button><button type="button" class="b out" style="padding:8px 14px" data-fa="decline" data-h="' + esc(p.handle) + '">Refuser</button></div>').join('') + '</div></section>';
+    if (out.length) h += '<section class="pn"><div class="hd"><h3>Demandes envoyées</h3></div><ul class="rows">' + out.map((p) => '<li>' + row(p, '<span class="muted">en attente</span>') + '</li>').join('') + '</ul></section>';
+    h += '<div class="span2 me-card">' + avo(me.avatar, me.handle, me.sex, true, 'lg') + '<div class="t"><b>@' + esc(me.handle) + '</b><small>Niveau ' + lv.stage.n + ' · ' + esc(lv.stage.name) + ' · ' + me.xp + ' XP</small><div class="sp-bar"><i style="width:' + Math.round(lv.pct * 100) + '%"></i></div></div><a class="b" href="#/profile">Profil</a></div>';
+    h += '<div class="acts span2"><a class="b g" href="classement.html" data-go>Classement</a><a class="b g" href="clans.html" data-go>Clans</a><a class="b g" href="defis.html" data-go>Défis</a><a class="b g" href="chat.html" data-go>Chat</a><a class="b g" href="amis.html" data-go>Amis par code</a></div></div>';
     body.innerHTML = h;
+    const nm = $('notifMove'), nn = $('socNotif'); if (nm && nn) { nm.appendChild(nn); }
+    $('qf').addEventListener('submit', (e) => { e.preventDefault(); const v = $('qh').value.replace(/^@+/, '').trim(); try { sessionStorage.setItem('nev.social.q', v); } catch (e2) { /* ignoré */ } location.hash = '#/search'; });
   }
   function convRow(c) {
     return '<li><a class="row' + (cur.handle && cur.handle.toLowerCase() === c.handle.toLowerCase() ? ' act' : '') + '" href="#/messages/' + enc(c.handle) + '">' + avo(c.avatar, c.handle, c.sex, c.online) + '<div class="t"><b>@' + esc(c.handle) + '</b><span class="' + (c.unread ? 'unread' : '') + '">' + (c.fromMe ? 'Toi : ' : '') + esc(c.text) + '</span></div><div style="text-align:right;display:grid;gap:4px;justify-items:end"><time>' + ago(c.t) + '</time>' + (c.unread ? '<span class="dot">' + c.unread + '</span>' : '') + '</div></a></li>';
@@ -171,19 +184,20 @@
     const f = { lvl: 0, zone: '' }; let res = null, term = '';
     const stages = NEV.HERO_STAGES.map((h) => [h.n, (NEV.sex === 'f' && h.nameF) ? h.nameF : h.name]);
     const pill = (k, v, l, on) => '<button type="button" class="pl' + (on ? ' on' : '') + '" data-' + k + '="' + v + '">' + esc(l) + '</button>';
-    body.innerHTML = '<div class="se" id="se"><div class="se-main"><h2>Rechercher un joueur</h2>' +
-      '<form class="sbar" id="sf" role="search"><span>@</span><input id="q" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="pseudo, par exemple neville" maxlength="20" aria-label="Pseudo à rechercher"><button class="b" type="submit">Rechercher</button></form>' +
+    body.innerHTML = '<div class="se" id="se"><div class="se-main"><div class="se-top">' +
+      '<form class="qs" id="sf" role="search"><label class="sbar"><span>@</span><input id="q" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="pseudo, par exemple neville" maxlength="20" aria-label="Pseudo à rechercher"></label><button class="b" type="submit"><span class="full">Rechercher</span><span class="ok">OK</span></button></form>' +
       '<div class="flt"><span>Niveau</span><div class="pls" id="fl">' + pill('lvl', 0, 'Tous', true) + stages.map((s) => pill('lvl', s[0], s[1], false)).join('') + '</div></div>' +
-      '<div class="flt"><span>Zone</span><div class="pls" id="fz">' + pill('zone', '', 'Toutes', true) + Object.keys(ZONE).map((k) => pill('zone', k, ZONE[k], false)).join('') + '</div></div>' +
-      '<h3 id="rh"></h3><div id="res"><p class="muted">Tape au moins 2 caractères du @pseudo.</p></div></div>' +
-      '<aside class="se-side"><h3>Recherches récentes</h3><div id="rec"></div>' + (guest ? '' : '<h3>Joueurs suggérés</h3><div id="sug"></div>') + '</aside></div>';
+      '<div class="flt"><span>Zone</span><div class="pls" id="fz">' + pill('zone', '', 'Toutes', true) + Object.keys(ZONE).map((k) => pill('zone', k, ZONE[k], false)).join('') + '</div></div></div>' +
+      '<h3 id="rh" style="margin-top:0"></h3><div id="res"><p class="muted">Tape au moins 2 caractères du @pseudo.</p></div></div>' +
+      '<aside class="se-side"><section class="pn"><h3>Recherches récentes</h3><div id="rec"></div></section>' + (guest ? '' : '<section class="pn sg"><h3>Joueurs suggérés</h3><div id="sug"></div></section>') + '</aside></div>';
     const q = $('q'); q.focus();
-    const drawRec = () => { const a = recent(); $('rec').innerHTML = a.length ? '<ul class="rows">' + a.map((x) => '<li class="row"><button type="button" class="lnk" data-rs="' + esc(x) + '">@' + esc(x) + '</button><button type="button" class="b g sm" data-rr="' + esc(x) + '">Retirer</button></li>').join('') + '</ul>' : '<p class="muted">Aucune recherche pour le moment.</p>'; };
+    try { const pre = sessionStorage.getItem('nev.social.q'); if (pre) { sessionStorage.removeItem('nev.social.q'); q.value = pre; setTimeout(() => run(true), 0); } } catch (e) { /* ignoré */ }
+    const drawRec = () => { const a = recent(); $('rec').innerHTML = a.length ? '<ul class="rows rs-list">' + a.map((x) => '<li class="row"><button type="button" class="lnk" data-rs="' + esc(x) + '">@' + esc(x) + '</button><button type="button" class="add" style="color:var(--muted)" data-rr="' + esc(x) + '">Retirer</button></li>').join('') + '</ul><div class="rs-chips">' + a.map((x) => '<button type="button" data-rs="' + esc(x) + '">@' + esc(x) + '</button>').join('') + '</div>' : '<p class="muted" style="margin:0">Aucune recherche pour le moment.</p>'; };
     drawRec();
     const card = (p) => {
       const lv = p.xp != null ? lvlTxt(p.xp, p.sex) : 'Profil réservé';
       const act = p.relation === 'friends' ? '<span class="tag ok">Contact</span>' : p.relation === 'self' ? '<span class="tag">Toi</span>' : p.relation === 'requested' ? '<span class="tag">Demande envoyée</span>' : guest ? '' : '<button type="button" class="b sm" data-fa="request" data-h="' + esc(p.handle) + '">Ajouter</button>';
-      return '<li class="sp-card">' + avo(p.avatar, p.handle, p.sex, p.online, 'lg') + '<b>@' + esc(p.handle) + '</b><span class="lv">' + esc(lv) + '</span><span class="zn">' + (p.zone ? esc(ZONE[p.zone] || '') : '&nbsp;') + '</span><div class="acts">' + act + '<a class="b g sm" href="#/u/' + enc(p.handle) + '">Profil</a></div></li>';
+      return '<li class="sp-card">' + avo(p.avatar, p.handle, p.sex, p.online, 'lg') + '<b>@' + esc(p.handle) + '</b><span class="lv">' + esc(lv) + '</span><span class="lv-m">' + esc(lv + (p.zone ? ' · ' + ZONE[p.zone] : '')) + '</span><span class="zn">' + (p.zone ? esc(ZONE[p.zone] || '') : '&nbsp;') + '</span><div class="acts">' + act + '<a class="b g sm" href="#/u/' + enc(p.handle) + '">Profil</a></div></li>';
     };
     const draw = () => {
       if (res === null) return;
@@ -211,7 +225,7 @@
     });
     if (!guest) api('suggest').then((r) => {
       const el = $('sug'); if (!el) return; const L = (r.ok && r.j.results) || [];
-      el.innerHTML = L.length ? '<ul class="rows">' + L.map((p) => '<li class="row"><a class="lnk" href="#/u/' + enc(p.handle) + '">' + av(p.avatar, p.handle, p.sex, 'sm') + '<span>@' + esc(p.handle) + '</span></a>' + (p.relation === 'none' ? '<button type="button" class="b g sm" data-fa="request" data-h="' + esc(p.handle) + '">Ajouter</button>' : '<span class="tag">En attente</span>') + '</li>').join('') + '</ul>' : '<p class="muted">Pas de suggestion pour le moment.</p>';
+      el.innerHTML = L.length ? '<ul class="rows">' + L.map((p) => '<li class="row"><a class="lnk" href="#/u/' + enc(p.handle) + '">' + av(p.avatar, p.handle, p.sex, 'sm') + '<span style="display:grid;gap:1px"><b style="font-size:.88rem">@' + esc(p.handle) + '</b><small style="color:var(--muted);font-weight:600;font-size:.74rem">' + esc(lvlTxt(p.xp, p.sex)) + '</small></span></a>' + (p.relation === 'none' || p.relation === 'incoming' ? '<button type="button" class="add" data-fa="request" data-h="' + esc(p.handle) + '">Ajouter</button>' : '<span class="tag">En attente</span>') + '</li>').join('') + '</ul>' : '<p class="muted" style="margin:0">Pas de suggestion pour le moment.</p>';
     });
   }
 
@@ -285,7 +299,7 @@
       await loadFriends(); await refreshConvs();
     } else await refreshConvs();
     if (!handle && wide() && convCache.length) { location.replace('#/messages/' + enc(convCache[0].handle)); return; }
-    $('m3').dataset.open = handle ? '1' : '';
+    $('m3').dataset.open = handle ? '1' : ''; $('soc').classList.toggle('chatopen', !!handle); document.body.classList.toggle('pg-chat', !!handle);
     if (handle) return loadChat(handle);
     $('cpane').innerHTML = '<div class="empty"><b>Choisis une conversation</b>Ou <a href="#/search"><b>cherche un joueur</b></a> pour écrire.</div>'; $('rpane').innerHTML = '';
   }
@@ -299,8 +313,8 @@
     if (!p) return '<div class="empty">Fiche indisponible.</div>';
     if (p.locked) return '<div class="rp-h">' + av(p.avatar, p.handle, p.sex, 'lg') + '<b>@' + esc(p.handle) + '</b><span class="muted">Profil réservé</span></div>';
     return '<div class="rp-h">' + avo(p.avatar, p.handle, p.sex, p.online, 'lg') + '<b>@' + esc(p.handle) + '</b><span class="sp-lvl">' + esc(lvlTxt(p.xp, p.sex)) + '</span></div>' + xpbar(p.xp, p.sex) +
-      '<div class="sp-tiles s3">' + tile(p.streak || 0, 'Flammes') + tile(p.sessions || 0, 'Séances') + tile(p.contacts || 0, 'Contacts') + '</div><h3>Badges</h3>' + badges(p, 6) +
-      '<a class="b" href="#/u/' + enc(p.handle) + '" style="justify-content:center;width:100%;margin-top:14px">Voir le profil</a>';
+      '<div class="sp-tiles s3">' + tile(p.streak || 0, 'Flammes') + tile(p.sessions || 0, 'Séances') + tile(p.contacts || 0, 'Contacts') + '</div><h3>Badges</h3>' + badges(p, 3).replace('sp-badges', 'sp-badges mini') +
+      '<a class="b" href="#/u/' + enc(p.handle) + '" style="justify-content:center;width:100%;margin-top:18px;padding:14px">Voir le profil</a><div class="rp-act"><button type="button" data-bl="1" data-h="' + esc(p.handle) + '">Bloquer ce joueur</button></div>';
   }
   async function loadChat(handle) {
     const [r, pr] = await Promise.all([api('messages?h=' + enc(handle) + '&mark=1'), api('profile?h=' + enc(handle))]);
@@ -309,7 +323,7 @@
     const w = r.j.with; cur.handle = w.handle; lastDay = '';
     const pp = pr.ok ? pr.j.profile : null;
     $('rpane').innerHTML = panel(pp, w);
-    pane.innerHTML = '<div class="chat"><div class="chat-h"><a class="back mob" href="#/messages" aria-label="Retour aux conversations" style="margin:0;text-decoration:none">←</a><a href="#/u/' + enc(w.handle) + '">' + avo(w.avatar, w.handle, w.sex, pp && pp.online) + '</a><div class="t"><b>@' + esc(w.handle) + '</b><small>' + (pp && pp.online ? '<i class="od on"></i> En ligne' : 'Messagerie privée') + '</small></div><div class="acts"><a class="b g sm" href="defis.html" data-go>Défier</a><button class="b d sm" data-bl="1" type="button" data-h="' + esc(w.handle) + '">Bloquer</button></div></div>' +
+    pane.innerHTML = '<div class="chat"><div class="chat-h"><a class="back mob" href="#/messages" aria-label="Retour aux conversations" style="margin:0;text-decoration:none;font-size:1.4rem;padding:0 6px">‹</a><a href="#/u/' + enc(w.handle) + '">' + avo(w.avatar, w.handle, w.sex, pp && pp.online) + '</a><div class="t"><b>@' + esc(w.handle) + '</b><small class="' + (pp && pp.online ? '' : 'off') + '">' + (pp && pp.online ? 'En ligne' : 'Hors ligne') + '</small></div><div class="acts"><a class="b out" href="defis.html" data-go>Défier</a></div></div>' +
       '<div class="msgs" id="msgs" role="log" aria-label="Messages">' + (r.j.messages.length ? r.j.messages.map(msgHtml).join('') : '<div class="empty">Dis bonjour à @' + esc(w.handle) + ' 👋</div>') + '</div>' +
       (r.j.blocked ? '<div class="note">Tu as bloqué ce joueur. <button class="b g" data-bl="0" data-h="' + esc(w.handle) + '" type="button">Débloquer</button></div>' : r.j.canSend ?
         '<form class="comp" id="comp"><textarea id="txt" rows="1" maxlength="1000" placeholder="' + (wide() ? 'Écris un message à @' + esc(w.handle) : 'Écris un message') + '…" aria-label="Message"></textarea>' + (imagesOn ? '<label class="b g" style="cursor:pointer">📷<input type="file" id="imgIn" accept="image/jpeg,image/png,image/webp" hidden></label>' : '') + '<button class="b send" id="sendBtn" type="submit">Envoyer</button></form><p class="err" id="cerr"></p>' :

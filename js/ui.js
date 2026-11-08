@@ -67,7 +67,7 @@
   ];
 
   /* Espace communautaire unique : Profils et messages, Chat et Amis sont trois onglets d'une même entrée de menu. */
-  const COMMU = [['social', 'social.html', 'Social'], ['classement', 'classement.html', 'Classement'], ['clans', 'clans.html', 'Clans'], ['defis', 'defis.html', 'Défis']];
+  const COMMU = [['classement', 'classement.html', 'Joueurs'], ['clans', 'clans.html', 'Clans'], ['defis', 'defis.html', 'Défis']];
   const inCommu = (id) => COMMU.some((c) => c[0] === id);
   const lk = (l, inner, active) => '<a href="' + l[1] + '" data-go' + (l[0] === active ? ' class="on" aria-current="page"' : '') + '>' + inner + '</a>';
 
@@ -119,6 +119,12 @@
       doc.addEventListener('keydown', (e) => { if (e.key === 'Escape') setSide(false); });
       const cur = side.querySelector('.si.on'); if (cur && cur.scrollIntoView) { try { cur.scrollIntoView({ block: 'nearest' }); } catch (e) { /* ignoré */ } }
       loadCompanion(active);
+    }
+    if (user && !pub && active !== 'social' && active !== 'exercice') {
+      const MB = [['accueil', 'accueil.html', 'Accueil', I.home], ['quete', 'quete.html', 'Quête', I.quest], ['gacha', 'gacha.html', 'Gacha', I.gacha], ['social', 'social.html', 'Social', I.at], ['compte', 'compte.html', 'Profil', I.me]];
+      const mb = doc.createElement('nav'); mb.className = 'mbar'; mb.setAttribute('aria-label', 'Navigation rapide');
+      mb.innerHTML = MB.map((l) => '<a href="' + l[1] + '" data-go' + (l[0] === active || (l[0] === 'social' && inCommu(active)) ? ' class="on" aria-current="page"' : '') + '><i>' + l[3] + '</i><span>' + l[2] + '</span></a>').join('');
+      doc.body.appendChild(mb); doc.body.classList.add('has-mbar');
     }
     if (inCommu(active)) {
       const w = doc.querySelector('.page .wrap');
