@@ -300,3 +300,10 @@ Page `social.html` (Accueil · Recherche · Messages · Profil) — `js/p-social
 - **Classement** : bandeau avec compte à rebours jusqu'à la fin de la semaine, podium du top 3.
 - Onglets Communauté : Social · Classement · Clans · Défis. Barre d'onglets fixe en bas sur mobile.
 - Tests : 277 réussis (le seul échec connu : `assetlinks.json`). Service worker `nev-v24`.
+
+## V15 — Maquettes : accueil, messagerie, recherche, classement, admin
+- **Accueil** : tableau de bord en 3 colonnes (carte du jour + quêtes · avatar et niveau · annonce du coach, enchaînement, messages récents). Mobile : colonne unique + barre du bas (Accueil, Quête, Gacha, Social, Profil).
+- **Social** : en-tête « neV.BOOSTER Social », onglets Accueil/Recherche/Messages/Profil, messagerie en 3 panneaux séparés, recherche avec filtres, conversation plein écran sur mobile, barre d'onglets du bas.
+- **Classement** : onglets Joueurs · Clans · Défis, catégories (Score + chaque défi : pompes, squats…), podium, bandeau Coach avec compte à rebours, lignes avec barre de progression.
+- **Admin** : barre latérale à icônes, barre du haut avec recherche de joueur, 6 cartes de statistiques avec courbes et évolution, graphiques (barres, anneau des niveaux), tâches récentes (`admin/tasks`), annonce rapide, courbe de fréquentation 7j/30j/90j/1an (`admin/stats/series`), page Statistiques, menu mobile. Palette du site inchangée.
+- Tests : 286 réussis (seul échec connu : `assetlinks.json`). Service worker `nev-v25`.

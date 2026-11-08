@@ -14,20 +14,20 @@
 </head>
 <body>
 <div class="page"><div class="wrap">
-  <div class="eyebrow">Communauté</div>
-  <h1 class="big">neV<em>.</em>BOOSTER <em>Social</em></h1>
-  <p class="lead">Retrouve les autres joueurs par leur @pseudo, ajoute des contacts et écris-leur, même en dehors des séances.</p>
-  <section class="soc" id="soc" aria-label="Espace social">
-    <header class="soc-top">
-      <b class="soc-title">neV.BOOSTER</b>
+  <section class="soc" id="soc" aria-label="Espace social" data-v="home">
+    <header class="soc-top" id="socTop">
+      <div class="soc-ttl"><div class="eyebrow">Communauté</div>
+        <h1 class="soc-h"><span class="t-d">neV.BOOSTER <em>Social</em></span><span class="t-m" id="socT">neV.BOOSTER <em>Social</em></span></h1></div>
+      <nav class="soc-tabs" id="socTabs" aria-label="Sections du social">
+        <a href="#/" data-t="home"><em class="ti"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7M6 10v10h12V10M10 20v-6h4v6"/></svg></em><span>Accueil</span></a>
+        <a href="#/search" data-t="search"><em class="ti"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg></em><span>Recherche</span></a>
+        <a href="#/messages" data-t="messages"><em class="ti"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H10l-5 4v-4H4z"/></svg></em><span>Messages</span><i class="badge" id="socBadge" hidden>0</i></a>
+        <a href="#/profile" data-t="profile"><em class="ti"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></em><span>Profil</span></a>
+      </nav>
       <span class="soc-pill" id="socPill">Social</span>
+      <button type="button" class="soc-burger" id="socBurger" aria-label="Menu du site"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <a class="soc-me" id="socMe" href="#/profile" aria-label="Mon profil">?</a>
     </header>
-    <nav class="soc-tabs" id="socTabs" aria-label="Sections du social">
-      <a href="#/" data-t="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7M6 10v10h12V10M10 20v-6h4v6"/></svg><span>Accueil</span></a>
-      <a href="#/search" data-t="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg><span>Recherche</span></a>
-      <a href="#/messages" data-t="messages"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H10l-5 4v-4H4z"/></svg><span>Messages</span><i class="badge" id="socBadge" hidden>0</i></a>
-      <a href="#/profile" data-t="profile"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span>Profil</span></a>
-    </nav>
     <div class="soc-notif" id="socNotif"></div>
     <div class="soc-body" id="socBody" aria-live="polite"></div>
   </section>
