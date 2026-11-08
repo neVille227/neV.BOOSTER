@@ -158,6 +158,13 @@ CREATE TABLE IF NOT EXISTS challenge_scores(
 );
 CREATE INDEX IF NOT EXISTS ix_scores ON challenge_scores(defi, verified, day, score);
 CREATE INDEX IF NOT EXISTS ix_scores_uid ON challenge_scores(uid, defi);
+CREATE TABLE IF NOT EXISTS clans(
+  id TEXT PRIMARY KEY, name TEXT NOT NULL COLLATE NOCASE UNIQUE, descr TEXT NOT NULL DEFAULT '', owner TEXT NOT NULL, t INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS clan_members(
+  uid TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, clan_id TEXT NOT NULL REFERENCES clans(id) ON DELETE CASCADE, t INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_clan_members ON clan_members(clan_id);
 CREATE TABLE IF NOT EXISTS profiles(
   uid TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE, handle TEXT NOT NULL COLLATE NOCASE UNIQUE,
   bio TEXT NOT NULL DEFAULT '', avatar TEXT NOT NULL DEFAULT 'evo', info TEXT NOT NULL DEFAULT '{}',
@@ -609,6 +616,16 @@ function open(dir) {
   S.iBlocked = (a, b) => !!D1('SELECT 1 AS x FROM blocks WHERE uid = ? AND blocked = ?', a, b);
   S.setBlock = (uid, b, on) => { if (on) DR('INSERT OR IGNORE INTO blocks(uid,blocked,t) VALUES(?,?,?)', uid, b, now()); else DR('DELETE FROM blocks WHERE uid = ? AND blocked = ?', uid, b); };
   S.blockedList = (uid) => D('SELECT p.handle, p.avatar FROM blocks b JOIN profiles p ON p.uid = b.blocked WHERE b.uid = ? ORDER BY b.t DESC', uid);
+  /* clans : un joueur = au plus un clan ; l'XP du clan = somme de l'XP de ses membres */
+  S.clanList = () => D('SELECT c.id, c.name, c.descr, c.owner, (SELECT COUNT(*) FROM clan_members m WHERE m.clan_id = c.id) AS n FROM clans c ORDER BY c.t');
+  S.clanMembers = (id) => D('SELECT uid FROM clan_members WHERE clan_id = ? ORDER BY t', id).map((r) => r.uid);
+  S.clanOf = (uid) => { const r = D1('SELECT clan_id AS id FROM clan_members WHERE uid = ?', uid); return r ? r.id : null; };
+  S.clanById = (id) => D1('SELECT * FROM clans WHERE id = ?', String(id));
+  S.clanCreate = (id, name, descr, owner) => { DR('INSERT INTO clans(id,name,descr,owner,t) VALUES(?,?,?,?,?)', id, name, descr, owner, now()); DR('INSERT INTO clan_members(uid,clan_id,t) VALUES(?,?,?)', owner, id, now()); };
+  S.clanJoin = (uid, id) => DR('INSERT OR REPLACE INTO clan_members(uid,clan_id,t) VALUES(?,?,?)', uid, id, now());
+  S.clanLeave = (uid) => { const id = S.clanOf(uid); if (!id) return; DR('DELETE FROM clan_members WHERE uid = ?', uid); const left = S.clanMembers(id); if (!left.length) DR('DELETE FROM clans WHERE id = ?', id); else { const c = S.clanById(id); if (c && c.owner === uid) DR('UPDATE clans SET owner = ? WHERE id = ?', left[0], id); } };
+  S.clanCount = () => D1('SELECT COUNT(*) AS n FROM clans').n;
+  S.suggestHandles = (limit) => D("SELECT p.* FROM profiles p JOIN users u ON u.id = p.uid WHERE u.banned = 0 AND p.vis = 'public' ORDER BY RANDOM() LIMIT ?", limit);
   const convKey = (a, b) => (a < b ? a + ':' + b : b + ':' + a);
   S.convKey = convKey;
   S.addDm = (from, to, text, img) => { const t = now(); const r = DR('INSERT INTO dm_messages(conv,from_uid,to_uid,text,img,t) VALUES(?,?,?,?,?,?)', convKey(from, to), from, to, text, img || null, t); return { id: Number(r.lastInsertRowid), t }; };

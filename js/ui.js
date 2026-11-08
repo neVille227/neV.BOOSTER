@@ -49,6 +49,7 @@
     ['social', 'social.html', 'Communauté', I.at, 0, 0],
     ['chat', 'chat.html', 'Chat', I.chat, 0, 0],
     ['amis', 'amis.html', 'Amis', I.users, 0, 0],
+    ['clans', 'clans.html', 'Clans', I.users, 0, 0],
     ['defis', 'defis.html', 'Défis', I.target, 0, 0],
     ['classement', 'classement.html', 'Classement', I.trophy, 0, 0],
     ['coachs', 'coachs.html', 'Salon des coachs', I.coach, 0, 0],
@@ -61,12 +62,12 @@
   const GROUPS = [
     ['Principal', ['accueil', 'quete', 'gacha', 'gacha-box', 'mythiques']],
     ['Entraînement', ['specialisation', 'bibliotheque', 'programmes', 'alimentation', 'conseils']],
-    ['Communauté', ['social', 'defis', 'classement', 'recompenses', 'coachs']],
+    ['Communauté', ['social', 'clans', 'defis', 'classement', 'recompenses', 'coachs']],
     ['Mon espace', ['apropos', 'tuto', 'compte']]
   ];
 
   /* Espace communautaire unique : Profils et messages, Chat et Amis sont trois onglets d'une même entrée de menu. */
-  const COMMU = [['social', 'social.html', 'Profils et messages'], ['chat', 'chat.html', 'Chat'], ['amis', 'amis.html', 'Amis']];
+  const COMMU = [['social', 'social.html', 'Social'], ['classement', 'classement.html', 'Classement'], ['clans', 'clans.html', 'Clans'], ['defis', 'defis.html', 'Défis']];
   const inCommu = (id) => COMMU.some((c) => c[0] === id);
   const lk = (l, inner, active) => '<a href="' + l[1] + '" data-go' + (l[0] === active ? ' class="on" aria-current="page"' : '') + '>' + inner + '</a>';
 
@@ -74,7 +75,7 @@
     accueil: 'Ton tableau de bord', quete: 'Objectifs du jour et combo du coach', gacha: 'Ton tirage quotidien', 'gacha-box': 'La boîte mystère en 3D : 4 cartes', specialisation: 'Cible une zone du corps',
     mythiques: 'Les 7 mouvements d\'élite, en 3D',
     bibliotheque: 'Tous les exercices, animés', programmes: 'Des enchaînements prêts à faire', conseils: 'Sécurité, sommeil, récupération',
-    alimentation: 'Manger pour progresser', social: 'Profils, messages privés, contacts', chat: 'Parle au coach et aux joueurs', amis: 'Ajoute des amis par code', coachs: 'Les coachs du site', apropos: 'Toi, le site, les infos légales', recompenses: 'Flammes, badges, parrainage', defis: 'Pompes, squats, gainage : bats ton record', classement: 'Public et entre amis', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'
+    alimentation: 'Manger pour progresser', social: 'Profils, messages privés, contacts', clans: 'Rejoins un clan et cumule l\'XP', chat: 'Parle au coach et aux joueurs', amis: 'Ajoute des amis par code', coachs: 'Les coachs du site', apropos: 'Toi, le site, les infos légales', recompenses: 'Flammes, badges, parrainage', defis: 'Pompes, squats, gainage : bats ton record', classement: 'Public et entre amis', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'
   };
   I.menu = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 8h16M4 16h16"/></svg>';
   I.close = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';

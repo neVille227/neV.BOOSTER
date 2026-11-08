@@ -78,7 +78,8 @@ module.exports = function (ctx) {
     if (AVATAR.test(a)) return true;
     return /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(a) && a.length <= 60000;
   }
-  const stats = (uid) => { const pl = S.getPlayer(uid) || {}; const pr = pl.progress || {}; return { sex: pl.sex === 'f' ? 'f' : 'm', xp: pr.xp || 0, streak: pr.streak || 0, level: pl.level || null }; };
+  const stats = (uid) => { const pl = S.getPlayer(uid) || {}; const pr = pl.progress || {}; return { sex: pl.sex === 'f' ? 'f' : 'm', xp: pr.xp || 0, streak: pr.streak || 0, level: pl.level || null, sessions: pr.total || 0 }; };
+  const clanName = (uid) => { const id = S.clanOf(uid), c = id ? S.clanById(id) : null; return c ? c.name : ''; };
   function card(me, p, u) {
     const rel = relation(me, p.uid);
     return { handle: p.handle, avatar: p.avatar, sex: stats(p.uid).sex, relation: rel, since: u ? u.created : null };
@@ -89,7 +90,7 @@ module.exports = function (ctx) {
     const base = { handle: p.handle, avatar: p.avatar, relation: rel, vis: p.vis, blockedByMe: me ? S.iBlocked(me, p.uid) : false, canMessage: !!me && !isMe && canDm(me, p) };
     if (!full) return Object.assign(base, { locked: true });
     const st = stats(p.uid);
-    return Object.assign(base, { locked: false, bio: p.bio, info: p.info, sex: st.sex, xp: st.xp, streak: st.streak, level: st.level, since: u ? u.created : null });
+    return Object.assign(base, { locked: false, bio: p.bio, info: p.info, sex: st.sex, xp: st.xp, streak: st.streak, level: st.level, since: u ? u.created : null, contacts: S.mutualFriends(p.uid).length, sessions: st.sessions, online: online(p.uid), clan: clanName(p.uid) });
   }
   function canDm(me, p) {
     if (!me || me === p.uid || S.isBlocked(me, p.uid)) return false;
@@ -98,8 +99,10 @@ module.exports = function (ctx) {
   const cleanInfo = (i) => {
     const o = {}; i = i && typeof i === 'object' ? i : {};
     ['city', 'goal', 'fav'].forEach((k) => { const v = clean(i[k], k === 'goal' ? 80 : 40); if (v) o[k] = v; });
+    if (ZONES.indexOf(i.zone) >= 0) o.zone = i.zone;
     return o;
   };
+  const ZONES = ['haut', 'jambes', 'abdos', 'cardio'];
   const OTHER = (uid) => { const p = S.profile(uid); return p ? { handle: p.handle, avatar: p.avatar } : { handle: '?', avatar: 'evo' }; };
 
   /* ---------------- routes ---------------- */
@@ -117,7 +120,7 @@ module.exports = function (ctx) {
       const term = clean(q.get('q'), 30).replace(/^@+/, '').replace(/[^A-Za-z0-9_]/g, '');
       if (term.length < 2) return send(res, 200, { results: [] });
       const out = S.searchHandles(term, 20).filter((p) => !me || !S.isBlocked(me, p.uid)).map((p) => {
-        const v = view(me, p); return { handle: v.handle, avatar: v.avatar, relation: v.relation, locked: v.locked, bio: v.locked ? '' : String(p.bio || '').slice(0, 80), sex: v.sex || null, canMessage: v.canMessage };
+        const v = view(me, p); return { handle: v.handle, avatar: v.avatar, relation: v.relation, locked: v.locked, bio: v.locked ? '' : String(p.bio || '').slice(0, 80), sex: v.sex || null, canMessage: v.canMessage, xp: v.locked ? null : v.xp, zone: v.locked || !v.info ? '' : (v.info.zone || ''), online: online(p.uid) };
       });
       return send(res, 200, { results: out });
     }
@@ -127,12 +130,46 @@ module.exports = function (ctx) {
       if (!p || !u || u.banned || (me && S.isBlocked(me, p.uid) && me !== p.uid)) return fail(res, 404, 'Profil introuvable.');
       return send(res, 200, { profile: view(me, p) });
     }
+
+    /* --- clans (liste publique ; créer / rejoindre / quitter avec un compte) --- */
+    const clanOut = (c) => {
+      const ids = S.clanMembers(c.id), xp = ids.reduce((a, id) => a + stats(id).xp, 0);
+      return { id: c.id, name: c.name, descr: c.descr, members: ids.length, xp: xp, owner: me ? c.owner === me : false, mine: me ? ids.indexOf(me) >= 0 : false, full: ids.length >= 30 };
+    };
+    if (r === 'clans' && m === 'GET') {
+      const list = S.clanList().map(clanOut).sort((a, b) => b.xp - a.xp).map((c, i) => Object.assign(c, { rank: i + 1 }));
+      return send(res, 200, { clans: list, mine: me ? S.clanOf(me) : null, max: 30 });
+    }
     if (needUser()) return;
+    if (r === 'clans/create' && m === 'POST') {
+      const w = limit('cc:' + me, 5, HOUR); if (w) return fail(res, 429, 'Trop de créations. Réessaie plus tard.');
+      const b = await readBody(req, 1024), name = clean(b.name, 24).replace(/\s+/g, ' ').trim(), descr = clean(b.descr, 80);
+      if (!/^[\p{L}\p{N} _'-]{3,24}$/u.test(name)) return fail(res, 400, 'Nom du clan : 3 à 24 caractères (lettres, chiffres, espaces, - _ \').');
+      if (S.clanOf(me)) return fail(res, 400, 'Tu es déjà dans un clan. Quitte-le d\'abord.');
+      if (S.clanCount() >= 500) return fail(res, 400, 'Limite de clans atteinte.');
+      const id = crypto.randomBytes(6).toString('hex');
+      try { S.clanCreate(id, name, descr, me); } catch (e) { return fail(res, 409, 'Ce nom de clan est déjà pris.'); }
+      return send(res, 200, { ok: true, id: id });
+    }
+    if (r === 'clans/join' && m === 'POST') {
+      const w = limit('cj:' + me, 20, HOUR); if (w) return fail(res, 429, 'Trop d\'essais. Réessaie plus tard.');
+      const b = await readBody(req, 256), c = S.clanById(String(b.id || ''));
+      if (!c) return fail(res, 404, 'Clan introuvable.');
+      if (S.clanOf(me)) return fail(res, 400, 'Tu es déjà dans un clan. Quitte-le d\'abord.');
+      if (S.clanMembers(c.id).length >= 30) return fail(res, 400, 'Ce clan est complet (30 membres).');
+      S.clanJoin(me, c.id); return send(res, 200, { ok: true });
+    }
+    if (r === 'clans/leave' && m === 'POST') { S.clanLeave(me); return send(res, 200, { ok: true }); }
+    if (r === 'suggest' && m === 'GET') {
+      const mine = new Set(S.friendIds(me));
+      const out = S.suggestHandles(12).filter((p) => p.uid !== me && !mine.has(p.uid) && !S.isBlocked(me, p.uid)).slice(0, 4).map((p) => ({ handle: p.handle, avatar: p.avatar, sex: stats(p.uid).sex, xp: stats(p.uid).xp, relation: relation(me, p.uid) }));
+      return send(res, 200, { results: out });
+    }
 
     /* --- mon profil et mes réglages --- */
     if (r === 'me' && m === 'GET') {
       const p = S.profile(me), st = stats(me);
-      return send(res, 200, { profile: { handle: p.handle, bio: p.bio, avatar: p.avatar, info: p.info, vis: p.vis, dm: p.dm, preview: p.preview, receipts: p.receipts, sex: st.sex, xp: st.xp, streak: st.streak }, unread: S.dmUnread(me), push: { key: vapid.pub, subscribed: S.pushOf(me).length > 0 }, images: IMAGES(), blocked: S.blockedList(me) });
+      return send(res, 200, { profile: { handle: p.handle, bio: p.bio, avatar: p.avatar, info: p.info, vis: p.vis, dm: p.dm, preview: p.preview, receipts: p.receipts, sex: st.sex, xp: st.xp, streak: st.streak, sessions: st.sessions, contacts: S.mutualFriends(me).length, clan: clanName(me) }, unread: S.dmUnread(me), push: { key: vapid.pub, subscribed: S.pushOf(me).length > 0 }, images: IMAGES(), blocked: S.blockedList(me) });
     }
     if (r === 'me' && m === 'PUT') {
       const w = limit('sp:' + me, 40, HOUR); if (w) return fail(res, 429, 'Trop de modifications. Réessaie plus tard.');
@@ -163,7 +200,7 @@ module.exports = function (ctx) {
 
     /* --- amis et demandes --- */
     if (r === 'friends' && m === 'GET') {
-      const list = (ids) => ids.map((id) => { const p = S.profile(id), u = S.userById(id); return p && u && !u.banned ? { handle: p.handle, avatar: p.avatar } : null; }).filter(Boolean);
+      const list = (ids) => ids.map((id) => { const p = S.profile(id), u = S.userById(id); return p && u && !u.banned ? { handle: p.handle, avatar: p.avatar, sex: stats(id).sex, xp: stats(id).xp, online: online(id) } : null; }).filter(Boolean);
       const mine = S.friendIds(me), mu = new Set(S.mutualFriends(me));
       return send(res, 200, { friends: list(Array.from(mu)), incoming: list(S.incomingRequests(me)), outgoing: list(mine.filter((id) => !mu.has(id))) });
     }
@@ -192,7 +229,7 @@ module.exports = function (ctx) {
     if (r === 'conversations' && m === 'GET') {
       const convs = S.dmConvs(me).map((c) => {
         const o = OTHER(c.other), u = S.userById(c.other);
-        return { handle: o.handle, avatar: o.avatar, text: c.text || (c.img ? '📷 Image' : ''), fromMe: c.from === me, t: c.t, unread: c.unread, read: !!c.readAt, blocked: S.iBlocked(me, c.other), gone: !u || u.banned };
+        return { handle: o.handle, avatar: o.avatar, sex: stats(c.other).sex, online: online(c.other), text: c.text || (c.img ? '📷 Image' : ''), fromMe: c.from === me, t: c.t, unread: c.unread, read: !!c.readAt, blocked: S.iBlocked(me, c.other), gone: !u || u.banned };
       }).filter((c) => !c.gone);
       return send(res, 200, { conversations: convs, unread: S.dmUnread(me) });
     }

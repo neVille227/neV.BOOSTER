@@ -92,8 +92,8 @@
     if (guest || stream || !window.EventSource) return;
     stream = new EventSource('api/social/stream');
     stream.addEventListener('hello', (e) => { const d = JSON.parse(e.data); unread = d.unread; requests = d.requests; setBadge(); });
-    stream.addEventListener('unread', (e) => { unread = JSON.parse(e.data).n; setBadge(); if (cur.view === 'messages' && !cur.handle) viewMessages(); });
-    stream.addEventListener('friend', (e) => { const d = JSON.parse(e.data); if (d.state === 'incoming') { requests++; setBadge(); toast('@' + d.handle + ' veut rejoindre tes contacts.'); } if (cur.view === 'home') viewHome(); });
+    stream.addEventListener('unread', (e) => { unread = JSON.parse(e.data).n; setBadge(); if ($('m3')) refreshConvs(); });
+    stream.addEventListener('friend', (e) => { const d = JSON.parse(e.data); if (d.state === 'incoming') { requests++; setBadge(); toast('@' + d.handle + ' veut rejoindre tes contacts.'); } if (cur.view === 'home') viewHome(); if ($('m3')) loadFriends().then(drawList); });
     stream.addEventListener('read', (e) => { const d = JSON.parse(e.data); if (cur.view === 'chat' && cur.handle.toLowerCase() === d.handle.toLowerCase()) Array.prototype.forEach.call(document.querySelectorAll('.m.me .tick'), (t) => { t.textContent = '✓✓'; t.classList.add('r'); }); });
     stream.addEventListener('sent', (e) => { const m = JSON.parse(e.data); if (cur.view === 'chat' && cur.handle.toLowerCase() === m.handle.toLowerCase() && !document.querySelector('[data-id="' + m.id + '"]')) addMsg(m); });
     stream.addEventListener('message', (e) => {
@@ -102,15 +102,43 @@
       if (document.hidden && Notification && Notification.permission === 'granted') {
         navigator.serviceWorker.ready.then((reg) => api('notify-preview').then((r) => { if (r.ok) reg.showNotification(r.j.title, { body: r.j.body, tag: 'dm', renotify: true, icon: 'img/icon-192.png', data: { url: r.j.url } }); })).catch(() => {});
       } else toast('@' + m.handle + ' : ' + (m.text ? m.text.slice(0, 60) : '📷 Image'));
-      if (cur.view === 'messages' && !cur.handle) viewMessages();
+      if ($('m3')) refreshConvs();
     });
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden && cur.view === 'chat') api('read', 'POST', { handle: cur.handle }); });
 
   /* ---------- vues ---------- */
-  function row(p, extra) {
-    return '<a class="row" href="#/u/' + encodeURIComponent(p.handle) + '">' + av(p.avatar, p.handle, p.sex) + '<div class="t"><b>@' + esc(p.handle) + '</b><span>' + esc(p.locked ? 'Profil réservé' : (p.bio || (p.sex === 'f' ? 'Parcours féminin' : p.sex === 'm' ? 'Parcours masculin' : ''))) + '</span></div>' + (extra || '') + '</a>';
+  /* ---------- aides d'affichage : niveau, XP, badges ---------- */
+  const ZONE = { haut: 'Haut du corps', jambes: 'Jambes', abdos: 'Abdos', cardio: 'Cardio' };
+  const stageOf = (xp, sex) => NEV.heroFromXp(xp || 0, sex);
+  const lvlTxt = (xp, sex) => { const h = stageOf(xp, sex); return 'Niveau ' + h.stage.n + ' · ' + h.stage.name; };
+  function xpbar(xp, sex) {
+    const h = stageOf(xp, sex);
+    return '<div class="sp-xp"><div class="sp-xp-t"><b>' + (xp || 0) + (h.next ? ' / ' + h.next.xp : '') + ' XP</b><span>' + (h.next ? 'Prochain niveau : ' + esc(h.next.name) : 'Palier maximal atteint') + '</span></div><div class="sp-bar"><i style="width:' + Math.round(h.pct * 100) + '%"></i></div></div>';
   }
+  const BADGES = [
+    ['Première séance', (p) => p.sessions >= 1], ['Série de 3 jours', (p) => p.streak >= 3], ['Série de 7 jours', (p) => p.streak >= 7],
+    ['Niveau 3', (p) => p.xp >= 300], ['Niveau 5', (p) => p.xp >= 1400], ['Légende', (p) => p.xp >= 2600],
+    ['Sociable', (p) => p.contacts >= 3], ['Membre de clan', (p) => !!p.clan]
+  ];
+  const MEDAL = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5L7 21l5-3 5 3-1.5-7.5"/></svg>';
+  const LOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 118 0v3"/></svg>';
+  function badges(p, max) {
+    const all = BADGES.map((b) => ({ n: b[0], on: !!b[1](p) })), list = max ? all.slice(0, max) : all;
+    return '<ul class="sp-badges">' + list.map((b) => '<li class="' + (b.on ? 'on' : 'off') + '" title="' + esc(b.n) + (b.on ? '' : ' (à débloquer)') + '">' + (b.on ? MEDAL : LOCK) + '<span>' + esc(b.n) + '</span></li>').join('') + '</ul>';
+  }
+  const tile = (v, l) => '<div class="sp-tile"><b>' + esc(String(v)) + '</b><span>' + esc(l) + '</span></div>';
+  const avo = (a, h, sex, on, size) => '<span class="avw">' + av(a, h, sex, size) + '<i class="od' + (on ? ' on' : '') + '" aria-hidden="true"></i></span>';
+  const wide = () => window.matchMedia('(min-width:900px)').matches;
+  const enc = encodeURIComponent;
+  const MYTH = ['Pompes à un bras', 'Pompes en équilibre', 'Pseudo-planche', 'Tractions à un bras'];
+
+  function row(p, extra) {
+    return '<a class="row" href="#/u/' + enc(p.handle) + '">' + av(p.avatar, p.handle, p.sex) + '<div class="t"><b>@' + esc(p.handle) + '</b><span>' + esc(p.locked ? 'Profil réservé' : (p.bio || (p.sex === 'f' ? 'Parcours féminin' : p.sex === 'm' ? 'Parcours masculin' : ''))) + '</span></div>' + (extra || '') + '</a>';
+  }
+  const reqRow = (p) => '<li class="row">' + av(p.avatar, p.handle, p.sex) + '<div class="t"><b>@' + esc(p.handle) + '</b><span>veut t\'ajouter</span></div><div class="acts"><button type="button" class="b" data-fa="accept" data-h="' + esc(p.handle) + '">Accepter</button><button type="button" class="b g" data-fa="decline" data-h="' + esc(p.handle) + '">Refuser</button></div></li>';
+
+  /* ---------- accueil ---------- */
   async function viewHome() {
     cur = { view: 'home', handle: '' }; tabs('home');
     if (guest) {
@@ -120,62 +148,146 @@
     }
     const [f, c] = await Promise.all([api('friends'), api('conversations')]);
     requests = (f.j.incoming || []).length; unread = c.j.unread || 0; setBadge(); renderNotif();
-    let h = '<h2>Salut @' + esc(me.handle) + '</h2><p class="muted">Ton espace pour discuter avec les autres joueurs, même hors séance.</p>';
-    if ((f.j.incoming || []).length) h += '<h3>Demandes de contact</h3><ul class="rows">' + f.j.incoming.map((p) => '<li class="row">' + av(p.avatar, p.handle) + '<div class="t"><b>@' + esc(p.handle) + '</b><span>veut t\'ajouter</span></div><div class="acts"><button type="button" class="b" data-fa="accept" data-h="' + esc(p.handle) + '">Accepter</button><button type="button" class="b g" data-fa="decline" data-h="' + esc(p.handle) + '">Refuser</button></div></li>').join('') + '</ul>';
+    let h = '<h2>Salut @' + esc(me.handle) + '</h2><p class="muted">Ton espace pour discuter avec les autres joueurs, même hors séance.</p>' +
+      '<div class="acts" style="margin:12px 0 4px"><a class="b g" href="classement.html" data-go>Classement</a><a class="b g" href="clans.html" data-go>Clans</a><a class="b g" href="defis.html" data-go>Défis</a><a class="b g" href="chat.html" data-go>Chat</a><a class="b g" href="amis.html" data-go>Amis par code</a></div>';
+    if ((f.j.incoming || []).length) h += '<h3>Demandes de contact</h3><ul class="rows">' + f.j.incoming.map(reqRow).join('') + '</ul>';
     const convs = (c.j.conversations || []).slice(0, 3);
     h += '<h3>Messages récents</h3>' + (convs.length ? '<ul class="rows">' + convs.map(convRow).join('') + '</ul>' : '<div class="empty"><b>Aucune conversation</b>Cherche un joueur pour commencer.<div class="acts" style="justify-content:center;margin-top:12px"><a class="b" href="#/search">Rechercher</a></div></div>');
-    if ((f.j.friends || []).length) h += '<h3>Mes contacts (' + f.j.friends.length + ')</h3><ul class="rows">' + f.j.friends.map((p) => '<li>' + row(p, '<span class="b g">Écrire</span>').replace('href="#/u/' + encodeURIComponent(p.handle) + '"', 'href="#/messages/' + encodeURIComponent(p.handle) + '"') + '</li>').join('') + '</ul>';
+    if ((f.j.friends || []).length) h += '<h3>Mes contacts (' + f.j.friends.length + ')</h3><ul class="rows">' + f.j.friends.map((p) => '<li>' + row(p, '<span class="b g">Écrire</span>').replace('href="#/u/' + enc(p.handle) + '"', 'href="#/messages/' + enc(p.handle) + '"') + '</li>').join('') + '</ul>';
     if ((f.j.outgoing || []).length) h += '<h3>Demandes envoyées</h3><ul class="rows">' + f.j.outgoing.map((p) => '<li>' + row(p, '<span class="muted">en attente</span>') + '</li>').join('') + '</ul>';
     body.innerHTML = h;
   }
   function convRow(c) {
-    return '<li><a class="row" href="#/messages/' + encodeURIComponent(c.handle) + '">' + av(c.avatar, c.handle) + '<div class="t"><b>@' + esc(c.handle) + '</b><span class="' + (c.unread ? 'unread' : '') + '">' + (c.fromMe ? 'Toi : ' : '') + esc(c.text) + '</span></div><div style="text-align:right;display:grid;gap:4px;justify-items:end"><time>' + ago(c.t) + '</time>' + (c.unread ? '<span class="dot">' + c.unread + '</span>' : '') + '</div></a></li>';
+    return '<li><a class="row' + (cur.handle && cur.handle.toLowerCase() === c.handle.toLowerCase() ? ' act' : '') + '" href="#/messages/' + enc(c.handle) + '">' + avo(c.avatar, c.handle, c.sex, c.online) + '<div class="t"><b>@' + esc(c.handle) + '</b><span class="' + (c.unread ? 'unread' : '') + '">' + (c.fromMe ? 'Toi : ' : '') + esc(c.text) + '</span></div><div style="text-align:right;display:grid;gap:4px;justify-items:end"><time>' + ago(c.t) + '</time>' + (c.unread ? '<span class="dot">' + c.unread + '</span>' : '') + '</div></a></li>';
   }
+
+  /* ---------- recherche ---------- */
   let st = 0;
+  const RK = 'nev.social.recent';
+  const recent = () => { try { const a = JSON.parse(localStorage.getItem(RK) || '[]'); return Array.isArray(a) ? a.filter((x) => typeof x === 'string').slice(0, 6) : []; } catch (e) { return []; } };
+  const setRecent = (a) => { try { localStorage.setItem(RK, JSON.stringify(a.slice(0, 6))); } catch (e) { /* stockage indisponible */ } };
   function viewSearch() {
     cur = { view: 'search', handle: '' }; tabs('search');
-    body.innerHTML = '<h2>Rechercher un joueur</h2><div class="sbar"><span>@</span><input id="q" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="pseudo, par exemple neville" maxlength="20" aria-label="Pseudo à rechercher"></div><div id="res" style="margin-top:14px"><p class="muted">Tape au moins 2 caractères du @pseudo.</p></div>';
+    const f = { lvl: 0, zone: '' }; let res = null, term = '';
+    const stages = NEV.HERO_STAGES.map((h) => [h.n, (NEV.sex === 'f' && h.nameF) ? h.nameF : h.name]);
+    const pill = (k, v, l, on) => '<button type="button" class="pl' + (on ? ' on' : '') + '" data-' + k + '="' + v + '">' + esc(l) + '</button>';
+    body.innerHTML = '<div class="se" id="se"><div class="se-main"><h2>Rechercher un joueur</h2>' +
+      '<form class="sbar" id="sf" role="search"><span>@</span><input id="q" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="pseudo, par exemple neville" maxlength="20" aria-label="Pseudo à rechercher"><button class="b" type="submit">Rechercher</button></form>' +
+      '<div class="flt"><span>Niveau</span><div class="pls" id="fl">' + pill('lvl', 0, 'Tous', true) + stages.map((s) => pill('lvl', s[0], s[1], false)).join('') + '</div></div>' +
+      '<div class="flt"><span>Zone</span><div class="pls" id="fz">' + pill('zone', '', 'Toutes', true) + Object.keys(ZONE).map((k) => pill('zone', k, ZONE[k], false)).join('') + '</div></div>' +
+      '<h3 id="rh"></h3><div id="res"><p class="muted">Tape au moins 2 caractères du @pseudo.</p></div></div>' +
+      '<aside class="se-side"><h3>Recherches récentes</h3><div id="rec"></div>' + (guest ? '' : '<h3>Joueurs suggérés</h3><div id="sug"></div>') + '</aside></div>';
     const q = $('q'); q.focus();
-    q.addEventListener('input', () => { clearTimeout(st); st = setTimeout(async () => {
-      const v = q.value.replace(/^@+/, '').trim(); if (v.length < 2) { $('res').innerHTML = '<p class="muted">Tape au moins 2 caractères du @pseudo.</p>'; return; }
-      const r = await api('search?q=' + encodeURIComponent(v));
+    const drawRec = () => { const a = recent(); $('rec').innerHTML = a.length ? '<ul class="rows">' + a.map((x) => '<li class="row"><button type="button" class="lnk" data-rs="' + esc(x) + '">@' + esc(x) + '</button><button type="button" class="b g sm" data-rr="' + esc(x) + '">Retirer</button></li>').join('') + '</ul>' : '<p class="muted">Aucune recherche pour le moment.</p>'; };
+    drawRec();
+    const card = (p) => {
+      const lv = p.xp != null ? lvlTxt(p.xp, p.sex) : 'Profil réservé';
+      const act = p.relation === 'friends' ? '<span class="tag ok">Contact</span>' : p.relation === 'self' ? '<span class="tag">Toi</span>' : p.relation === 'requested' ? '<span class="tag">Demande envoyée</span>' : guest ? '' : '<button type="button" class="b sm" data-fa="request" data-h="' + esc(p.handle) + '">Ajouter</button>';
+      return '<li class="sp-card">' + avo(p.avatar, p.handle, p.sex, p.online, 'lg') + '<b>@' + esc(p.handle) + '</b><span class="lv">' + esc(lv) + '</span><span class="zn">' + (p.zone ? esc(ZONE[p.zone] || '') : '&nbsp;') + '</span><div class="acts">' + act + '<a class="b g sm" href="#/u/' + enc(p.handle) + '">Profil</a></div></li>';
+    };
+    const draw = () => {
+      if (res === null) return;
+      const L = res.filter((p) => (!f.lvl || (p.xp != null && stageOf(p.xp, p.sex).stage.n === f.lvl)) && (!f.zone || p.zone === f.zone));
+      $('rh').textContent = L.length + ' résultat' + (L.length > 1 ? 's' : '') + ' pour « ' + term + ' »';
+      $('res').innerHTML = L.length ? '<ul class="sp-grid">' + L.map(card).join('') + '</ul>' : '<div class="empty"><b>Aucun résultat</b>Vérifie l\'orthographe du @pseudo ou élargis les filtres.</div>';
+    };
+    const run = async (save) => {
+      const v = q.value.replace(/^@+/, '').trim();
+      if (v.length < 2) { res = null; $('rh').textContent = ''; $('res').innerHTML = '<p class="muted">Tape au moins 2 caractères du @pseudo.</p>'; return; }
+      const r = await api('search?q=' + enc(v));
       if (!r.ok) { $('res').innerHTML = '<p class="err">' + esc(r.j.error || 'Recherche impossible.') + '</p>'; return; }
-      const L = r.j.results || [];
-      $('res').innerHTML = L.length ? '<ul class="rows">' + L.map((p) => '<li>' + row(p, p.relation === 'friends' ? '<span class="tag ok">Contact</span>' : p.relation === 'self' ? '<span class="tag">Toi</span>' : '') + '</li>').join('') + '</ul>' : '<div class="empty"><b>Aucun résultat</b>Vérifie l\'orthographe du @pseudo.</div>';
-    }, 250); });
+      res = r.j.results || []; term = v;
+      if (save && res.length) { setRecent([v].concat(recent().filter((x) => x.toLowerCase() !== v.toLowerCase()))); drawRec(); }
+      draw();
+    };
+    q.addEventListener('input', () => { clearTimeout(st); st = setTimeout(() => run(false), 250); });
+    $('sf').addEventListener('submit', (e) => { e.preventDefault(); clearTimeout(st); run(true); });
+    $('se').addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.lvl != null) { f.lvl = +b.dataset.lvl; Array.prototype.forEach.call($('fl').children, (x) => x.classList.toggle('on', x === b)); draw(); }
+      else if (b.dataset.zone != null) { f.zone = b.dataset.zone; Array.prototype.forEach.call($('fz').children, (x) => x.classList.toggle('on', x === b)); draw(); }
+      else if (b.dataset.rs) { q.value = b.dataset.rs; run(false); }
+      else if (b.dataset.rr) { setRecent(recent().filter((x) => x !== b.dataset.rr)); drawRec(); }
+    });
+    if (!guest) api('suggest').then((r) => {
+      const el = $('sug'); if (!el) return; const L = (r.ok && r.j.results) || [];
+      el.innerHTML = L.length ? '<ul class="rows">' + L.map((p) => '<li class="row"><a class="lnk" href="#/u/' + enc(p.handle) + '">' + av(p.avatar, p.handle, p.sex, 'sm') + '<span>@' + esc(p.handle) + '</span></a>' + (p.relation === 'none' ? '<button type="button" class="b g sm" data-fa="request" data-h="' + esc(p.handle) + '">Ajouter</button>' : '<span class="tag">En attente</span>') + '</li>').join('') + '</ul>' : '<p class="muted">Pas de suggestion pour le moment.</p>';
+    });
   }
+
+  /* ---------- profil (le tien et celui des autres) ---------- */
   async function viewProfile(handle) {
     cur = { view: 'profile-of', handle: handle }; tabs('search');
     body.innerHTML = '<p class="muted">Chargement…</p>';
-    const r = await api('profile?h=' + encodeURIComponent(handle));
+    const r = await api('profile?h=' + enc(handle));
     if (!r.ok) { body.innerHTML = '<button class="back" type="button" data-back>← Retour</button><div class="empty"><b>Profil introuvable</b>Ce @pseudo n\'existe pas ou n\'est plus visible.</div>'; return; }
-    const p = r.j.profile; let h = '<button class="back" type="button" data-back>← Retour</button><div class="pf">' + av(p.avatar, p.handle, p.sex, 'xl') + '<div><h2>@' + esc(p.handle) + '</h2></div>';
+    const p = r.j.profile, self = p.relation === 'self';
+    if (self) { cur.view = 'me'; tabs('profile'); }
+    let h = self ? '' : '<button class="back" type="button" data-back>← Retour</button>';
+    const i = p.info || {};
+    h += '<section class="sp-hero">' + avo(p.avatar, p.handle, p.sex, p.online, 'xl') + '<div class="sp-hero-t"><h2>@' + esc(p.handle) + '</h2>';
     if (p.locked) h += '<div class="lockbox">' + (p.vis === 'friends' ? 'Ce profil est réservé à ses contacts.' : 'Ce profil est privé.') + '</div>';
     else {
-      const hero = p.xp != null && NEV.heroFromXp ? NEV.heroFromXp(p.xp, p.sex) : null, i = p.info || {};
-      if (p.bio) h += '<p>' + esc(p.bio) + '</p>';
-      h += '<div class="chips"><span class="chip">' + (p.sex === 'f' ? 'Parcours féminin' : 'Parcours masculin') + '</span>' + (hero ? '<span class="chip">' + esc(hero.stage.name) + '</span>' : '') + (p.streak ? '<span class="chip">🔥 série de ' + p.streak + ' j</span>' : '') + (i.city ? '<span class="chip">' + esc(i.city) + '</span>' : '') + (i.fav ? '<span class="chip">Aime : ' + esc(i.fav) + '</span>' : '') + (p.since ? '<span class="chip">Membre depuis ' + new Date(p.since).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) + '</span>' : '') + '</div>' + (i.goal ? '<p class="muted">Objectif : ' + esc(i.goal) + '</p>' : '');
+      h += '<div class="sp-lvl">' + esc(lvlTxt(p.xp, p.sex)) + '</div>' + xpbar(p.xp, p.sex);
+      if (p.bio) h += '<p class="bio">' + esc(p.bio) + '</p>';
+      h += '<div class="chips"><span class="chip">' + (p.sex === 'f' ? 'Parcours féminin' : 'Parcours masculin') + '</span>' + (p.clan ? '<a class="chip" href="clans.html" data-go>Clan ' + esc(p.clan) + '</a>' : '') + (i.zone ? '<span class="chip">' + esc(ZONE[i.zone] || '') + '</span>' : '') + (i.city ? '<span class="chip">' + esc(i.city) + '</span>' : '') + (i.fav ? '<span class="chip">Aime : ' + esc(i.fav) + '</span>' : '') + (i.goal ? '<span class="chip">Objectif : ' + esc(i.goal) + '</span>' : '') + '</div>';
     }
-    h += '<div class="acts" id="pa">';
+    h += '<div class="acts" id="pa" data-h="' + esc(p.handle) + '">';
     if (guest) h += '<a class="b" href="' + SIGN + '" data-go>Créer un compte pour écrire</a>';
-    else if (p.relation === 'self') h += '<a class="b" href="#/profile">Modifier mon profil</a>';
+    else if (self) h += '<a class="b" href="#/profile/edit">Modifier le profil</a><button type="button" class="b g" data-share="1">Partager</button>';
+    else if (p.blockedByMe) h += '<button class="b g" data-bl="0" type="button">Débloquer</button>';
     else {
-      if (p.blockedByMe) h += '<button class="b g" data-bl="0" type="button">Débloquer</button>';
-      else {
-        if (p.canMessage) h += '<a class="b" href="#/messages/' + encodeURIComponent(p.handle) + '">Message</a>';
-        h += p.relation === 'friends' ? '<button class="b g" data-fa="remove" type="button">Retirer des contacts</button>' : p.relation === 'requested' ? '<button class="b g" data-fa="cancel" type="button">Demande envoyée · annuler</button>' : p.relation === 'incoming' ? '<button class="b" data-fa="accept" type="button">Accepter la demande</button>' : '<button class="b g" data-fa="request" type="button">Ajouter</button>';
-        if (!p.canMessage) h += '<span class="muted" style="align-self:center">Messages non acceptés pour le moment</span>';
-        h += '<button class="b d" data-bl="1" type="button">Bloquer</button><button class="b d" data-rp="1" type="button">Signaler</button>';
-      }
+      if (p.canMessage) h += '<a class="b" href="#/messages/' + enc(p.handle) + '">Message</a>';
+      h += p.relation === 'friends' ? '<button class="b g" data-fa="remove" type="button">Retirer des contacts</button>' : p.relation === 'requested' ? '<button class="b g" data-fa="cancel" type="button">Demande envoyée · annuler</button>' : p.relation === 'incoming' ? '<button class="b" data-fa="accept" type="button">Accepter la demande</button>' : '<button class="b g" data-fa="request" type="button">Ajouter</button>';
+      if (!p.canMessage) h += '<span class="muted" style="align-self:center">Messages non acceptés pour le moment</span>';
+      h += '<button class="b d" data-bl="1" type="button">Bloquer</button><button class="b d" data-rp="1" type="button">Signaler</button>';
     }
-    body.innerHTML = h + '</div></div>';
-    body.querySelector('#pa').dataset.h = p.handle;
+    h += '</div></div></section>';
+    if (!p.locked) {
+      h += '<div class="sp-tiles">' + tile(p.streak || 0, 'Flammes') + tile(p.xp || 0, 'XP cumulés') + tile(stageOf(p.xp, p.sex).stage.n, 'Niveau') + tile(p.contacts || 0, 'Contacts') + '</div>';
+      h += '<div class="sp-cols"><div><h3>Badges</h3>' + badges(p) + '</div><div><h3>Repères</h3><ul class="sp-act"><li><b>' + (p.streak || 0) + '</b> jour' + (p.streak > 1 ? 's' : '') + ' de série en cours</li><li><b>' + (p.sessions || 0) + '</b> séance' + (p.sessions > 1 ? 's' : '') + ' validée' + (p.sessions > 1 ? 's' : '') + '</li><li>Palier actuel : <b>' + esc(stageOf(p.xp, p.sex).stage.name) + '</b></li>' + (p.since ? '<li>Membre depuis ' + esc(new Date(p.since).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })) + '</li>' : '') + '</ul></div></div>';
+      if (self) h += '<h3>Cartes mythiques</h3><div class="sp-myth">' + MYTH.map((n) => '<div class="sp-mc"><span>MR</span><b>' + esc(n) + '</b></div>').join('') + '<a class="b g" href="mythiques.html" data-go>Voir la collection</a></div><div id="myc"></div>';
+    }
+    body.innerHTML = h;
+    if (self && !p.locked) api('friends').then((x) => {
+      const L = (x.ok && x.j.friends) || []; const el = $('myc'); if (!el) return;
+      el.innerHTML = '<h3>Contacts (' + L.length + ')</h3>' + (L.length ? '<ul class="rows">' + L.map((c) => '<li><a class="row" href="#/messages/' + enc(c.handle) + '">' + avo(c.avatar, c.handle, c.sex, c.online) + '<div class="t"><b>@' + esc(c.handle) + '</b><span>' + esc(lvlTxt(c.xp, c.sex)) + '</span></div><span class="b g sm">Écrire</span></a></li>').join('') + '</ul>' : '<p class="muted">Aucun contact pour le moment. <a href="#/search"><b>Trouve des joueurs</b></a>.</p>');
+    });
   }
-  async function viewMessages() {
-    cur = { view: 'messages', handle: '' }; tabs('messages');
-    if (guest) { body.innerHTML = needAccount('Envoyer et recevoir des messages privés demande un compte.'); return; }
-    const r = await api('conversations'); convCache = r.j.conversations || []; unread = r.j.unread || 0; setBadge();
-    body.innerHTML = '<h2>Messages</h2>' + (convCache.length ? '<ul class="rows">' + convCache.map(convRow).join('') + '</ul>' : '<div class="empty"><b>Aucune conversation</b>Trouve un joueur pour lui écrire.<div class="acts" style="justify-content:center;margin-top:12px"><a class="b" href="#/search">Rechercher un @pseudo</a></div></div>');
+
+  /* ---------- messages : liste, conversation, fiche du contact ---------- */
+  let mtab = 'recent', mq = '', fr = { friends: [], incoming: [], outgoing: [] };
+  async function loadFriends() { const r = await api('friends'); if (r.ok) { fr = r.j; requests = (fr.incoming || []).length; setBadge(); } }
+  async function refreshConvs() { const r = await api('conversations'); if (r.ok) { convCache = r.j.conversations || []; unread = r.j.unread || 0; setBadge(); } drawList(); }
+  function drawList() {
+    const el = $('clist'); if (!el) return;
+    const q = mq.replace(/^@+/, '').toLowerCase(), has = (h) => !q || h.toLowerCase().indexOf(q) >= 0;
+    Array.prototype.forEach.call($('cp').children, (b) => b.classList.toggle('on', b.dataset.mt === mtab));
+    $('cp').querySelector('[data-mt="requests"]').innerHTML = 'Demandes' + ((fr.incoming || []).length ? ' <i class="dot">' + fr.incoming.length + '</i>' : '');
+    let h = '';
+    if (mtab === 'recent') { const L = (convCache || []).filter((c) => has(c.handle)); h = L.length ? '<ul class="rows">' + L.map(convRow).join('') + '</ul>' : '<div class="empty"><b>Aucune conversation</b><a class="b" href="#/search">Rechercher un @pseudo</a></div>'; }
+    else if (mtab === 'contacts') { const L = (fr.friends || []).filter((c) => has(c.handle)); h = L.length ? '<ul class="rows">' + L.map((c) => '<li><a class="row" href="#/messages/' + enc(c.handle) + '">' + avo(c.avatar, c.handle, c.sex, c.online) + '<div class="t"><b>@' + esc(c.handle) + '</b><span>' + esc(lvlTxt(c.xp, c.sex)) + '</span></div></a></li>').join('') + '</ul>' : '<div class="empty"><b>Aucun contact</b>Ajoute des joueurs depuis la recherche.</div>'; }
+    else { h = ((fr.incoming || []).length ? '<ul class="rows">' + fr.incoming.map(reqRow).join('') + '</ul>' : '<div class="empty"><b>Aucune demande</b></div>') + ((fr.outgoing || []).length ? '<h3>Envoyées</h3><ul class="rows">' + fr.outgoing.map((p) => '<li class="row">' + av(p.avatar, p.handle, p.sex) + '<div class="t"><b>@' + esc(p.handle) + '</b><span>en attente</span></div></li>').join('') + '</ul>' : ''); }
+    el.innerHTML = h;
+    $('cav').innerHTML = (fr.friends || []).length ? (fr.friends || []).slice(0, 8).map((c) => '<a href="#/messages/' + enc(c.handle) + '" title="@' + esc(c.handle) + '" aria-label="Écrire à @' + esc(c.handle) + '">' + avo(c.avatar, c.handle, c.sex, c.online) + '</a>').join('') : '<span class="muted">Aucun contact</span>';
+    $('cn').textContent = (fr.friends || []).length;
+  }
+  async function viewMessages(handle) {
+    if (guest) { cur = { view: 'messages', handle: '' }; tabs('messages'); body.innerHTML = needAccount('Envoyer et recevoir des messages privés demande un compte.'); return; }
+    cur = { view: handle ? 'chat' : 'messages', handle: handle || '' }; tabs('messages');
+    if (!$('m3')) {
+      body.innerHTML = '<div class="m3" id="m3"><aside class="m3-l"><form class="sbar sm" id="cs"><span>@</span><input id="cq" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Rechercher un @pseudo" aria-label="Filtrer les conversations"></form>' +
+        '<div class="pls" id="cp"><button type="button" class="pl" data-mt="recent">Récents</button><button type="button" class="pl" data-mt="contacts">Contacts</button><button type="button" class="pl" data-mt="requests">Demandes</button></div>' +
+        '<div id="clist"></div><h3>Mes contacts (<span id="cn">0</span>)</h3><div class="avrow" id="cav"></div></aside><section class="m3-c" id="cpane"></section><aside class="m3-r" id="rpane"></aside></div>';
+      $('cq').addEventListener('input', (e) => { mq = e.target.value; drawList(); });
+      $('cs').addEventListener('submit', (e) => e.preventDefault());
+      $('cp').addEventListener('click', (e) => { const b = e.target.closest('[data-mt]'); if (b) { mtab = b.dataset.mt; drawList(); } });
+      await loadFriends(); await refreshConvs();
+    } else await refreshConvs();
+    if (!handle && wide() && convCache.length) { location.replace('#/messages/' + enc(convCache[0].handle)); return; }
+    $('m3').dataset.open = handle ? '1' : '';
+    if (handle) return loadChat(handle);
+    $('cpane').innerHTML = '<div class="empty"><b>Choisis une conversation</b>Ou <a href="#/search"><b>cherche un joueur</b></a> pour écrire.</div>'; $('rpane').innerHTML = '';
   }
   let lastDay = '';
   function msgHtml(m) {
@@ -183,19 +295,27 @@
     return sep + '<div class="m' + (m.mine ? ' me' : '') + '" data-id="' + m.id + '">' + (m.img ? '<img src="' + String(m.img).replace(/"/g, '') + '" alt="Image envoyée">' : '') + (m.text ? esc(m.text) : '') + '<small>' + hm(m.t) + (m.mine ? '<span class="tick' + (m.read ? ' r' : '') + '" title="' + (m.read ? 'Lu' : 'Envoyé') + '">' + (m.read ? '✓✓' : '✓') + '</span>' : '') + '</small></div>';
   }
   function addMsg(m) { const box = $('msgs'); if (!box) return; box.insertAdjacentHTML('beforeend', msgHtml(m)); box.scrollTop = box.scrollHeight; }
-  async function viewChat(handle) {
-    if (guest) return viewMessages();
-    cur = { view: 'chat', handle: handle }; tabs('messages');
-    const r = await api('messages?h=' + encodeURIComponent(handle) + '&mark=1');
-    if (!r.ok) { body.innerHTML = '<button class="back" type="button" data-back>← Retour</button><div class="empty"><b>Conversation introuvable</b></div>'; return; }
+  function panel(p, w) {
+    if (!p) return '<div class="empty">Fiche indisponible.</div>';
+    if (p.locked) return '<div class="rp-h">' + av(p.avatar, p.handle, p.sex, 'lg') + '<b>@' + esc(p.handle) + '</b><span class="muted">Profil réservé</span></div>';
+    return '<div class="rp-h">' + avo(p.avatar, p.handle, p.sex, p.online, 'lg') + '<b>@' + esc(p.handle) + '</b><span class="sp-lvl">' + esc(lvlTxt(p.xp, p.sex)) + '</span></div>' + xpbar(p.xp, p.sex) +
+      '<div class="sp-tiles s3">' + tile(p.streak || 0, 'Flammes') + tile(p.sessions || 0, 'Séances') + tile(p.contacts || 0, 'Contacts') + '</div><h3>Badges</h3>' + badges(p, 6) +
+      '<a class="b" href="#/u/' + enc(p.handle) + '" style="justify-content:center;width:100%;margin-top:14px">Voir le profil</a>';
+  }
+  async function loadChat(handle) {
+    const [r, pr] = await Promise.all([api('messages?h=' + enc(handle) + '&mark=1'), api('profile?h=' + enc(handle))]);
+    const pane = $('cpane'); if (!pane) return;
+    if (!r.ok) { pane.innerHTML = '<div class="empty"><b>Conversation introuvable</b><a class="b g" href="#/messages">Retour</a></div>'; $('rpane').innerHTML = ''; return; }
     const w = r.j.with; cur.handle = w.handle; lastDay = '';
-    body.innerHTML = '<div class="chat"><div class="chat-h"><button class="back" type="button" data-back aria-label="Retour" style="margin:0">←</button><a href="#/u/' + encodeURIComponent(w.handle) + '">' + av(w.avatar, w.handle, w.sex) + '</a><div class="t"><b>@' + esc(w.handle) + '</b><small>Messagerie privée</small></div><div class="acts"><button class="b d" data-bl="1" type="button" data-h="' + esc(w.handle) + '">Bloquer</button><button class="b d" data-rp="1" type="button" data-h="' + esc(w.handle) + '">Signaler</button></div></div>' +
+    const pp = pr.ok ? pr.j.profile : null;
+    $('rpane').innerHTML = panel(pp, w);
+    pane.innerHTML = '<div class="chat"><div class="chat-h"><a class="back mob" href="#/messages" aria-label="Retour aux conversations" style="margin:0;text-decoration:none">←</a><a href="#/u/' + enc(w.handle) + '">' + avo(w.avatar, w.handle, w.sex, pp && pp.online) + '</a><div class="t"><b>@' + esc(w.handle) + '</b><small>' + (pp && pp.online ? '<i class="od on"></i> En ligne' : 'Messagerie privée') + '</small></div><div class="acts"><a class="b g sm" href="defis.html" data-go>Défier</a><button class="b d sm" data-bl="1" type="button" data-h="' + esc(w.handle) + '">Bloquer</button></div></div>' +
       '<div class="msgs" id="msgs" role="log" aria-label="Messages">' + (r.j.messages.length ? r.j.messages.map(msgHtml).join('') : '<div class="empty">Dis bonjour à @' + esc(w.handle) + ' 👋</div>') + '</div>' +
       (r.j.blocked ? '<div class="note">Tu as bloqué ce joueur. <button class="b g" data-bl="0" data-h="' + esc(w.handle) + '" type="button">Débloquer</button></div>' : r.j.canSend ?
-        '<form class="comp" id="comp"><textarea id="txt" rows="1" maxlength="1000" placeholder="Écris un message…" aria-label="Message"></textarea>' + (imagesOn ? '<label class="b g" style="cursor:pointer">📷<input type="file" id="imgIn" accept="image/jpeg,image/png,image/webp" hidden></label>' : '') + '<button class="send" id="sendBtn" type="submit" aria-label="Envoyer"><svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-3-7z"/></svg></button></form><p class="err" id="cerr"></p>' :
+        '<form class="comp" id="comp"><textarea id="txt" rows="1" maxlength="1000" placeholder="' + (wide() ? 'Écris un message à @' + esc(w.handle) : 'Écris un message') + '…" aria-label="Message"></textarea>' + (imagesOn ? '<label class="b g" style="cursor:pointer">📷<input type="file" id="imgIn" accept="image/jpeg,image/png,image/webp" hidden></label>' : '') + '<button class="b send" id="sendBtn" type="submit">Envoyer</button></form><p class="err" id="cerr"></p>' :
         '<div class="note">Ce joueur n\'accepte pas de messages de ta part pour le moment.</div>') + '</div>';
     const box = $('msgs'); box.scrollTop = box.scrollHeight;
-    unread = Math.max(0, unread); api('unread').then((x) => { if (x.ok) { unread = x.j.messages; requests = x.j.requests; setBadge(); } });
+    api('unread').then((x) => { if (x.ok) { unread = x.j.messages; requests = x.j.requests; setBadge(); } }); refreshConvs();
     const f = $('comp'); if (!f) return;
     const t = $('txt'); let img = null;
     t.addEventListener('input', () => { t.style.height = 'auto'; t.style.height = Math.min(120, t.scrollHeight) + 'px'; });
@@ -209,8 +329,9 @@
       $('cerr').textContent = ''; t.value = ''; t.style.height = 'auto'; img = null; t.focus();
       const empty = box.querySelector('.empty'); if (empty) empty.remove();
       if (!document.querySelector('[data-id="' + x.j.message.id + '"]')) addMsg(x.j.message);
+      refreshConvs();
     });
-    t.focus();
+    if (wide()) t.focus();
   }
   function shrink(file, max, q) {
     return new Promise((ok) => {
@@ -235,13 +356,14 @@
       '<label>Biographie<textarea id="fb" rows="3" maxlength="160" placeholder="Quelques mots sur toi">' + esc(me.bio) + '</textarea><span class="hint" id="bc"></span></label>' +
       '<label>Parcours<select id="fs">' + sel(me.sex, [['m', 'Masculin'], ['f', 'Féminin']]) + '</select></label>' +
       '<div class="row2"><label>Ville ou pays<input type="text" id="fc" maxlength="40" value="' + esc(i.city || '') + '"></label><label>Exercice préféré<input type="text" id="ff" maxlength="40" value="' + esc(i.fav || '') + '"></label></div>' +
+      '<label>Zone d\'entraînement<select id="fzn">' + sel(i.zone || '', [['', 'Non précisée'], ['haut', 'Haut du corps'], ['jambes', 'Jambes'], ['abdos', 'Abdos'], ['cardio', 'Cardio']]) + '</select></label>' +
       '<label>Objectif<input type="text" id="fg" maxlength="80" value="' + esc(i.goal || '') + '" placeholder="Ex. : 50 pompes d\'affilée"></label>' +
       '<h3>Confidentialité</h3>' +
       '<label>Qui peut voir mon profil<select id="fv">' + sel(me.vis, [['public', 'Tout le monde'], ['friends', 'Mes contacts seulement'], ['private', 'Personne (profil privé, introuvable)']]) + '</select></label>' +
       '<label>Qui peut m\'écrire<select id="fd">' + sel(me.dm, [['all', 'Tout le monde'], ['friends', 'Mes contacts seulement'], ['none', 'Personne']]) + '</select></label>' +
       '<div class="sw"><span>Aperçu du message dans les notifications<small>Sinon : « Nouveau message » seulement.</small></span><input type="checkbox" id="fp"' + (me.preview ? ' checked' : '') + '></div>' +
       '<div class="sw"><span>Accusés de lecture<small>Les autres voient quand tu as lu leur message.</small></span><input type="checkbox" id="fr"' + (me.receipts ? ' checked' : '') + '></div>' +
-      '<p class="err" id="ferr"></p><div class="acts"><button type="submit" class="b" id="fsave">Enregistrer</button><a class="b g" href="#/u/' + encodeURIComponent(me.handle) + '">Voir mon profil</a></div></form>' +
+      '<p class="err" id="ferr"></p><div class="acts"><button type="submit" class="b" id="fsave">Enregistrer</button><a class="b g" href="#/profile">Voir mon profil</a></div></form>' +
       '<h3>Joueurs bloqués</h3>' + ((r.j.blocked || []).length ? '<ul class="rows">' + r.j.blocked.map((p) => '<li class="row">' + av(p.avatar, p.handle) + '<div class="t"><b>@' + esc(p.handle) + '</b></div><button type="button" class="b g" data-bl="0" data-h="' + esc(p.handle) + '">Débloquer</button></li>').join('') + '</ul>' : '<p class="muted">Personne n\'est bloqué.</p>');
     const drawAv = () => { $('avs').innerHTML = ['evo', 'p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'].map((a) => '<button type="button" data-a="' + a + '" class="' + (avatar === a ? 'on' : '') + '" aria-label="Avatar ' + a + '">' + av(a, me.handle, $('fs').value) + '</button>').join('') + (/^data:/.test(avatar) ? '<button type="button" class="on" data-a="' + 'photo' + '" aria-label="Ta photo">' + av(avatar, me.handle) + '</button>' : '') + '<label class="b g" style="cursor:pointer">Envoyer une photo<input type="file" id="fph" accept="image/jpeg,image/png,image/webp" hidden></label>'; };
     drawAv();
@@ -251,11 +373,11 @@
     const bc = () => { $('bc').textContent = $('fb').value.length + ' / 160'; }; bc(); $('fb').addEventListener('input', bc);
     $('pf').addEventListener('submit', async (e) => {
       e.preventDefault(); $('fsave').disabled = true; $('ferr').textContent = '';
-      const x = await api('me', 'PUT', { handle: $('fh').value, bio: $('fb').value, avatar: avatar, sex: $('fs').value, info: { city: $('fc').value, fav: $('ff').value, goal: $('fg').value }, vis: $('fv').value, dm: $('fd').value, preview: $('fp').checked, receipts: $('fr').checked });
+      const x = await api('me', 'PUT', { handle: $('fh').value, bio: $('fb').value, avatar: avatar, sex: $('fs').value, info: { city: $('fc').value, fav: $('ff').value, goal: $('fg').value, zone: $('fzn').value }, vis: $('fv').value, dm: $('fd').value, preview: $('fp').checked, receipts: $('fr').checked });
       $('fsave').disabled = false;
       if (!x.ok) { $('ferr').textContent = x.j.error || 'Enregistrement impossible.'; return; }
       if (NEV.setSex && $('fs').value !== NEV.sex) { try { const p = NEV.player.load(); p.sex = $('fs').value; NEV.player.save(p); NEV.setSex($('fs').value); } catch (e2) { /* ignoré */ } }
-      toast('Profil enregistré.'); viewMyProfile();
+      toast('Profil enregistré.'); location.hash = '#/profile';
     });
   }
 
@@ -268,13 +390,18 @@
       t.disabled = true; const r = await api('friend', 'POST', { handle: h, action: t.dataset.fa });
       if (!r.ok) { toast(r.j.error || 'Action impossible.'); t.disabled = false; return; }
       toast(r.j.relation === 'friends' ? 'Vous êtes maintenant en contact.' : r.j.relation === 'requested' ? 'Demande envoyée.' : 'C\'est fait.');
-      cur.view === 'home' ? viewHome() : viewProfile(cur.handle); return;
+      if (cur.view === 'home') viewHome(); else if ($('m3')) { await loadFriends(); drawList(); } else if (cur.view === 'search') { toast('Demande envoyée.'); } else viewProfile(cur.handle); return;
     }
     if (t.dataset.bl != null && t.dataset.bl !== '') {
       const on = t.dataset.bl === '1'; if (on && !confirm('Bloquer @' + h + ' ? Plus de messages, et il sera retiré de tes contacts.')) return;
       const r = await api('block', 'POST', { handle: h, on: on }); if (!r.ok) return toast(r.j.error || 'Action impossible.');
       toast(on ? '@' + h + ' est bloqué.' : '@' + h + ' est débloqué.');
-      cur.view === 'chat' ? viewChat(cur.handle) : cur.view === 'profile' ? viewMyProfile() : viewProfile(h); return;
+      cur.view === 'chat' ? loadChat(cur.handle) : cur.view === 'profile' ? viewMyProfile() : viewProfile(h); return;
+    }
+    if (t.dataset.share) {
+      const url = location.origin + location.pathname.replace(/[^/]*$/, '') + 'social.html#/u/' + encodeURIComponent(cur.handle);
+      try { if (navigator.share) { await navigator.share({ title: 'neV.BOOSTER', url: url }); return; } await navigator.clipboard.writeText(url); toast('Lien du profil copié.'); } catch (e2) { /* annulé */ }
+      return;
     }
     if (t.dataset.rp) {
       const reason = prompt('Pourquoi signales-tu @' + h + ' ? (harcèlement, spam, contenu choquant…)'); if (!reason) return;
@@ -288,8 +415,8 @@
     $('socBody').scrollTop = 0;
     if (p[0] === 'search') return viewSearch();
     if (p[0] === 'u' && p[1]) return viewProfile(p[1].replace(/^@/, ''));
-    if (p[0] === 'messages') return p[1] ? viewChat(p[1]) : viewMessages();
-    if (p[0] === 'profile') return viewMyProfile();
+    if (p[0] === 'messages') return viewMessages(p[1]);
+    if (p[0] === 'profile') return p[1] === 'edit' || guest || !me ? viewMyProfile() : viewProfile(me.handle);
     return viewHome();
   }
   window.addEventListener('hashchange', route);
