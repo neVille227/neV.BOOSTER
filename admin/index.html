@@ -32,12 +32,20 @@
   </form>
 </div>
 <div id="app" class="app" hidden>
-  <aside class="side">
-    <div class="brand">neV<span>.</span>BOOSTER <small>admin</small></div>
+  <aside class="side" id="side" aria-label="Navigation admin">
+    <div class="brand"><span class="logo" aria-hidden="true">NV</span><div><b>neV<span>.</span>BOOSTER</b><small>admin</small></div><button type="button" class="sclose" id="sclose" aria-label="Fermer le menu">✕</button></div>
     <nav id="nav" aria-label="Sections admin"></nav>
-    <div class="sidefoot"><span class="chip" id="mode"></span><a class="btn ghost sm" href="../accueil.html">Voir le site</a><button type="button" class="btn ghost sm" id="out">Quitter</button></div>
+    <div class="sidefoot"><span class="rolebtn" id="mode"></span><a class="btn ghost sm" href="../accueil.html">Voir le site</a><button type="button" class="btn ghost sm quit" id="out">Quitter</button>
+      <div class="tagl"><b>neV.BOOSTER</b><i>Booste ton quotidien</i></div></div>
   </aside>
-  <main class="main" id="main" tabindex="-1"></main>
+  <div class="scrim" id="scrim"></div>
+  <div class="colmain">
+    <header class="topbar"><button type="button" class="burger" id="burger" aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><span class="mlogo">neV<span>.</span>BOOSTER</span>
+      <form class="tsearch" id="tsearch" role="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg><input id="tq" type="search" placeholder="Rechercher un joueur…" aria-label="Rechercher un joueur" autocomplete="off"></form>
+      <span class="tuser" id="tuser"></span></header>
+    <main class="main" id="main" tabindex="-1"></main>
+  </div>
+  <nav class="mtabs" id="mtabs" aria-label="Navigation rapide"></nav>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="../js/core.js"></script>

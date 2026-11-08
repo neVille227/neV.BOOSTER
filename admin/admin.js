@@ -7,7 +7,7 @@
   let tab = 'dash', timer = 0;
 
   /* [id, titre, rang minimum] : 1 modérateur · 2 administrateur · 3 propriétaire. Simple confort d'affichage : le serveur refuse de toute façon. */
-  const ALL_TABS = [['dash', '📊 Tableau de bord', 1], ['suivi', '🛰️ Suivi du site', 2], ['joueurs', '👥 Joueurs', 1], ['catalogue', '🎰 Catalogue et Gacha', 2], ['combos', '🧩 Combos', 2], ['badges', '🏅 Badges', 2], ['annonce', '📣 Annonce', 2], ['chat', '💬 Chat', 1], ['modo', '🛡️ Modération', 1], ['triche', '🚨 Anti-triche', 1], ['courriels', '✉️ Courriels', 2], ['relecture', '🩺 Relecture', 2], ['securite', '🔐 Sécurité', 2], ['equipe', '🧑‍💼 Équipe et rôles', 3], ['systeme', '⚙️ Système', 2], ['base', '🗄️ Base de données', 2]];
+  const ALL_TABS = [['dash', '📊 Tableau de bord', 1], ['stats', '📈 Statistiques', 1], ['suivi', '🛰️ Suivi du site', 2], ['joueurs', '👥 Joueurs', 1], ['catalogue', '🎰 Catalogue et Gacha', 2], ['combos', '🧩 Combos', 2], ['badges', '🏅 Badges', 2], ['annonce', '📣 Annonce', 2], ['chat', '💬 Chat', 1], ['modo', '🛡️ Modération', 1], ['triche', '🚨 Anti-triche', 1], ['courriels', '✉️ Courriels', 2], ['relecture', '🩺 Relecture', 2], ['securite', '🔐 Sécurité', 2], ['equipe', '🧑‍💼 Équipe et rôles', 3], ['systeme', '⚙️ Système', 2], ['base', '🗄️ Base de données', 2]];
   let ROLE = 'owner', TABS = ALL_TABS;
   const RANK = { moderator: 1, admin: 2, owner: 3 };
   const ask = (msg) => new Promise((res) => {
@@ -49,14 +49,34 @@
     TABS = ALL_TABS.filter((t) => t[2] <= (RANK[ROLE] || 3)); document.body.setAttribute('data-role', ROLE);
     $('gate').hidden = true; $('app').hidden = false;
     $('mode').textContent = C.mode === 'server' ? '● Serveur · ' + ({ owner: 'Propriétaire', admin: 'Administrateur', moderator: 'Modérateur' }[ROLE] || '') : '● Mode démo (ce navigateur)';
-    $('nav').innerHTML = TABS.map((t) => '<button type="button" data-t="' + t[0] + '">' + t[1] + '</button>').join('');
+    buildNav();
     show((location.hash || '').slice(1).split(':')[0] || 'dash');
   }
-  $('nav').addEventListener('click', (e) => { const b = e.target.closest('[data-t]'); if (b) show(b.dataset.t); });
+  const IC = {
+    dash: 'M4 20V10M10 20V4M16 20v-7M22 20H2', stats: 'M3 17l5-6 4 3 8-9M3 21h18', suivi: 'M3 12h4l3-8 4 16 3-8h4', joueurs: 'M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM2.5 20c0-3.6 3-5.5 6.5-5.5s6.5 1.9 6.5 5.5M17 4.5a3.3 3.3 0 010 6M21.5 20c0-2.6-1.6-4.3-3.8-5',
+    catalogue: 'M12 3l8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9', combos: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM17 13v7M13.5 16.5h7', badges: 'M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.3 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z',
+    annonce: 'M4 10v4h3l7 4V6L7 10zM17 9a4 4 0 010 6', chat: 'M4 5h16v11H10l-5 4v-4H4z', modo: 'M12 3l8 3v6c0 4.5-3.2 7.5-8 9-4.8-1.5-8-4.5-8-9V6z', triche: 'M12 4l9 16H3zM12 10v4M12 17h.01',
+    courriels: 'M3 6h18v12H3zM3 7l9 7 9-7', relecture: 'M12 21s-7-4.5-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.5-7 10-7 10z', securite: 'M6 11V8a6 6 0 1112 0v3M5 11h14v9H5z', equipe: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21c0-4 4-6 8-6s8 2 8 6', systeme: 'M12 15a3 3 0 100-6 3 3 0 000 6zM19 12l2-1-1-3-2 .5-1.5-1.5.5-2-3-1-1 2h-2l-1-2-3 1 .5 2L6 8.5 4 8l-1 3 2 1v2l-2 1 1 3 2-.5L7.5 19l-.5 2 3 1 1-2h2l1 2 3-1-.5-2 1.5-1.5 2 .5 1-3-2-1z', base: 'M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6', menu: 'M4 7h16M4 12h16M4 17h16'
+  };
+  const ico = (id) => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + (IC[id] || IC.dash) + '"/></svg>';
+  const MAIN_IDS = ['dash', 'stats', 'suivi', 'joueurs', 'catalogue', 'combos', 'badges', 'annonce', 'chat'];
+  function buildNav() {
+    const lab = (t) => t[1].replace(/^\S+\s+/, ''), btn = (t) => '<button type="button" data-t="' + t[0] + '">' + ico(t[0]) + '<span>' + esc(lab(t)) + '</span></button>';
+    const m = TABS.filter((t) => MAIN_IDS.indexOf(t[0]) >= 0), o = TABS.filter((t) => MAIN_IDS.indexOf(t[0]) < 0);
+    $('nav').innerHTML = m.map(btn).join('') + (o.length ? '<div class="navsep">Administration</div>' + o.map(btn).join('') : '');
+    const MT = [['dash', 'Tableau'], ['stats', 'Stats'], ['joueurs', 'Joueurs'], ['annonce', 'Annonce']].filter((x) => TABS.some((t) => t[0] === x[0]));
+    $('mtabs').innerHTML = MT.map((x) => '<button type="button" data-t="' + x[0] + '">' + ico(x[0]) + '<span>' + x[1] + '</span></button>').join('') + '<button type="button" id="mmenu">' + ico('menu') + '<span>Menu</span></button>';
+    $('tuser').textContent = ({ owner: 'Propriétaire', admin: 'Administrateur', moderator: 'Modérateur' }[ROLE] || 'Admin');
+  }
+  const setMenu = (o) => { $('side').classList.toggle('open', o); $('scrim').classList.toggle('open', o); };
+  $('burger').addEventListener('click', () => setMenu(true)); $('sclose').addEventListener('click', () => setMenu(false)); $('scrim').addEventListener('click', () => setMenu(false));
+  $('mtabs').addEventListener('click', (e) => { if (e.target.closest('#mmenu')) { setMenu(true); return; } const b = e.target.closest('[data-t]'); if (b) show(b.dataset.t); });
+  $('nav').addEventListener('click', (e) => { const b = e.target.closest('[data-t]'); if (b) { setMenu(false); show(b.dataset.t); } });
+  $('tsearch').addEventListener('submit', (e) => { e.preventDefault(); const v = $('tq').value.trim(); if (!v) return; try { sessionStorage.setItem('nvb.adm.q', v); } catch (e2) { /* ignoré */ } show('joueurs'); });
   async function show(t) {
     if (!TABS.some((x) => x[0] === t)) t = 'dash';
     tab = t; history.replaceState(null, '', '#' + t); clearInterval(timer); $('main').onclick = null;
-    document.querySelectorAll('#nav button').forEach((b) => b.classList.toggle('on', b.dataset.t === t));
+    document.querySelectorAll('#nav button,#mtabs button[data-t]').forEach((b) => b.classList.toggle('on', b.dataset.t === t));
     $('main').innerHTML = '<p class="muted">Chargement…</p>';
     try { await VIEWS[t](); } catch (e) { $('main').innerHTML = '<div class="warnbar">Impossible de charger cette section : ' + esc(e.message || e) + '</div>'; }
   }
@@ -74,15 +94,113 @@
 
   const VIEWS = {};
   /* ---------- tableau de bord ---------- */
+  /* --- graphiques du tableau de bord (SVG, sans dépendance) --- */
+  const fmtN = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  const pctD = (a, b) => (b > 0 ? Math.round((a - b) / b * 100) : null);
+  function spark(vals, color) {
+    if (!vals || vals.length < 2) return '<svg class="sp" viewBox="0 0 100 34" aria-hidden="true"><path d="M0 28 L100 28" stroke="' + color + '" stroke-opacity=".35" fill="none" stroke-width="2"/></svg>';
+    const mx = Math.max(1, ...vals), mn = Math.min(...vals), r = Math.max(1, mx - mn), pts = vals.map((v, i) => [i / (vals.length - 1) * 100, 30 - (v - mn) / r * 24]);
+    const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    return '<svg class="sp" viewBox="0 0 100 34" preserveAspectRatio="none" aria-hidden="true"><path d="' + d + ' L100 34 L0 34 Z" fill="' + color + '" fill-opacity=".14"/><path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>';
+  }
+  function kcard(icon, color, value, label, delta, vals) {
+    const dl = delta == null ? '<em class="dl z">—</em>' : '<em class="dl ' + (delta > 0 ? 'up' : delta < 0 ? 'dn' : 'z') + '">' + (delta > 0 ? '↑ +' : delta < 0 ? '↓ ' : '→ ') + delta + '%</em>';
+    return '<div class="kc" style="--kc:' + color + '"><div class="kt"><i class="ki">' + ico(icon) + '</i>' + dl + '</div><b>' + esc(String(value)) + '</b><span>' + esc(label) + '</span>' + spark(vals, color) + '</div>';
+  }
+  function vbars(vals, labels, color) {
+    const W = 380, H = 190, L = 28, B = 24, mx = Math.max(1, ...vals), top = Math.max(4, Math.ceil(mx / 4) * 4 || 4), ch = H - B - 10, bw = (W - L) / vals.length;
+    let g = '';
+    for (let i = 0; i <= 4; i++) { const y = 10 + ch - ch * i / 4; g += '<line x1="' + L + '" x2="' + W + '" y1="' + y + '" y2="' + y + '" stroke="currentColor" stroke-opacity=".1"/><text x="' + (L - 6) + '" y="' + (y + 4) + '" text-anchor="end" font-size="10" fill="currentColor" fill-opacity=".6">' + Math.round(top * i / 4) + '</text>'; }
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Graphique en barres" class="vb">' + g + vals.map((v, i) => {
+      const h = Math.round(v / top * ch), x = L + i * bw + bw * .2, w = bw * .6, y = 10 + ch - h;
+      return '<rect x="' + x.toFixed(1) + '" y="' + y + '" width="' + w.toFixed(1) + '" height="' + h + '" rx="5" fill="' + color + '"/>' + (v ? '<text x="' + (x + w / 2).toFixed(1) + '" y="' + (y - 5) + '" text-anchor="middle" font-size="11" font-weight="800" fill="currentColor">' + v + '</text>' : '') + '<text x="' + (x + w / 2).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="10" fill="currentColor" fill-opacity=".65">' + esc(labels[i]) + '</text>';
+    }).join('') + '</svg>';
+  }
+  function donut(parts, total) {
+    const R = 52, C = 2 * Math.PI * R; let off = 0;
+    const arcs = parts.map((p) => { const len = total ? p.n / total * C : 0, a = '<circle r="' + R + '" cx="70" cy="70" fill="none" stroke="' + p.c + '" stroke-width="20" stroke-dasharray="' + len.toFixed(2) + ' ' + (C - len).toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 70 70)"/>'; off += len; return a; }).join('');
+    return '<div class="dn"><svg viewBox="0 0 140 140" role="img" aria-label="Répartition des niveaux"><circle r="' + R + '" cx="70" cy="70" fill="none" stroke="currentColor" stroke-opacity=".1" stroke-width="20"/>' + arcs + '<text x="70" y="68" text-anchor="middle" font-size="24" font-weight="900" fill="currentColor">' + total + '</text><text x="70" y="86" text-anchor="middle" font-size="10" fill="currentColor" fill-opacity=".65">Joueurs</text></svg><ul>' +
+      parts.map((p) => '<li><i style="background:' + p.c + '"></i><span>' + esc(p.l) + '</span><b>' + p.n + '</b><small>(' + (total ? (p.n / total * 100).toFixed(1).replace('.', ',') : '0') + ' %)</small></li>').join('') + '</ul></div>';
+  }
+  function areaChart(days, vals) {
+    const W = 640, H = 220, L = 38, B = 26, T = 14, mx = Math.max(1, ...vals), top = Math.max(4, Math.ceil(mx / 4) * 4), cw = W - L - 10, ch = H - B - T;
+    const X = (i) => L + (vals.length > 1 ? i / (vals.length - 1) : 0) * cw, Y = (v) => T + ch - v / top * ch, P = vals.map((v, i) => [X(i), Y(v)]);
+    let d = 'M' + P[0][0] + ' ' + P[0][1];
+    for (let i = 1; i < P.length; i++) { const c = (P[i][0] - P[i - 1][0]) / 2; d += ' C' + (P[i - 1][0] + c).toFixed(1) + ' ' + P[i - 1][1].toFixed(1) + ' ' + (P[i][0] - c).toFixed(1) + ' ' + P[i][1].toFixed(1) + ' ' + P[i][0].toFixed(1) + ' ' + P[i][1].toFixed(1); }
+    let g = ''; for (let i = 0; i <= 4; i++) { const y = T + ch - ch * i / 4; g += '<line x1="' + L + '" x2="' + (W - 10) + '" y1="' + y + '" y2="' + y + '" stroke="currentColor" stroke-opacity=".1"/><text x="' + (L - 8) + '" y="' + (y + 4) + '" text-anchor="end" font-size="10" fill="currentColor" fill-opacity=".6">' + Math.round(top * i / 4) + '</text>'; }
+    const step = Math.max(1, Math.ceil(vals.length / 7)); let xl = ''; days.forEach((dd, i) => { if (i % step === 0 || i === days.length - 1) xl += '<text x="' + X(i).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="10" fill="currentColor" fill-opacity=".65">' + fd(dd) + '</text>'; });
+    return '<div class="ac" id="ac"><svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Joueurs actifs par jour"><defs><linearGradient id="agr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--red)" stop-opacity=".45"/><stop offset="1" stop-color="var(--red)" stop-opacity="0"/></linearGradient></defs>' + g + xl +
+      '<path d="' + d + ' L' + P[P.length - 1][0] + ' ' + (T + ch) + ' L' + P[0][0] + ' ' + (T + ch) + ' Z" fill="url(#agr)"/><path d="' + d + '" fill="none" stroke="var(--red)" stroke-width="3" stroke-linecap="round"/><g id="acd">' + (vals.length <= 31 ? P.map((p) => '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3.5" fill="#fff" stroke="var(--red)" stroke-width="2"/>').join('') : '') + '</g><line id="acl" y1="' + T + '" y2="' + (T + ch) + '" stroke="var(--red)" stroke-dasharray="3 4" opacity="0"/><circle id="acp" r="6" fill="#fff" stroke="var(--red)" stroke-width="3" opacity="0"/></svg><div class="tip" id="tip" hidden></div></div>';
+  }
+  function bindArea(days, vals) {
+    const el = $('ac'); if (!el) return; const svg = el.querySelector('svg'), W = 640, H = 220, L = 38, T = 14, B = 26, cw = W - L - 10, ch = H - B - T, top = Math.max(4, Math.ceil(Math.max(1, ...vals) / 4) * 4);
+    const move = (ev) => {
+      const r = svg.getBoundingClientRect(), x = ((ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left) / r.width * W, i = Math.max(0, Math.min(vals.length - 1, Math.round((x - L) / cw * (vals.length - 1)))), px = L + (vals.length > 1 ? i / (vals.length - 1) : 0) * cw, py = T + ch - vals[i] / top * ch;
+      const l = $('acl'), p = $('acp'); l.setAttribute('x1', px); l.setAttribute('x2', px); l.setAttribute('opacity', 1); p.setAttribute('cx', px); p.setAttribute('cy', py); p.setAttribute('opacity', 1);
+      const t = $('tip'); t.hidden = false; t.innerHTML = '<b>' + new Date(days[i] + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' }) + '</b>' + vals[i] + ' joueur' + (vals[i] > 1 ? 's' : '') + ' actif' + (vals[i] > 1 ? 's' : '');
+      t.style.left = Math.min(Math.max(px / W * 100, 14), 86) + '%'; t.style.top = Math.max(py / H * 100 - 6, 2) + '%';
+    };
+    svg.addEventListener('mousemove', move); svg.addEventListener('touchmove', move, { passive: true }); svg.addEventListener('touchstart', move, { passive: true });
+    svg.addEventListener('mouseleave', () => { $('tip').hidden = true; $('acl').setAttribute('opacity', 0); $('acp').setAttribute('opacity', 0); });
+  }
+  function freqPanel() {
+    return '<section class="cp"><div class="ch"><h3><i class="ki sm">' + ico('stats') + '</i>Statistiques de fréquentation</h3><div class="rg" id="rg">' + [['7', '7j'], ['30', '30j'], ['90', '90j'], ['365', '1an']].map((x, i) => '<button type="button" data-n="' + x[0] + '" class="' + (i ? '' : 'on') + '">' + x[1] + '</button>').join('') + '</div></div><p class="muted small" style="margin:0 0 6px">Joueurs actifs par jour (connexions ou séances).</p><div id="fq"></div></section>';
+  }
+  async function loadFreq(n) {
+    const r = await A.raw('stats/series?n=' + n, 'GET'), box = $('fq'); if (!box) return;
+    if (!r.ok) { box.innerHTML = '<p class="muted">Données indisponibles (' + esc((r.data && r.data.error) || 'serveur requis') + ').</p>'; return; }
+    box.innerHTML = areaChart(r.data.days, r.data.active); bindArea(r.data.days, r.data.active);
+  }
+  function bindFreq() { $('rg').onclick = (e) => { const b = e.target.closest('[data-n]'); if (!b) return; Array.prototype.forEach.call($('rg').children, (x) => x.classList.toggle('on', x === b)); loadFreq(b.dataset.n); }; loadFreq(7); }
+  const LV = (levels) => { const l = levels || [0, 0, 0, 0, 0]; return [{ l: 'Débutant', n: (l[0] || 0) + (l[1] || 0), c: '#b983ff' }, { l: 'Intermédiaire', n: (l[2] || 0) + (l[3] || 0), c: '#e0455f' }, { l: 'Expert', n: l[4] || 0, c: '#ff8a3d' }]; };
+  const SER = async () => { const r = await A.raw('stats/series?n=30', 'GET'); return r.ok ? r.data : null; };
+  const sum = (a) => a.reduce((x, y) => x + y, 0);
+
   VIEWS.dash = async function () {
-    const s = await A.stats(); if (!s) throw new Error('Statistiques indisponibles');
-    const L = ['Éveil', 'Initié', 'Combattant', 'Guerrier', 'Légende'], Rr = ['Commun', 'Rare', 'Épique', 'Légendaire', 'Mythique'];
-    $('main').innerHTML = '<h1>Tableau de bord</h1><p class="lead">Vue d\'ensemble de la communauté neV.BOOSTER.</p>' +
-      kpi([[s.players, 'Joueurs'], [s.newToday, 'Nouveaux aujourd\'hui'], [s.sessionsTotal, 'Séances enregistrées'], [s.verifiedPct + ' %', 'Validées par caméra'], [s.avgStreak, 'Série moyenne'], [s.bestStreak, 'Meilleure série'], [s.flames, 'Flammes en circulation'], [s.referrals, 'Parrainages'], [s.doubled, 'Séances doublées'], [s.views24h, 'Pages vues (24 h)'], [s.errors24h, 'Erreurs (24 h)']]) +
-      '<div class="g2"><div class="chart"><h3>Joueurs actifs (7 jours)</h3>' + bars(s.active, s.days.map(fd)) + '</div><div class="chart"><h3>Séances validées (7 jours)</h3>' + bars(s.sessions, s.days.map(fd), '#ff8a3d') + '</div>' +
-      '<div class="chart"><h3>Niveaux des joueurs</h3>' + bars(s.levels, L, '#c8456e') + '</div><div class="chart"><h3>Raretés tirées</h3>' + bars(s.rarity, Rr, '#f0b24a') + '</div></div>' +
-      '<h2>Exercices les plus tirés</h2><div class="chart">' + hbars(s.topExercises.map((x) => [exName(x.id), x.n])) + '</div>';
+    const [s, ser] = await Promise.all([A.stats(), SER()]); if (!s) throw new Error('Statistiques indisponibles');
+    const now = new Date(), upd = now.toLocaleDateString('fr-FR') + ' • ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    let cards;
+    if (ser) {
+      const n = ser.days.length, l7 = (a) => sum(a.slice(n - 7)), p7 = (a) => sum(a.slice(n - 14, n - 7)), cum = []; let c = ser.playersBefore; ser.signups.forEach((v) => { c += v; cum.push(c); });
+      const vr = ser.sessions.map((v, i) => (v ? Math.round(ser.verified[i] / v * 100) : 0)), vNow = l7(ser.sessions) ? Math.round(l7(ser.verified) / l7(ser.sessions) * 100) : 0, vPrev = p7(ser.sessions) ? Math.round(p7(ser.verified) / p7(ser.sessions) * 100) : null;
+      cards = [kcard('joueurs', '#e0455f', fmtN(s.players), 'Joueurs', pctD(s.players, s.players - l7(ser.signups)), cum.slice(-14)),
+        kcard('annonce', '#b983ff', s.newToday, 'Nouveaux aujourd\'hui', pctD(ser.signups[n - 1], ser.signups[n - 2]), ser.signups.slice(-14)),
+        kcard('stats', '#4aa3ff', fmtN(s.sessionsTotal), 'Séances enregistrées', pctD(l7(ser.sessions), p7(ser.sessions)), ser.sessions.slice(-14)),
+        kcard('securite', '#3ddc84', s.verifiedPct + ' %', 'Validées par caméra', vPrev == null ? null : vNow - vPrev, vr.slice(-14)),
+        kcard('suivi', '#ff8a3d', s.avgStreak, 'Série moyenne', null, null), kcard('badges', '#f0b84a', s.bestStreak, 'Meilleure série', null, null)];
+    } else cards = [kcard('joueurs', '#e0455f', s.players, 'Joueurs', null), kcard('annonce', '#b983ff', s.newToday, 'Nouveaux aujourd\'hui', null), kcard('stats', '#4aa3ff', s.sessionsTotal, 'Séances enregistrées', null), kcard('securite', '#3ddc84', s.verifiedPct + ' %', 'Validées par caméra', null), kcard('suivi', '#ff8a3d', s.avgStreak, 'Série moyenne', null), kcard('badges', '#f0b84a', s.bestStreak, 'Meilleure série', null)];
+    const lv = LV(s.levels), tot = lv.reduce((a, x) => a + x.n, 0);
+    $('main').innerHTML = '<div class="dh"><div><h1>Tableau de bord</h1><p class="lead">Vue d\'ensemble de la communauté neV.BOOSTER.</p></div><div class="ds"><span class="op">● Système opérationnel</span><small>Dernière mise à jour : ' + upd + '</small></div></div>' +
+      '<div class="kg">' + cards.join('') + '</div>' +
+      '<div class="cg"><section class="cp"><div class="ch"><h3><i class="ki sm">' + ico('joueurs') + '</i>Joueurs actifs (7 jours)</h3></div>' + vbars(s.active, s.days.map(fd), '#e0455f') + '</section>' +
+      '<section class="cp"><div class="ch"><h3><i class="ki sm" style="--kc:#ff8a3d">' + ico('stats') + '</i>Séances validées (7 jours)</h3></div>' + vbars(s.sessions, s.days.map(fd), '#ff8a3d') + '</section>' +
+      '<section class="cp"><div class="ch"><h3><i class="ki sm">' + ico('badges') + '</i>Niveaux des joueurs</h3></div>' + donut(lv, tot) + '</section></div>' +
+      '<div class="cg2"><section class="cp" id="tk"></section><section class="cp ann"><h3>Annonce rapide</h3><p class="muted">Écris un message visible par tous les joueurs en haut du site.</p><textarea id="qa" maxlength="200" placeholder="Bienvenue sur neV.BOOSTER !" aria-label="Annonce rapide"></textarea><button type="button" class="btn" id="qaGo">Publier une annonce</button></section></div>' +
+      '<div style="margin-top:16px">' + freqPanel() + '</div>';
+    bindFreq(); drawTasks(); $('qaGo').onclick = async () => { const t = $('qa').value.trim(); if (!t) { toast('Écris un message.', true); return; } const r = await A.announce(t); toast(r && r.ok === false ? 'Publication impossible.' : 'Annonce publiée.', r && r.ok === false); };
   };
+  VIEWS.stats = async function () {
+    const [s, ser] = await Promise.all([A.stats(), SER()]); if (!s) throw new Error('Statistiques indisponibles');
+    const lv = LV(s.levels), tot = lv.reduce((a, x) => a + x.n, 0);
+    $('main').innerHTML = '<div class="dh"><div><h1>Statistiques</h1><p class="lead">Fréquentation et activité de la communauté.</p></div></div>' + freqPanel() +
+      '<div class="cg" style="margin-top:16px"><section class="cp"><div class="ch"><h3>Joueurs actifs (7 jours)</h3></div>' + vbars(s.active, s.days.map(fd), '#e0455f') + '</section><section class="cp"><div class="ch"><h3>Séances validées (7 jours)</h3></div>' + vbars(s.sessions, s.days.map(fd), '#ff8a3d') + '</section><section class="cp"><div class="ch"><h3>Niveaux des joueurs</h3></div>' + donut(lv, tot) + '</section></div>' +
+      '<h2>Exercices les plus tirés</h2><div class="chart">' + hbars(s.topExercises.map((x) => [exName(x.id), x.n])) + '</div>';
+    bindFreq();
+  };
+  /* tâches récentes (vraie liste, journalisée) */
+  const ST = { todo: ['En attente', 'wt'], doing: ['En cours', 'dg'], done: ['Terminée', 'dn2'] }, NEXT = { todo: 'doing', doing: 'done', done: 'todo' };
+  let showAll = false;
+  async function drawTasks() {
+    const box = $('tk'); if (!box) return; const r = await A.raw('tasks', 'GET');
+    if (!r.ok) { box.innerHTML = '<h3>Tâches récentes</h3><p class="muted">Disponible avec le serveur (rôle administrateur).</p>'; return; }
+    const L = r.data.tasks || [], V = showAll ? L : L.slice(0, 4);
+    box.innerHTML = '<div class="ch"><h3><i class="ki sm">' + ico('dash') + '</i>Tâches récentes</h3>' + (L.length > 4 ? '<button type="button" class="linkb" id="tkAll">' + (showAll ? 'Réduire' : 'Voir toutes') + ' →</button>' : '') + '</div>' +
+      (V.length ? '<ul class="tl">' + V.map((t) => '<li><i class="dot ' + ST[t.status][1] + '"></i><div class="tt"><b>' + esc(t.title) + '</b><small>' + esc(t.detail) + '</small></div><button type="button" class="chipb ' + ST[t.status][1] + '" data-ts="' + t.id + '" data-n="' + NEXT[t.status] + '" title="Changer le statut">' + ST[t.status][0] + '</button><time>' + esc(fd(t.due)) + '</time><button type="button" class="x" data-td="' + t.id + '" aria-label="Supprimer la tâche">✕</button></li>').join('') + '</ul>' : '<p class="muted">Aucune tâche. Ajoute-en une ci-dessous.</p>') +
+      '<form class="tadd" id="tf"><input type="text" id="tt" maxlength="90" placeholder="Nouvelle tâche…" aria-label="Titre de la tâche"><input type="text" id="td" maxlength="160" placeholder="Détail (facultatif)" aria-label="Détail"><button class="btn sm" type="submit">Ajouter</button></form>';
+    $('tkAll') && ($('tkAll').onclick = () => { showAll = !showAll; drawTasks(); });
+    box.onclick = async (e) => { const a = e.target.closest('[data-ts]'), d = e.target.closest('[data-td]'); if (a) { await A.raw('tasks/status', 'POST', { id: +a.dataset.ts, status: a.dataset.n }); drawTasks(); } else if (d && await ask('Supprimer cette tâche ?')) { await A.raw('tasks/delete', 'POST', { id: +d.dataset.td }); drawTasks(); } };
+    $('tf').onsubmit = async (e) => { e.preventDefault(); const t = $('tt').value.trim(); if (!t) return; const x = await A.raw('tasks', 'POST', { title: t, detail: $('td').value.trim() }); if (!x.ok) { toast((x.data && x.data.error) || 'Impossible.', true); return; } drawTasks(); };
+  }
 
   /* ---------- suivi du site ---------- */
   VIEWS.suivi = async function () {
@@ -241,6 +359,7 @@
       $('cnt').textContent = L.length + ' / ' + users.length + ' joueurs';
     }
     $('main').innerHTML = '<h1>Joueurs</h1><p class="lead">Progression, parrainages, badges offerts et suspension de comptes.</p><div class="row"><input type="search" id="jq" placeholder="Pseudo, email ou code" aria-label="Rechercher"><span class="muted" id="cnt"></span></div><div class="tw"><table class="t"><thead><tr><th>Joueur</th><th>Email</th><th>Niv.</th><th>Série / record</th><th>Séances</th><th>XP</th><th>Flammes</th><th>Badges</th><th>Amis</th><th>Vu le</th><th>Actions</th></tr></thead><tbody id="tb"></tbody></table></div>';
+    try { const pre = sessionStorage.getItem('nvb.adm.q'); if (pre) { sessionStorage.removeItem('nvb.adm.q'); q = pre; $('jq').value = pre; table(); } } catch (e) { /* ignoré */ }
     $('jq').oninput = (e) => { q = e.target.value; table(); };
     $('tb').onchange = async (e) => { const s = e.target.closest('[data-g]'); if (s && s.value) { await A.badges.grant(s.dataset.g, s.value); toast('Badge offert 🏅'); users = await A.users(); table(); } };
     $('tb').onclick = async (e) => {
