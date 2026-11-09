@@ -72,3 +72,9 @@ html[data-theme=light] .cn-form input{background:#fff;border-color:var(--line)}
 html[data-theme=light] .sp-bar{background:#0000001a}
 .sp-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--ember),var(--red))}
 @media(max-width:620px){.pod{gap:8px}.cl-row{grid-template-columns:34px 40px minmax(0,1fr) auto;gap:10px;padding:12px}.cl-av{width:40px;height:40px}.cl-ban .tx{font-size:.85rem}.cl-ban{padding:12px 14px}}
+@media(max-width:700px){
+.cn-row{grid-template-columns:26px minmax(0,1fr);gap:10px 12px;padding:12px}
+.cn-row>*:last-child:not(div){grid-column:1/-1;justify-self:stretch;text-align:center}
+.cn-row>div{min-width:0}
+.cn-row small{line-height:1.45}
+}
