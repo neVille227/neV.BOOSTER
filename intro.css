@@ -89,3 +89,7 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--cream);font-fami
 .wordmark{display:none}
 .tag{bottom:13%}
 @media(prefers-reduced-motion:reduce){.lg-glow,.lg-half{opacity:1!important;transform:none!important}.lg-shine,.lg-seam{display:none}}
+
+/* carte à gratter : le canvas remplit l'écran, le logo est dessiné dedans */
+#s-logo{padding:0}
+.scr{position:absolute;inset:0;width:100%;height:100%;display:block}
