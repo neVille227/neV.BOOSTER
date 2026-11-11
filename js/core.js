@@ -369,7 +369,14 @@
       }
       return { already: false, xpGain, p, touched };
     },
-    /* Séance « Gacha Box » : les 4 cartes de la boîte, dans l'ordre (les combos comptent pour une carte).
+    /* Cartes réellement jouées d'une boîte : celles que le joueur a choisies, sinon toutes. */
+    boxPlayed(b) {
+      const all = (b && b.cards) || [];
+      const idx = ((b && b.picked) || []).filter((i) => Number.isInteger(i) && i >= 0 && i < all.length);
+      return idx.length ? idx.filter((v, k) => idx.indexOf(v) === k).sort((a, c) => a - c).map((i) => all[i]) : all;
+    },
+    /* Séance « Gacha » en tirage multiple : les cartes CHOISIES dans la boîte (b.picked : indices ; toutes si rien n'a été choisi),
+       dans l'ordre du tirage (un combo compte pour une carte).
        res : { reps, sets, verified, byCard: [{ reps, sets }, …] } ; XP selon la difficulté de chaque carte. */
     completeBox(p, res, today) {
       today = today || util.todayStr();
@@ -379,7 +386,8 @@
       if (!b || !b.cards || !b.cards.length) return { already: true, xpGain: 0, p };
       if (b.status === 'done') return { already: true, xpGain: 0, p };
       const dayDone = d.status === 'done', dbl = !!(d.double && !dayDone), verified = res.verified !== false;
-      const base = b.cards.map((c) => (c.type === 'combo' ? 14 + 8 * c.steps.length : 18 + 10 * (c.tier || 1)));
+      const played = P.boxPlayed(b);
+      const base = played.map((c) => (c.type === 'combo' ? 14 + 8 * c.steps.length : 18 + 10 * (c.tier || 1)));
       const mult = (dbl ? 1.5 : 1) * (verified ? 1 : 0.5) * (dayDone ? 0.6 : 1);
       const share = base.map((x) => Math.round(x * mult));
       const xpGain = share.reduce((a, x) => a + x, 0);
@@ -388,7 +396,7 @@
       b.status = 'done';
       b.result = { reps: res.reps, sets: res.sets, verified: !!verified, at: Date.now(), xpGain };
       if (!dayDone) { d.status = 'done'; d.result = Object.assign({ via: 'box' }, b.result); }
-      b.cards.forEach((c, i) => {
+      played.forEach((c, i) => {
         const bc = (res.byCard || [])[i] || {};
         const tot = c.type === 'combo' ? c.steps.reduce((a, s) => a + s.plan.total, 0) : c.plan.total;
         const sets = c.type === 'combo' ? c.steps.reduce((a, s) => a + s.plan.sets, 0) : c.plan.sets;

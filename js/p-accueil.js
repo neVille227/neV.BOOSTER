@@ -25,7 +25,7 @@
   var t = '<div class="eyebrow">Ta carte du jour</div>';
   if (d.status === 'none') {
     t += '<h2 style="margin:8px 0">Une carte t\'attend.</h2><p class="muted">Un seul tirage par jour, totalement aléatoire.</p>' +
-      '<div class="acts"><a class="b1" href="gacha.html?go=1" data-go>Tirage du jour</a><a class="b2" href="gacha-box.html" data-go>Gacha Box · 4 cartes</a></div>';
+      '<div class="acts"><a class="b1" href="gacha.html" data-go>Tirage simple</a><a class="b2" href="gacha.html?mode=multi" data-go>Tirage multiple · 4 cartes</a></div>';
   } else {
     var r = NEV.Gacha.rarity(d.card.rarity);
     var pl = d.card.plan;

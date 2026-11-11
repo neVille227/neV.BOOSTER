@@ -38,12 +38,12 @@ const addDays = (s, n) => new Date(Date.parse(s + 'T00:00:00Z') + n * 86400000).
 const clean = (t, max) => String(t == null ? '' : t).replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
 const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 const scrypt = (pw, salt) => new Promise((res, rej) => crypto.scrypt(String(pw), salt, 64, { N: 16384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 }, (e, k) => (e ? rej(e) : res(k.toString('hex')))));
-const noProto = (o, depth) => { // retire les clés dangereuses, limite la profondeur
+const noProto = (o, depth, strMax) => { // retire les clés dangereuses, limite la profondeur et la longueur des textes (600 par défaut)
   depth = depth || 0;
   if (depth > 8) return null;
-  if (Array.isArray(o)) return o.slice(0, 400).map((x) => noProto(x, depth + 1));
-  if (o && typeof o === 'object') { const r = {}; Object.keys(o).slice(0, 200).forEach((k) => { if (k === '__proto__' || k === 'constructor' || k === 'prototype') return; r[k.slice(0, 60)] = noProto(o[k], depth + 1); }); return r; }
-  if (typeof o === 'string') return o.slice(0, 600);
+  if (Array.isArray(o)) return o.slice(0, 400).map((x) => noProto(x, depth + 1, strMax));
+  if (o && typeof o === 'object') { const r = {}; Object.keys(o).slice(0, 200).forEach((k) => { if (k === '__proto__' || k === 'constructor' || k === 'prototype') return; r[k.slice(0, 60)] = noProto(o[k], depth + 1, strMax); }); return r; }
+  if (typeof o === 'string') return o.slice(0, strMax || 600);
   return o;
 };
 
@@ -116,13 +116,13 @@ function setCookie(res, req, name, val, maxAgeS) { // maxAgeS = null → cookie 
 }
 function send(res, code, obj, extra) { const b = JSON.stringify(obj); res.writeHead(code, Object.assign({ 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'Content-Length': Buffer.byteLength(b) }, extra || {})); res.end(b); }
 const fail = (res, code, error, field) => send(res, code, field ? { error, field } : { error });
-function readBody(req, max) {
+function readBody(req, max, strMax) { // strMax : longueur maximale d'un texte (photos et images en data-URL)
   return new Promise((resolve, reject) => {
     const len = Number(req.headers['content-length'] || 0);
     if (len > max) { reject(Object.assign(new Error('big'), { code: 413 })); return; }
     let size = 0; const parts = [];
     req.on('data', (c) => { size += c.length; if (size > max) { reject(Object.assign(new Error('big'), { code: 413 })); req.destroy(); return; } parts.push(c); });
-    req.on('end', () => { if (!size) return resolve({}); try { const j = JSON.parse(Buffer.concat(parts).toString('utf8')); resolve(j && typeof j === 'object' ? noProto(j) : {}); } catch (e) { reject(Object.assign(new Error('json'), { code: 400 })); } });
+    req.on('end', () => { if (!size) return resolve({}); try { const j = JSON.parse(Buffer.concat(parts).toString('utf8')); resolve(j && typeof j === 'object' ? noProto(j, 0, strMax) : {}); } catch (e) { reject(Object.assign(new Error('json'), { code: 400 })); } });
     req.on('error', reject);
   });
 }

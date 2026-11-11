@@ -1,11 +1,17 @@
-/* neV.BOOSTER — page gacha : doigt, rotation x8, explosion, compte à rebours */
+/* neV.BOOSTER — page Gacha (une seule page pour tout le tirage)
+   Parcours : boîte mystérieuse → tirage simple (1 carte) ou multiple (4 cartes) → catégorie → TIRER →
+   la boîte s'avance en 3D, s'immobilise, le couvercle s'ouvre, la lumière jaillit, les cartes sortent → révélation → validation.
+   Règle d'or : le tirage est fait par le moteur (NEV.Gacha.ensureCard / ensureBox) et ENREGISTRÉ avant la moindre animation ;
+   l'animation ne fait que le montrer. Recharger la page ne permet donc jamais de retirer.
+   Deux événements sont émis pour d'éventuels outils externes : « nvb:gacha-draw » et « nvb:gacha-validate ». */
 (async function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
   const esc = NEV.util.esc, sleep = NEV.util.sleep, reduced = NEV.util.reduced();
-  /* Mode visiteur (?visiteur=m|f) : on peut tirer une carte, jamais l'exécuter sans compte.
-     Le joueur est vierge, en mémoire seulement : rien n'est enregistré, rien n'est envoyé au serveur. */
+  const G = NEV.Gacha;
   const qs = new URLSearchParams(location.search);
+
+  /* ---------- contexte : visiteur (?visiteur=m|f), Spécialisation (?mode=spe&zone=…) ou joueur connecté ---------- */
   const GUEST = qs.get('visiteur') === 'f' ? 'f' : qs.get('visiteur') === 'm' ? 'm' : '';
   let ctx;
   if (GUEST) {
@@ -19,146 +25,179 @@
   }
   const user = ctx.user, p = ctx.p;
   NEV.player.ensureDay(p); if (!GUEST) NEV.player.save(p);
-  /* Deux systèmes, une seule page : gacha.html (du jour) et gacha.html?mode=spe&zone=cou (Spécialisation). */
-  const MODE = !GUEST && qs.get('mode') === 'spe' ? 'spe' : 'daily';
+  const SPE = !GUEST && qs.get('mode') === 'spe';
   let ZONE = qs.get('zone') || 'all';
-  if (MODE === 'spe') { if (p.spe.card && p.spe.zone) ZONE = p.spe.zone; if (ZONE !== 'all' && !NEV.Zones.get(ZONE)) ZONE = 'all'; }
-  const slotOf = () => (MODE === 'spe' ? p.spe : p.daily);
-  const zoneObj = ZONE !== 'all' ? NEV.Zones.get(ZONE) : null;
-  const cautious = false;
-  const stage = $('gstage'), table = $('gtable'), msg = $('gmsg');
-  let busy = false, countTimer = 0;
+  if (SPE) { if (p.spe.card && p.spe.zone) ZONE = p.spe.zone; if (ZONE !== 'all' && !NEV.Zones.get(ZONE)) ZONE = 'all'; }
+  const zoneObj = SPE && ZONE !== 'all' ? NEV.Zones.get(ZONE) : null;
+  const SIGNUP = 'connexion.html?sex=' + GUEST;
+  const CFG = Object.assign({ heroImage: '' }, window.NVB_GACHA || {});
 
-  /* ----- choix du tirage, avant l'animation : une carte ou la Gacha Box ----- */
-  if (!GUEST && MODE === 'daily' && d0().status === 'none' && qs.get('go') !== '1') {
-    $('pick').hidden = false; stage.hidden = true;
-    $('pkOne').addEventListener('click', () => { $('pick').hidden = true; stage.hidden = false; stage.scrollIntoView({ block: 'center' }); });
+  /* ---------- éléments ---------- */
+  const gx = $('gx'), stage = $('gxStage'), cardsEl = $('gxCards'), rays = $('gxRays'), hint = $('gxHint'), banner = $('gxBanner'), hero = $('gxHero'), flashEl = $('gxFlash');
+  const parts = [$('gxBack'), $('gxFront'), $('gxLid')];
+  const VIEWS = { idle: 'vIdle', busy: 'vBusy', result: 'vResult', confirm: 'vConfirm', done: 'vDone' };
+  const S = { mode: 'single', cat: 'all', cards: [], els: [], sel: new Set(), timers: [], anims: [], busy: false, skipped: false, L: null, fresh: false };
+
+  /* ---------- textes et données d'affichage ---------- */
+  const tierName = (t) => (NEV.Ex.TIER_NAMES && NEV.Ex.TIER_NAMES[t]) || '';
+  const plural = (n, w) => n + ' ' + w + (n > 1 ? 's' : '');
+  const rarOf = (c) => (c.special ? G.SPECIALS[c.special] : G.RARITIES[Math.max(0, Math.min(4, (c.tier || 1) - 1))]);
+  const tOf = (c) => (c.special ? 4 : (c.tier || 1));
+  const codeOf = (c) => (c.special ? 'UR' : rarOf(c).code);
+  const planText = (c) => {
+    if (c.type === 'combo') return plural(c.steps.length, 'exercice') + ' à la suite';
+    const pl = c.plan;
+    if (c.special === 'repos') return 'Repos actif · ' + Math.round(pl.perSet / 6) / 10 + ' min';
+    return plural(pl.sets, 'série') + ' × ' + NEV.Ex.amountText(pl.unit, pl.perSet);
+  };
+  const faceOf = (c) => (c.type === 'combo' ? NEV.Card.combo(c, { diff: tierName(c.tier) }) : NEV.Card.ofCard(c, { diff: c.special ? '' : tierName(c.tier) }));
+  const hexRgb = (h) => { const v = parseInt(h.slice(1), 16); return (v >> 16 & 255) + ',' + (v >> 8 & 255) + ',' + (v & 255); };
+  const say = (t) => { const l = $('gxLive'); l.textContent = ''; setTimeout(() => { l.textContent = t; }, 30); };
+  const flat = (cards) => { const o = []; cards.forEach((c) => (c.type === 'combo' ? c.steps : [c]).forEach((s) => o.push(s))); return o; };
+  function minutesOf(cards) {
+    let s = 0;
+    flat(cards).forEach((e) => { const pl = e.plan, per = pl.unit === 'sec' || pl.unit === 'secside' ? pl.perSet * (pl.unit === 'secside' ? 2 : 1) : pl.perSet * (pl.unit === 'side' ? 2 : 1) * 3.2; s += pl.sets * (per + pl.rest) + 20; });
+    return Math.max(3, Math.round(s / 60));
   }
-  function d0() { return p.daily; }
+  const ICONS = {
+    pecs: '<path d="M3 10c0-3 4-4 9-1 5-3 9-2 9 1 0 5-4 7-9 6-5 1-9-1-9-6z"/><path d="M12 9v11"/>',
+    abdos: '<rect x="7" y="3.5" width="10" height="17" rx="3"/><path d="M12 3.5v17M7 9h10M7 14.5h10"/>',
+    jambes: '<path d="M9 3h6l-1 9 2 9h-4l-1-7-1 7H6l2-9z"/>',
+    epaules: '<path d="M3 19c0-6 4-9 9-9s9 3 9 9"/><circle cx="12" cy="5.5" r="2.8"/>',
+    cardio: '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
+    dos: '<path d="M12 3v18M6 7c3 2 9 2 12 0M7 12.5c3 2 7 2 10 0"/>',
+    bras: '<path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"/>',
+    all: '<path d="M12 3l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/>'
+  };
+  const icon = (id) => '<svg viewBox="0 0 24 24" aria-hidden="true">' + (ICONS[id] || '') + '</svg>';
+  const catName = (id) => (id === 'all' || !id ? 'Au hasard' : (G.catById(id) || {}).name || '');
 
-  /* ----- son ----- */
-  const sndBtn = $('snd');
+  /* ---------- données du joueur : où est le tirage d'aujourd'hui ? ---------- */
+  const singleSlot = () => (SPE ? p.spe : p.daily);
+  const singleCard = () => singleSlot().card || null;
+  const boxObj = () => (p.box && p.box.cards ? p.box : null);
+  const drawnOf = (mode) => (mode === 'multi' ? boxObj() : singleCard());
+  const statusOf = (mode) => (mode === 'multi' ? (p.box && p.box.status) : singleSlot().status);
+  const blockedSingle = () => !SPE && !singleCard() && p.daily.status === 'done';   // journée déjà validée par le tirage multiple
+  const cardsOf = (mode) => (mode === 'multi' ? boxObj().cards : [singleCard()]);
+  const catOfDrawn = (mode) => { const d = drawnOf(mode); return (d && d.cat) || 'all'; };
+
+  /* ---------- son ---------- */
+  const sndBtn = $('gxSnd');
   const syncSnd = () => { sndBtn.textContent = 'Son : ' + (NEV.Sfx.muted ? 'non' : 'oui'); sndBtn.setAttribute('aria-pressed', String(!NEV.Sfx.muted)); };
   sndBtn.onclick = () => { NEV.Sfx.toggle(); syncSnd(); };
   syncSnd();
+  stage.addEventListener('pointerdown', () => NEV.Sfx.unlock(), { once: true });
 
-  /* ----- bandeau visiteur ----- */
-  const SIGNUP = 'connexion.html?sex=' + GUEST;
+  /* ---------- bandeaux, chances, légende ---------- */
   if (GUEST) {
-    $('gAlert').innerHTML = '<div class="banner guestBanner"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><div><b>Mode visiteur · ' + (GUEST === 'f' ? 'Femme' : 'Homme') + '.</b> Tu peux tirer une carte pour découvrir le jeu. Pour lancer l\'exercice, gagner des flammes et suivre ta progression, il faut un compte (gratuit). <a href="' + SIGNUP + '" data-go>Créer mon compte</a></div></div>';
+    $('gAlert').innerHTML = '<div class="banner guestBanner"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><div><b>Mode visiteur · ' + (GUEST === 'f' ? 'Femme' : 'Homme') + '.</b> Tu peux tirer des cartes pour découvrir le jeu. Pour lancer les exercices, gagner des flammes et suivre ta progression, il faut un compte (gratuit). <a href="' + SIGNUP + '" data-go>Créer mon compte</a></div></div>';
     const od = document.querySelector('details.odds'); if (od) od.remove();
+  } else if (p.daily.double && p.daily.status !== 'done') {
+    $('gAlert').innerHTML = '<div class="banner"><span style="font-size:1.5rem">⚠️</span><div>Journée ratée : les séries d\'aujourd\'hui sont <b>doublées (×2)</b>. Le tirage reste unique.</div></div>';
   }
-  /* ----- bandeau de situation ----- */
-  const d = p.daily;
-  if (MODE === 'spe') {
-    document.title = 'neV.BOOSTER — Gacha Spécialisation';
-    document.querySelector('.eyebrow').textContent = 'Gacha Spécialisation · ' + (zoneObj ? zoneObj.name : 'Corps entier');
-    $('gTitle').innerHTML = zoneObj ? 'Ta carte <em>' + esc(zoneObj.name.toLowerCase()) + '</em>' : 'Ta carte <em>corps entier</em>';
-    $('gLead').textContent = 'Cinq cartes, une seule pour toi, tirée dans la zone que tu as choisie.';
-  }
-  if (d.double && d.status !== 'done') {
-    $('gAlert').innerHTML = '<div class="banner"><span style="font-size:1.5rem">⚠️</span><div>Journée ratée : l\'enchaînement d\'aujourd\'hui est <b>doublé (×2)</b>. Le tirage reste unique.</div></div>';
-  }
-  /* chances de carte spéciale (Repos / Tractions) */
-  (function special() {
-    const si = NEV.Gacha.specialInfo(p, { mode: MODE });
-    const box = $('spTxt'); if (!box) return;
-    box.innerHTML = 'Deux cartes <b>spéciales</b> très rares peuvent sortir : <b>Repos</b>' + (si.tractionsOk ? ' et <b>Tractions</b>' : ' (et <b>Tractions</b> si tu coches une barre ou une table solide dans tes réglages)') + '. ' +
+  const lvl = NEV.levelFromMax(p.maxPushups);
+  const W = G.weights(lvl.n, false, p.pity || 0).pct;
+  $('gxLegend').innerHTML = G.RARITIES.map((r, i) => '<span style="--c:' + r.color + '"><i></i><b>' + r.code + '</b> ' + r.name + ' <em>' + (W[i] >= 10 ? Math.round(W[i]) : Math.round(W[i] * 10) / 10) + ' %</em></span>').join('');
+  if (!GUEST) {
+    $('prob').innerHTML = G.RARITIES.map((r, i) => '<div style="--c:' + r.color + '"><b>' + (W[i] >= 10 ? Math.round(W[i]) : Math.round(W[i] * 10) / 10) + ' %</b>' + r.name + '</div>').join('');
+    const left = Math.max(0, G.PITY_HARD - (p.pity || 0));
+    $('oddsTxt').textContent = 'Niveau ' + lvl.n + ' « ' + lvl.name + ' ». ' + (left === 0 ? 'Ton prochain tirage est garanti Épique ou mieux.' : 'Tirages sans Épique d\'affilée : ' + (p.pity || 0) + '. Garantie Épique+ dans ' + left + ' tirage' + (left > 1 ? 's' : '') + ' au plus tard.') + ' La catégorie choisie est toujours respectée : seule la rareté est tirée au sort.';
+    const si = G.specialInfo(p, { mode: SPE ? 'spe' : 'daily' });
+    $('spTxt').innerHTML = 'Deux cartes <b>spéciales</b> très rares peuvent sortir au tirage simple « Au hasard » : <b>Repos</b>' + (si.tractionsOk ? ' et <b>Tractions</b>' : ' (et <b>Tractions</b> si tu coches une barre ou une table solide dans tes réglages)') + '. ' +
       (si.unlocked ? 'Tu t\'es entraîné <b>' + si.days + ' jours sur les ' + si.window + ' derniers</b> : chance de carte spéciale <b>' + si.pct + ' %</b>.'
-                   : 'Il faut au moins <b>' + si.need + ' jours d\'entraînement sur les ' + si.window + ' derniers</b> pour passer de 5 % à 40 %. Pour l\'instant : ' + si.days + ' jour' + (si.days > 1 ? 's' : '') + ', donc <b>' + si.pct + ' %</b>.');
-  })();
-
-  /* ----- probabilités ----- */
-  if (!GUEST) (function odds() {
-    const l = NEV.levelFromMax(p.maxPushups);
-    const w = NEV.Gacha.weights(l.n, cautious, p.pity || 0).pct;
-    $('prob').innerHTML = NEV.Gacha.RARITIES.map((r, i) => '<div style="--c:' + r.color + '"><b>' + (w[i] >= 10 ? Math.round(w[i]) : Math.round(w[i] * 10) / 10) + ' %</b>' + r.name + '</div>').join('');
-    const left = Math.max(0, NEV.Gacha.PITY_HARD - (p.pity || 0));
-    $('oddsTxt').textContent = 'Niveau ' + l.n + ' « ' + l.name + ' ». ' + (left === 0 ? 'Ton prochain tirage est garanti Épique ou mieux.' : 'Tirages sans Épique d\'affilée : ' + (p.pity || 0) + '. Garantie Épique+ dans ' + left + ' tirage' + (left > 1 ? 's' : '') + ' au plus tard.') + (cautious ? ' Les cartes Légendaire et Mythique sont retirées pour les moins de 18 ans.' : '');
-  })();
-
-  /* ----- plateau de 5 cartes ----- */
-  const N = NEV.Gacha.CARDS_ON_TABLE;
-  table.innerHTML = Array.from({ length: N }, (_, i) => '<div class="gslot deal" style="--i:' + i + '">' + NEV.Card.back() + '</div>').join('');
-  const slots = Array.from(table.children);
-
-  /* ----- le doigt musclé ----- */
-  const FINGER = '<svg viewBox="0 0 160 520" aria-hidden="true"><defs>' +
-    '<linearGradient id="fk" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d49a82"/><stop offset=".45" stop-color="#f3cdb8"/><stop offset="1" stop-color="#c08670"/></linearGradient>' +
-    '<linearGradient id="fk2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#cf957d"/><stop offset=".5" stop-color="#f0c6b0"/><stop offset="1" stop-color="#bb806a"/></linearGradient></defs>' +
-    // avant-bras musclé
-    '<path d="M4 -10H156C158 70 146 130 134 190C128 230 124 268 120 300H40C36 268 32 230 26 190C14 130 2 70 4 -10Z" fill="url(#fk)"/>' +
-    '<path d="M118 -10C130 80 120 190 112 300H124C130 230 136 190 146 120C152 70 154 30 150 -10Z" fill="#8a4a3b" opacity=".28"/>' +
-    '<path d="M22 -10C14 80 24 170 36 250" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="10" stroke-linecap="round"/>' +
-    '<g fill="none" stroke="#a76a58" stroke-opacity=".6" stroke-width="3.2" stroke-linecap="round"><path d="M54 30C64 84 48 128 62 188C68 220 64 250 72 286"/><path d="M62 188C78 178 90 184 102 172"/><path d="M104 40C98 100 112 150 102 214"/><path d="M82 96C90 118 86 140 94 162"/></g>' +
-    '<path d="M52 150C70 140 96 146 112 168" fill="none" stroke="#7a3d2f" stroke-opacity=".25" stroke-width="2.4"/>' +
-    // bracelet bordeaux
-    '<path d="M35 264H125L123 298H37Z" fill="#8e1b3c"/><path d="M35.6 272H124.4M36.6 290H123.4" stroke="#fff1f2" stroke-width="2.6"/>' +
-    // dos de la main
-    '<path d="M38 296H122C142 304 150 336 148 366C146 396 138 414 120 420H46C26 414 16 394 14 364C12 334 22 304 38 296Z" fill="url(#fk2)"/>' +
-    '<g fill="none" stroke="#a76a58" stroke-opacity=".55" stroke-width="3" stroke-linecap="round"><path d="M70 304C76 330 72 350 78 380"/><path d="M104 306C108 330 102 346 108 372"/></g>' +
-    // pouce replié
-    '<path d="M28 328C6 350 8 398 40 420C54 426 64 414 58 402C46 384 42 356 46 326Z" fill="url(#fk2)"/><path d="M40 360C42 378 48 392 56 402" fill="none" stroke="#a76a58" stroke-opacity=".5" stroke-width="2.4" stroke-linecap="round"/>' +
-    // doigts repliés
-    '<g fill="url(#fk)" stroke="#b27663" stroke-opacity=".6" stroke-width="2"><rect x="102" y="392" width="24" height="58" rx="12"/><rect x="123" y="388" width="22" height="48" rx="11"/></g>' +
-    '<g fill="#fff" opacity=".22"><ellipse cx="114" cy="400" rx="6" ry="4"/><ellipse cx="134" cy="396" rx="5" ry="3.6"/></g>' +
-    // index tendu
-    '<path d="M56 396V486C56 505 65 514 79 514C93 514 102 505 102 486V396Z" fill="url(#fk)" stroke="#b27663" stroke-opacity=".55" stroke-width="2"/>' +
-    '<path d="M84 400V490" stroke="#fff" stroke-opacity=".16" stroke-width="7" stroke-linecap="round"/>' +
-    '<g stroke="#a76a58" stroke-opacity=".65" stroke-width="2.4" stroke-linecap="round" fill="none"><path d="M63 440H95"/><path d="M64 466H94"/></g>' +
-    '<path d="M66 486C66 478 92 478 92 486V499C92 509 66 509 66 499Z" fill="#f7dcd2" stroke="#d9a998" stroke-width="1.6"/>' +
-    '</svg>';
-  const finger = document.createElement('div');
-  finger.className = 'gfinger'; finger.innerHTML = FINGER; finger.style.transformOrigin = '50% 100%';
-  stage.appendChild(finger);
-  let Fw = 110, Fh = 357, curT = '';
-  function sizeFinger() {
-    Fw = stage.clientWidth < 560 ? 72 : 112; Fh = Fw * 520 / 160;
-    finger.style.width = Fw + 'px'; finger.style.height = Fh + 'px';
-    if (!curT) { curT = 'translate(' + (stage.clientWidth / 2 - Fw / 2) + 'px,' + (-Fh - 60) + 'px)'; finger.style.transform = curT; }
-  }
-  sizeFinger();
-  const rel = (el) => { const s = stage.getBoundingClientRect(), r = el.getBoundingClientRect(); return { x: r.left - s.left + r.width / 2, y: r.top - s.top, w: r.width, h: r.height, l: r.left - s.left }; };
-  function move(x, y, dur, ease, rot) {
-    const to = 'translate(' + (x - Fw / 2).toFixed(1) + 'px,' + (y - Fh).toFixed(1) + 'px) rotate(' + (rot || 0) + 'deg)';
-    const a = finger.animate([{ transform: curT || to }, { transform: to }], { duration: dur, easing: ease || 'ease-in-out', fill: 'forwards' });
-    curT = to;
-    return a.finished.then(function () { finger.style.transform = to; a.cancel(); });
+        : 'Il faut au moins <b>' + si.need + ' jours d\'entraînement sur les ' + si.window + ' derniers</b> pour passer de 5 % à 40 %. Pour l\'instant : ' + si.days + ' jour' + (si.days > 1 ? 's' : '') + ', donc <b>' + si.pct + ' %</b>.');
+    const B = G.boxCfg(), pool = G.comboPool(p).length;
+    $('boxTxt').innerHTML = 'Le tirage multiple donne <b>' + B.cards + ' cartes</b>, toutes différentes. ' + (pool ? 'Chance qu\'une carte <b>Combo</b> (un enchaînement) se glisse dans ta boîte : <b>' + Math.round(B.comboChance * 100) + ' %</b>, en « Au hasard » ou si tous ses exercices sont de la catégorie.' : 'Aucun combo ne correspond à ton matériel pour l\'instant.');
   }
 
-  /* ----- étapes du tirage ----- */
-  function hot(i) { slots.forEach((s, k) => s.classList.toggle('hot', k === i)); }
-  async function fingerSweep(pick) {
-    msg.textContent = 'Le doigt choisit…';
-    sizeFinger();
-    const hoverY = (i) => rel(slots[i].querySelector('.tcard')).y - 18;
-    await move(rel(slots[2]).x, hoverY(2), 800, 'cubic-bezier(.2,.8,.3,1)');
-    const seq = []; let prev = 2;
-    const hops = 9 + NEV.rng.int(3);
-    for (let i = 0; i < hops; i++) { let k; do { k = NEV.rng.int(N); } while (k === prev); seq.push(k); prev = k; }
-    if (seq[seq.length - 1] === pick) seq.push((pick + 2 + NEV.rng.int(2)) % N);
-    seq.push(pick);
-    for (let i = 0; i < seq.length; i++) {
-      const k = seq[i], dur = 130 + Math.pow(i / (seq.length - 1), 2) * 520;
-      const r = rel(slots[k]);
-      hot(-1);
-      await move(r.x, hoverY(k), dur, 'cubic-bezier(.5,0,.3,1)', (r.x - stage.clientWidth / 2) / stage.clientWidth * 8);
-      hot(k); NEV.Sfx.tick(0.8 + i * 0.07);
-      if (i < seq.length - 1) await sleep(Math.max(0, 80 + i * 22));
+  /* ---------- catégories ---------- */
+  const INFO = {}; G.categoryInfo(p).forEach((c) => { INFO[c.id] = c; });
+  const chipsEl = $('gxChips');
+  chipsEl.innerHTML = G.CATEGORIES.map((c) => '<button type="button" class="gx-chip" data-cat="' + c.id + '" aria-pressed="false">' + icon(c.id) + esc(c.name) + '</button>').join('') +
+    '<button type="button" class="gx-chip" data-cat="all" aria-pressed="false">' + icon('all') + 'Au hasard</button>';
+  const minCount = () => (S.mode === 'multi' ? 2 : 1);
+  const catOk = (id) => id === 'all' || (INFO[id] && INFO[id].count >= minCount());
+  chipsEl.addEventListener('click', (e) => { const b = e.target.closest('.gx-chip'); if (!b || b.disabled || drawnOf(S.mode)) return; S.cat = b.dataset.cat; renderIdle(); });
+  $('gxSeg').addEventListener('click', (e) => { const b = e.target.closest('button[data-mode]'); if (!b || S.busy) return; S.mode = b.dataset.mode; renderIdle(); });
+
+  /* ---------- phases ---------- */
+  function setPhase(ph) {
+    gx.dataset.phase = ph;
+    Object.keys(VIEWS).forEach((k) => { $(VIEWS[k]).hidden = k !== ph; });
+  }
+  function renderIdle() {
+    const drawn = drawnOf(S.mode), st = statusOf(S.mode), blocked = S.mode === 'single' && blockedSingle();
+    if (drawn) S.cat = catOfDrawn(S.mode);
+    else if (!catOk(S.cat)) S.cat = G.CATEGORIES.find((c) => catOk(c.id)) ? G.CATEGORIES.find((c) => catOk(c.id)).id : 'all';
+    $('gxSeg').querySelectorAll('button').forEach((b) => {
+      const m = b.dataset.mode, on = m === S.mode, got = !!drawnOf(m) || (m === 'single' && blockedSingle());
+      b.setAttribute('aria-pressed', String(on));
+      const old = b.querySelector('.gx-got'); if (old) old.remove();
+      if (got) b.insertAdjacentHTML('beforeend', '<span class="gx-got">' + (m === 'single' && blockedSingle() ? 'Journée validée' : 'Déjà tiré') + '</span>');
+    });
+    chipsEl.querySelectorAll('.gx-chip').forEach((b) => {
+      const id = b.dataset.cat, ok = catOk(id);
+      b.setAttribute('aria-pressed', String(id === S.cat));
+      b.disabled = !!drawn || !ok;
+      b.title = !ok ? (INFO[id] && INFO[id].count ? 'Pas assez d\'exercices avec ton matériel pour un tirage multiple' : 'Aucun exercice disponible avec ton matériel') : '';
+    });
+    const draw = $('gxDraw'), bonus = $('gxBonus');
+    draw.disabled = !!blocked; draw.textContent = drawn ? 'VOIR MON TIRAGE' : 'TIRER';
+    const canBonus = !GUEST && (p.bonusDraws || 0) > 0 && ((drawn && st !== 'done') || (S.mode === 'single' && !SPE && st === 'done' && !!drawn));
+    bonus.hidden = !canBonus; bonus.textContent = '🎁 Tirage bonus (' + (p.bonusDraws || 0) + ')';
+    let note = '';
+    if (blocked) note = 'Ta journée est déjà validée grâce au tirage multiple. Reviens demain pour un nouveau tirage simple.';
+    else if (drawn) note = 'Tu as déjà ton tirage ' + (S.mode === 'multi' ? 'multiple' : 'simple') + ' du jour' + (catOfDrawn(S.mode) !== 'all' ? ' (<b>' + esc(catName(catOfDrawn(S.mode))) + '</b>)' : '') + '. Un seul tirage par jour et par type.';
+    else if (S.cat === 'all') note = S.mode === 'single' ? 'Toutes les catégories sont possibles, et les cartes spéciales (Repos, Tractions) peuvent sortir.' : 'Quatre cartes de catégories variées, avec peut-être un combo.';
+    else {
+      const n = INFO[S.cat] ? INFO[S.cat].count : 0, want = S.mode === 'multi' ? G.boxCfg().cards : 1;
+      note = '<b>' + esc(catName(S.cat)) + '</b> : ' + plural(n, 'exercice') + ' disponible' + (n > 1 ? 's' : '') + ' avec ton matériel.' + (S.mode === 'multi' && n < want ? ' Tu recevras ' + n + ' cartes.' : '');
     }
-    msg.textContent = 'Cette carte…';
-    NEV.Sfx.thud(); await sleep(520); NEV.Sfx.thud(); await sleep(620);
-    // le coup de doigt
-    const r = rel(slots[pick].querySelector('.tcard'));
-    await move(r.x, r.y + 30, 130, 'cubic-bezier(.6,0,1,.6)');
-    NEV.Sfx.thud(); NEV.Fx.shake(stage, 380, 7);
-    const sr = slots[pick].getBoundingClientRect();
-    ring(sr.left + sr.width / 2, sr.top + 40, 120, '#ffd45e', 600);
-    NEV.Fx.burst(sr.left + sr.width / 2, sr.top + 40, { n: 26, power: .6, colors: ['#ffd45e', '#ff8a3d'] });
-    await sleep(160);
-    await move(r.x, -Fh - 60, 650, 'cubic-bezier(.5,0,.9,.5)');
+    $('gxNote').innerHTML = note;
+    setPhase('idle'); idleStill();
   }
 
+  /* ---------- la boîte et les cartes : géométrie ---------- */
+  const RATIO = 7.4 / 5;   // hauteur / largeur d'une carte du site
+  const later = (fn, ms) => { S.timers.push(setTimeout(fn, reduced ? ms * 0.5 : ms)); };
+  function box(z, y, dur) { parts.forEach((q) => { q.style.transition = dur ? 'transform ' + dur + 'ms cubic-bezier(.3,.7,.2,1), opacity .6s ease' : 'none'; q.style.transform = 'perspective(900px) translate3d(0,' + y + 'px,' + z + 'px)'; }); }
+  function boxFade(o, dur) { parts.forEach((q) => { q.style.transition = 'opacity ' + dur + 'ms ease, transform ' + dur + 'ms ease'; q.style.opacity = o; }); }
+  function sizeBox() { const r = stage.getBoundingClientRect(); stage.style.setProperty('--bs', Math.max(220, Math.min(480, r.width * 0.86, r.height * 0.82)) + 'px'); }
+  function openPt() { const sr = stage.getBoundingClientRect(), r = $('gxBack').getBoundingClientRect(); return { x: r.left + r.width / 2 - sr.left, y: r.top + r.height * 0.43 - sr.top }; }
+  function layout() {
+    const r = stage.getBoundingClientRect(), Wd = r.width, H = r.height, n = S.cards.length;
+    if (n === 1) { const cw = Math.max(150, Math.min(270, Wd * 0.62, H * 0.8 / RATIO)); return { cw, ch: cw * RATIO, pos: [{ x: Wd / 2, y: H / 2 - 4, rot: 0 }] }; }
+    if (Wd < 600) {
+      const rows = Math.ceil(n / 2), cw = Math.max(92, Math.min(170, (Wd - 52) / 2.3, (H - 34) / (rows * RATIO + (rows - 1) * 0.14 + 0.1))), g = cw * 0.07, cx = Wd / 2, cy = H / 2 - 2;
+      const pos = []; for (let i = 0; i < n; i++) { const row = Math.floor(i / 2), col = i % 2, rowsH = rows * cw * RATIO + (rows - 1) * g * 2; pos.push({ x: cx + (col ? 1 : -1) * (cw / 2 + g), y: cy - rowsH / 2 + cw * RATIO / 2 + row * (cw * RATIO + g * 2), rot: col ? 2 : -2 }); }
+      return { cw, ch: cw * RATIO, pos };
+    }
+    const cw = Math.max(104, Math.min(210, (Wd - 40) / (n * 1.12 + 0.4), H * 0.74 / RATIO)), cx = Wd / 2, cy = H / 2 - 4, st = cw * 1.1;
+    return { cw, ch: cw * RATIO, pos: S.cards.map((_, i) => { const k = i - (n - 1) / 2, edge = Math.abs(k) / Math.max(1, (n - 1) / 2); return { x: cx + k * st, y: cy + 16 * edge * (cw / 190), rot: n > 1 ? k * (18 / Math.max(1, n - 1)) * 1.1 : 0 }; }) };
+  }
+  const tf = (x, y, cw, ch, rot, sc) => 'translate(' + (x - cw / 2) + 'px,' + (y - ch / 2) + 'px) rotate(' + (rot || 0) + 'deg) scale(' + (sc == null ? 1 : sc) + ')';
+
+  /* ---------- fabrication des cartes ---------- */
+  function cardEl(c, i) {
+    const r = rarOf(c), el = document.createElement('div');
+    el.className = 'gxc' + (c.special ? ' sp' : '') + (c.type === 'combo' ? ' cb' : '');
+    el.dataset.t = String(tOf(c)); el.tabIndex = 0; el.setAttribute('role', 'button');
+    el.setAttribute('aria-label', 'Carte ' + (i + 1) + ' (face cachée)');
+    el.style.setProperty('--rc', r.color); el.style.setProperty('--rg', r.glow + 'aa');
+    el.innerHTML = '<div class="gxc-aura"></div><div class="gxc-in"><div class="gxc-face gxc-back">' + NEV.Card.back() + '</div><div class="gxc-face gxc-front">' + faceOf(c) + '</div></div><div class="gxc-tick" aria-hidden="true">✓</div>';
+    el.addEventListener('click', () => onCard(i));
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onCard(i); } });
+    return el;
+  }
+  function build() {
+    cardsEl.innerHTML = ''; S.els = []; S.L = layout();
+    S.cards.forEach((c, i) => { const el = cardEl(c, i); el.style.width = S.L.cw + 'px'; el.style.height = S.L.ch + 'px'; cardsEl.appendChild(el); S.els.push(el); });
+  }
+  const place = (i) => { const q = S.L.pos[i], el = S.els[i]; el.style.transform = tf(q.x, q.y, S.L.cw, S.L.ch, q.rot, 1); el.style.opacity = 1; };
+  const mountArt = (el) => { try { NEV.Card.mountArt(el); } catch (e) { /* la figure n'est qu'un décor */ } };
+
+  /* ---------- effets de rareté ---------- */
   function ring(cx, cy, size, color, ms) {
     const s = document.createElement('div'); s.className = 'shock';
     s.style.cssText = 'left:' + (cx - size / 2) + 'px;top:' + (cy - size / 2) + 'px;width:' + size + 'px;height:' + size + 'px;border-color:' + color + ';box-shadow:0 0 30px ' + color;
@@ -166,159 +205,233 @@
     if (!s.animate) { s.remove(); return; }
     s.animate([{ transform: 'scale(.2)', opacity: 1 }, { transform: 'scale(4.5)', opacity: 0 }], { duration: ms || 800, easing: 'cubic-bezier(.1,.7,.3,1)' }).onfinish = () => s.remove();
   }
-
-  async function spin(card, r) {
-    const pick = card.pick, slot = slots[pick], cardEl = slot.querySelector('.tcard');
-    slots.forEach((s, i) => { if (i !== pick) s.classList.add('out'); });
-    hot(-1);
-    await sleep(520);
-    const br = cardEl.getBoundingClientRect();
-    const sp = document.createElement('div'); sp.className = 'spin';
-    sp.style.cssText = 'left:' + br.left + 'px;top:' + br.top + 'px;width:' + br.width + 'px;height:' + br.height + 'px';
-    sp.innerHTML = '<div class="glowring"></div><div class="flip"><div class="face">' + NEV.Card.back() + '</div></div>';
-    document.body.appendChild(sp); slot.classList.add('gone');
-    const flip = sp.querySelector('.flip'), glow = sp.querySelector('.glowring');
-    // vers le centre de l'écran, en grand
-    const sr = stage.getBoundingClientRect();
-    const cx = sr.left + sr.width / 2, cy = Math.max(sr.top + sr.height * 0.46, 220);
-    const scale = Math.min(1.7, Math.min(sr.width * 0.5, 300) / br.width);
-    const tx = cx - (br.left + br.width / 2), ty = cy - (br.top + br.height / 2);
-    msg.textContent = '';
-    await sp.animate([{ transform: 'none' }, { transform: 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')' }], { duration: 650, easing: 'cubic-bezier(.2,.9,.3,1)', fill: 'forwards' }).finished;
-    // la rotation folle : 8 tours (8 × 360°), de plus en plus vite
-    stage.classList.add('crazy');
-    NEV.Sfx.rise(2.9);
-    const T = 2900;
-    flip.animate([
-      { transform: 'rotateY(0deg) rotateZ(0deg) scale(1)', offset: 0, easing: 'cubic-bezier(.5,0,.9,.7)' },
-      { transform: 'rotateY(720deg) rotateZ(-5deg) scale(1.08)', offset: .45, easing: 'cubic-bezier(.4,0,1,.8)' },
-      { transform: 'rotateY(1980deg) rotateZ(6deg) scale(1.18)', offset: .8 },
-      { transform: 'rotateY(2880deg) rotateZ(-3deg) scale(1.3)', offset: 1 }
-    ], { duration: T, fill: 'forwards' });
-    sp.animate([{ filter: 'hue-rotate(0deg) brightness(1)' }, { filter: 'hue-rotate(540deg) brightness(1.3)', offset: .7 }, { filter: 'hue-rotate(1100deg) brightness(2.1)' }], { duration: T, fill: 'forwards' });
-    glow.animate([{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1.5)' }], { duration: T, fill: 'forwards', easing: 'ease-in' });
-    const t0 = performance.now();
-    const iv = setInterval(function () {
-      const k = (performance.now() - t0) / T;
-      NEV.Fx.stream(cx, cy + 40, { n: 2 + Math.round(k * 6), w: 50 + k * 80, colors: [r.color, '#ff6a3d'] });
-      if (k > .4 && Math.random() < .5) NEV.Fx.shake(stage, 200, 2 + k * 10);
-    }, 70);
-    await sleep(T);
-    clearInterval(iv);
-    return { sp: sp, cx: cx, cy: cy, br: br, scale: scale };
+  function fx(i) {
+    const c = S.cards[i], t = tOf(c), r = rarOf(c), el = S.els[i];
+    NEV.Sfx.rare(codeOf(c));
+    if (reduced) return;
+    if (t >= 4) {
+      flashEl.style.transition = 'none'; flashEl.style.opacity = t >= 5 ? 0.8 : 0.5; flashEl.style.background = t >= 5 ? '#ff4d66' : '#ffe3a0'; void flashEl.offsetWidth; flashEl.style.transition = 'opacity .9s ease'; flashEl.style.opacity = 0;
+      gx.classList.remove('shake'); void gx.offsetWidth; gx.classList.add('shake');
+      banner.textContent = c.special ? 'Carte spéciale !' : r.name + ' !'; banner.style.setProperty('--bc', r.color); banner.classList.remove('go'); void banner.offsetWidth; banner.classList.add('go');
+    }
+    if (t >= 2 && el) {
+      const q = el.getBoundingClientRect(), x = q.left + q.width / 2, y = q.top + q.height / 2, cols = [r.color, r.glow, '#ffd45e', '#fff'];
+      NEV.Fx.burst(x, y, { n: [0, 0, 22, 40, 80, 130][t], power: 0.6 + t * 0.14, colors: cols });
+      if (t >= 4) { ring(x, y, 150, r.color, 900); setTimeout(() => ring(x, y, 150, '#fff', 900), 130); }
+    }
+  }
+  function flipCard(i, quiet) {
+    const el = S.els[i]; if (!el || el.classList.contains('flipped')) return;
+    mountArt(el); el.classList.add('flipped');
+    const c = S.cards[i]; el.setAttribute('aria-label', c.name + ', ' + planText(c) + ', ' + (c.special ? 'carte spéciale' : rarOf(c).name));
+    if (!quiet) { NEV.Sfx.flip(); setTimeout(() => fx(i), 260); }
+    updateResult();
   }
 
-  function shatter(o, r, tier) {
-    const w = o.br.width * o.scale * 1.3, h = o.br.height * o.scale * 1.3, x0 = o.cx - w / 2, y0 = o.cy - h / 2;
-    const C = 4, R = 6, pts = [];
-    for (let j = 0; j <= R; j++) { pts[j] = []; for (let i = 0; i <= C; i++) pts[j][i] = [i / C * 100 + (i && i < C ? (Math.random() - .5) * 14 : 0), j / R * 100 + (j && j < R ? (Math.random() - .5) * 10 : 0)]; }
-    const tris = [];
-    for (let j = 0; j < R; j++) for (let i = 0; i < C; i++) { const a = pts[j][i], b = pts[j][i + 1], c = pts[j + 1][i], d = pts[j + 1][i + 1]; tris.push([a, b, c], [b, d, c]); }
-    tris.forEach(function (t) {
-      const s = document.createElement('div'); s.className = 'shard';
-      s.style.cssText = 'left:' + x0 + 'px;top:' + y0 + 'px;width:' + w + 'px;height:' + h + 'px;clip-path:polygon(' + t.map(function (q) { return q[0].toFixed(1) + '% ' + q[1].toFixed(1) + '%'; }).join(',') + ');background:linear-gradient(' + Math.round(Math.random() * 360) + 'deg,#f6d58a,#8e1b3c 45%,' + r.color + ');';
-      document.body.appendChild(s);
-      const cxp = (t[0][0] + t[1][0] + t[2][0]) / 3 - 50, cyp = (t[0][1] + t[1][1] + t[2][1]) / 3 - 50;
-      const dist = 160 + Math.random() * (260 + tier * 60), ang = Math.atan2(cyp, cxp) + (Math.random() - .5) * .8;
-      if (!s.animate) { s.remove(); return; }
-      s.animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(' + Math.cos(ang) * dist + 'px,' + (Math.sin(ang) * dist + 120 + Math.random() * 160) + 'px) rotate(' + (Math.random() - .5) * 900 + 'deg) scale(.3)', opacity: 0 }], { duration: 900 + Math.random() * 700, easing: 'cubic-bezier(.1,.6,.4,1)' }).onfinish = function () { s.remove(); };
+  /* ---------- le tirage (côté système, AVANT l'animation) ---------- */
+  function drawNow() {
+    const cat = S.cat === 'all' ? null : S.cat;
+    if (SPE) return [G.ensureCard(p, user, { mode: 'spe', zone: ZONE })];
+    if (S.mode === 'single') return [G.ensureCard(p, user, { mode: 'daily', cat })];
+    return G.ensureBox(p, user, { cat }).cards;
+  }
+  const evDetail = (cards) => ({ mode: S.mode === 'single' ? 'simple' : 'multiple', category: S.cat, cards: cards.map((c) => Object.assign({}, c)) });
+
+  /* ---------- la séquence d'animation ---------- */
+  function start() {
+    if (S.busy) return;
+    S.busy = true; NEV.Sfx.unlock();
+    try { gx.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' }); } catch (e) { /* ignoré */ }
+    let list;
+    try { list = drawNow(); } catch (e) { S.busy = false; NEV.ui.toast(e && /Aucun exercice/.test(e.message) ? 'Aucun exercice disponible dans cette catégorie avec ton matériel.' : 'Le tirage a échoué. Réessaie.'); renderIdle(); return; }
+    S.cards = list; S.sel.clear(); S.fresh = true; S.skipped = false;
+    NEV.track('draw', { mode: S.mode, cat: S.cat, ids: list.map((c) => c.id), tier: Math.max.apply(null, list.map(tOf)), special: (list[0] && list[0].special) || null });
+    window.dispatchEvent(new CustomEvent('nvb:gacha-draw', { detail: evDetail(list) }));
+    const best = list.reduce((m, c) => (tOf(c) > tOf(m) ? c : m), list[0]);
+    gx.style.setProperty('--rayc', hexRgb(rarOf(best).color));      // la lumière de la boîte annonce la meilleure rareté
+    hero.classList.remove('on');
+    setPhase('busy'); $('gxBusy').textContent = 'La boîte s\'avance…'; hint.classList.remove('on');
+    $('gxLid').classList.remove('open'); $('gxBack').classList.remove('lit');
+    build(); boxFade(1, 0); box(0, 0, 0); void stage.offsetWidth;
+    sizeBox();
+    if (reduced) { settle(); return; }
+    box(190, 30, 1050);                                                     // 1 · la boîte s'avance (zoom 3D)
+    later(() => { parts.forEach((q) => q.classList.add('trem')); NEV.Sfx.rumble(); $('gxBusy').textContent = 'Elle s\'immobilise…'; }, 1200);   // 2 · pause, elle tremble
+    later(() => {                                                           // 3 · le couvercle s'ouvre, la lumière jaillit
+      parts.forEach((q) => q.classList.remove('trem')); $('gxLid').classList.add('open'); $('gxBack').classList.add('lit');
+      const o = openPt(); rays.style.left = o.x + 'px'; rays.style.top = o.y + 'px'; rays.classList.add('on'); NEV.Sfx.open(); $('gxBusy').textContent = 'Ouverture de la boîte…';
+    }, 1850);
+    later(emerge, 2600);                                                    // 4 · les cartes sortent
+  }
+  function emerge() {
+    const o = openPt(), L = S.L, n = S.cards.length, step = n === 1 ? 0 : 470, dur = n === 1 ? 2000 : 1150;
+    $('gxBusy').textContent = n === 1 ? 'Ta carte sort de la boîte…' : 'Les cartes sortent une à une…';
+    if (n === 1) mountArt(S.els[0]);
+    S.cards.forEach((c, i) => {
+      later(() => {
+        const el = S.els[i], q = L.pos[i]; el.style.opacity = 1; el.style.zIndex = 10 + i; NEV.Sfx.out();
+        const from = tf(o.x, o.y + L.ch * 0.05, L.cw, L.ch, 0, 0.3), up = tf(o.x, Math.max(L.ch * 0.5 + 8, o.y - L.ch * 0.75), L.cw, L.ch, n === 1 ? 0 : q.rot * 0.5, n === 1 ? 1.05 : 0.85), to = tf(q.x, q.y, L.cw, L.ch, q.rot, 1);
+        el.style.transform = from;
+        S.anims.push(el.animate([{ transform: from, opacity: 0 }, { transform: up, opacity: 1, offset: 0.45 }, { transform: to, opacity: 1 }], { duration: dur, easing: 'cubic-bezier(.25,.8,.3,1)', fill: 'forwards' }));
+        if (n === 1) { // la carte sort, pivote, se retourne
+          const inner = el.querySelector('.gxc-in'); inner.style.transition = 'none';
+          S.anims.push(inner.animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(540deg)' }], { duration: dur, easing: 'cubic-bezier(.3,.6,.25,1)', fill: 'forwards' }));
+        }
+      }, i * step);
     });
+    const total = (n - 1) * step + dur;
+    later(() => { boxFade(0, 700); rays.classList.remove('on'); }, Math.max(600, total - 600));
+    later(settle, total + 80);
   }
 
-  async function explode(o, card, r) {
-    stage.classList.remove('crazy');
-    o.sp.remove();
-    NEV.Sfx.boom(card.tier);
-    NEV.Fx.flash(card.tier >= 5 ? '#fff' : r.glow, 800);
-    NEV.Fx.shake(stage, 700, 16);
-    shatter(o, r, card.tier);
-    const cols = [r.color, r.glow, '#ffd45e', '#ff8a3d', '#fff'];
-    NEV.Fx.burst(o.cx, o.cy, { n: 70 + card.tier * 40, power: 1 + card.tier * .15, colors: cols });
-    ring(o.cx, o.cy, 160, r.color, 900); setTimeout(() => ring(o.cx, o.cy, 160, '#fff', 900), 130);
-    if (card.tier >= 4) setTimeout(() => NEV.Fx.burst(o.cx, o.cy, { n: 120, power: 1.4, colors: cols }), 250);
-    await sleep(900);
+  /* ---------- état final (sans animation en cours) ---------- */
+  function clearAnim() { S.timers.forEach(clearTimeout); S.timers = []; S.anims.forEach((a) => { try { a.cancel(); } catch (e) { /* ignoré */ } }); S.anims = []; }
+  function settle() {
+    clearAnim();
+    S.L = layout();
+    S.els.forEach((el, i) => { el.style.width = S.L.cw + 'px'; el.style.height = S.L.ch + 'px'; place(i); });
+    $('gxLid').classList.add('open'); $('gxBack').classList.add('lit'); boxFade(0, 0); rays.classList.remove('on'); box(0, 0, 0);
+    const single = S.cards.length === 1;
+    if (single) {
+      const el = S.els[0], inner = el.querySelector('.gxc-in'); mountArt(el);
+      inner.style.transition = 'none'; el.classList.add('flipped'); void inner.offsetWidth; inner.style.transition = '';
+      S.sel.add(0); el.classList.add('sel');
+    } else if (!S.fresh) { S.els.forEach((el, i) => { mountArt(el); el.classList.add('flipped'); el.setAttribute('aria-label', S.cards[i].name); }); }
+    else S.els.forEach(mountArt);
+    S.els.forEach((el) => { try { NEV.Card.tilt(el.querySelector('.gxc-front')); } catch (e) { /* ignoré */ } });
+    S.busy = false;
+    const fresh = S.fresh && !S.skipped; S.fresh = false; S.skipped = false;
+    if (single && fresh) fx(0);
+    afterSettle(single);
   }
-
-  /* ----- révélation ----- */
-  const BANNER = ['Commun', 'Rare', 'Épique !', 'Légendaire !!', 'Mythique !!!'];
-  const GO = 'exercice.html?src=' + MODE + (MODE === 'spe' ? '&zone=' + encodeURIComponent(ZONE) : '');
-  function showReveal(card, animate) {
-    $('board').hidden = true; finger.remove();
-    const ex = NEV.Ex.byId(card.id), r = NEV.Gacha.rarity(card.rarity), pl = card.plan, dn = slotOf().status === 'done';
-    const rest = card.special === 'repos', tract = card.special === 'tractions';
-    const rv = $('reveal'); rv.hidden = false; rv.style.setProperty('--g', r.glow); rv.style.setProperty('--c', r.color); rv.style.setProperty('--c2', r.color2);
-    $('gTitle').innerHTML = dn ? (rest ? 'Repos <em>validé</em>' : 'Séance <em>validée</em>') : rest ? 'Jour de <em>repos</em>' : (MODE === 'spe' ? 'Ta carte de <em>spécialisation</em>' : 'Ta carte du <em>jour</em>');
-    $('gLead').textContent = dn ? 'Bravo, reviens demain pour une nouvelle carte.' : rest ? 'Une carte spéciale très rare : ton corps construit pendant qu\'il se repose.' : 'Une seule carte par tirage. Voici ton défi.';
-    const total = pl.unit === 'sec' || pl.unit === 'secside' ? '' : ' · ' + pl.total + ' au total';
-    const cam = p.setup.camera && ex.cam && !rest;
-    const banner = card.special ? 'Carte spéciale !!!' : BANNER[card.tier - 1];
-    let plan, meta, chips;
-    if (rest) {
-      plan = 'Repos actif · ' + Math.round(pl.perSet / 60 * 10) / 10 + ' min de respiration lente';
-      meta = 'Ta série est protégée. Aujourd\'hui, pas de séance : bois, mange bien, dors tôt. Ce jour ne compte pas comme un jour d\'entraînement.';
-      chips = '<span class="chip ok">Série protégée</span><span class="chip red">+20 XP</span>';
+  function afterSettle() {
+    const st = statusOf(S.mode);
+    if (st === 'done') { showDone(); return; }
+    if (S.mode === 'multi' && p.box.picked && p.box.picked.length) { showConfirm(); return; }
+    showResult();
+  }
+  function showResult() {
+    const multi = S.cards.length > 1;
+    setPhase('result');
+    hint.textContent = multi ? 'Touche une carte pour la retourner, puis choisis tes défis' : ''; hint.classList.toggle('on', multi);
+    stage.setAttribute('aria-label', multi ? 'Tes cartes' : 'Ta carte');
+    updateResult();
+  }
+  function metaChips(c) {
+    if (c.type === 'combo') return '<span class="chip red">Combo</span><span class="chip">≈ ' + minutesOf([c]) + ' min</span>';
+    if (c.special === 'repos') return '<span class="chip ok">Série protégée</span><span class="chip red">+20 XP</span>';
+    const ex = NEV.Ex.byId(c.id), cam = p.setup.camera && ex && ex.cam;
+    return '<span class="chip red">' + esc(ex ? NEV.Ex.musclesText(ex) : '') + '</span><span class="chip ' + (cam ? 'ok' : '') + '">' + (cam ? 'Validation par caméra' : 'Validation manuelle') + '</span>' + (c.plan && c.plan.doubled ? '<span class="chip red">×2 journée ratée</span>' : '');
+  }
+  function updateResult() {
+    if (gx.dataset.phase !== 'result') return;
+    const n = S.cards.length, fl = S.els.filter((e) => e.classList.contains('flipped')).length, ns = S.sel.size, t = $('gxRes'), go = $('gxGo');
+    if (n === 1) {
+      const c = S.cards[0], r = rarOf(c);
+      t.innerHTML = '<b>' + (c.special ? 'Carte spéciale' : r.name) + '</b> · ' + esc(c.name) + ' — ' + esc(planText(c));
+      $('gxMeta').innerHTML = metaChips(c);
+      go.textContent = GUEST ? 'CRÉER MON COMPTE' : c.special === 'repos' ? 'FAIRE MON REPOS' : 'RELEVER CE DÉFI'; go.disabled = false;
+      say('Carte obtenue : ' + c.name + ', ' + planText(c));
     } else {
-      plan = pl.sets + ' séries × ' + NEV.Ex.amountText(pl.unit, pl.perSet) + (pl.doubled ? ' <span class="chip red">×2 journée ratée</span>' : '');
-      meta = 'Repos ' + pl.rest + ' s entre les séries' + total + '. ' + esc(NEV.Ex.equipText(ex)) + '.' + (tract ? ' La moitié de ton maximum de pompes.' : '');
-      chips = '<span class="chip red">' + esc(NEV.Ex.musclesText(ex)) + '</span><span class="chip ' + (cam ? 'ok' : '') + '">' + (cam ? 'Validation par caméra' : 'Validation manuelle') + '</span>';
+      t.innerHTML = fl < n ? fl + ' / ' + n + ' cartes retournées · touche une carte' : (ns ? '<b>' + ns + '</b> défi' + (ns > 1 ? 's' : '') + ' sélectionné' + (ns > 1 ? 's' : '') + ' · ≈ ' + minutesOf(sortedSel().map((i) => S.cards[i])) + ' min' : 'Touche les cartes pour choisir tes défis');
+      $('gxMeta').innerHTML = '';
+      go.textContent = GUEST ? 'CRÉER MON COMPTE' : 'VALIDER MON DÉFI'; go.disabled = !(fl === n && ns > 0);
+      if (fl === n && ns === 0) hint.textContent = 'Touche les cartes pour choisir tes défis';
     }
-    rv.innerHTML = '<div class="rays" aria-hidden="true"></div><div class="rc">' + NEV.Card.ofCard(card) + '</div>' +
-      '<div class="rinfo"><span class="rbanner">' + banner + '</span><h2>' + esc(ex.name) + '</h2>' +
-      '<div class="rplan">' + plan + '</div>' +
-      '<p class="rmeta">' + meta + '</p><div class="chips">' + chips + '</div>' +
-      (GUEST ? '<div id="rAct"><a class="btn" href="' + SIGNUP + '" data-go id="goLock"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px;margin-right:8px"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Créer mon compte pour lancer l\'exercice</a></div><p class="rmeta" style="margin-top:12px">Exercice verrouillé : il ne s\'exécute qu\'avec un compte.</p>'
-      : dn ? '<a class="btn ghost" href="quete.html" data-go>Voir la quête du jour</a>'
-          : '<div id="rAct"><a class="btn ok" href="' + GO + '" data-go id="goNow">' + (rest ? 'Faire mon repos' : 'Lancer l\'exercice') + '</a></div>' + (rest ? '' : '<div class="count" id="count" hidden></div>')) + '</div>';
-    NEV.Card.mountArt(rv); NEV.Card.tilt(rv.querySelector('.rc'));
-    if (!GUEST && (p.bonusDraws || 0) > 0) {
-      const bb = document.createElement('button'); bb.type = 'button'; bb.className = 'btn ghost'; bb.id = 'bonusBtn'; bb.style.marginTop = '10px';
-      bb.textContent = '🎁 Utiliser un tirage bonus (' + p.bonusDraws + ')';
-      bb.onclick = function () {
-        if (busy) return; p.bonusDraws--;
-        if (MODE === 'daily' && p.daily.status === 'done') { p.spe = { date: p.spe.date, zone: null, card: null, status: 'none', result: null }; NEV.player.save(p); location.href = 'gacha.html?mode=spe'; return; }
-        const sl = slotOf(); sl.card = null; sl.status = 'none'; sl.result = null; NEV.player.save(p); location.reload();
-      };
-      rv.querySelector('.rinfo').appendChild(bb);
-    }
-    if (animate) { NEV.Sfx.win(); if (!GUEST && !dn && !rest) setTimeout(startCount, 1800); }
+    $('gxAll').hidden = !(n > 1 && fl < n);
+  }
+  const sortedSel = () => Array.from(S.sel).sort((a, b) => a - b);
+  function onCard(i) {
+    if (gx.dataset.phase !== 'result') return;
+    const el = S.els[i];
+    if (!el.classList.contains('flipped')) { flipCard(i); return; }
+    if (S.cards.length > 1) { if (S.sel.has(i)) { S.sel.delete(i); el.classList.remove('sel'); } else { S.sel.add(i); el.classList.add('sel'); NEV.Sfx.pop(); } updateResult(); }
+  }
+  $('gxAll').onclick = () => { S.els.forEach((e, i) => setTimeout(() => flipCard(i), i * 420)); };
+  $('gxSkip').onclick = () => { if (S.busy) { S.skipped = true; settle(); } };
+
+  /* ---------- validation ---------- */
+  const GO_URL = () => 'exercice.html?src=' + (SPE ? 'spe&zone=' + encodeURIComponent(ZONE) : 'daily');
+  $('gxGo').onclick = () => {
+    if (GUEST) { NEV.go(SIGNUP); return; }
+    if (S.cards.length === 1) { NEV.Sfx.ok(); $('gxGo').disabled = true; NEV.go(GO_URL(), 500); return; }
+    const picked = sortedSel(); if (!picked.length) return;
+    p.box.picked = picked; NEV.player.save(p);
+    window.dispatchEvent(new CustomEvent('nvb:gacha-validate', { detail: { mode: 'multiple', category: S.cat, cards: picked.map((i) => Object.assign({}, S.cards[i])) } }));
+    NEV.Sfx.ok(); showConfirm();
+  };
+  function recapHtml(cards) { return cards.map((c) => '<li style="--c:' + rarOf(c).color + '"><i></i><span>' + esc(c.name) + '</span><em>' + esc(planText(c)) + ' · ' + (c.special ? 'Spéciale' : (c.type === 'combo' ? 'Combo' : rarOf(c).name)) + '</em></li>').join(''); }
+  function showConfirm() {
+    const picked = (p.box.picked && p.box.picked.length ? p.box.picked : sortedSel()).filter((i) => i >= 0 && i < S.cards.length).sort((a, b) => a - b);
+    S.sel = new Set(picked);
+    S.els.forEach((el, i) => { el.classList.add('flipped'); el.classList.toggle('sel', S.sel.has(i)); el.classList.toggle('dim', !S.sel.has(i)); });
+    const cards = picked.map((i) => S.cards[i]);
+    $('gxConfT').innerHTML = '<b>' + plural(cards.length, 'défi') + '</b> à relever · ≈ ' + minutesOf(cards) + ' min';
+    $('gxConfL').innerHTML = recapHtml(cards);
+    hint.classList.remove('on'); setPhase('confirm'); say('Sélection enregistrée : ' + plural(cards.length, 'défi'));
+  }
+  $('gxEdit').onclick = () => { p.box.picked = null; NEV.player.save(p); S.els.forEach((el) => el.classList.remove('dim')); showResult(); };
+  $('gxStart').onclick = () => { $('gxStart').disabled = true; NEV.Sfx.ok(); NEV.go('exercice.html?src=box', 500); };
+  function showDone() {
+    const multi = S.mode === 'multi', slot = multi ? p.box : singleSlot(), r = slot.result || {};
+    const played = multi ? NEV.player.boxPlayed(p.box) : S.cards;
+    S.els.forEach((el, i) => { el.classList.add('flipped'); el.classList.remove('sel'); el.classList.toggle('dim', multi && played.indexOf(S.cards[i]) < 0); });
+    $('gxDoneT').textContent = (S.cards[0] && S.cards[0].special === 'repos' && !multi ? 'Repos validé ✓' : 'Défi validé ✓') + (r.xpGain ? '  ·  +' + r.xpGain + ' XP' : '');
+    $('gxDoneL').innerHTML = recapHtml(played);
+    hint.classList.remove('on'); setPhase('done');
   }
 
-  function startCount() {
-    const box = $('count'); if (!box) return;
-    box.hidden = false;
-    box.innerHTML = '<div class="ring"><svg viewBox="0 0 64 64"><circle class="bg" cx="32" cy="32" r="28"/><circle class="fg" id="cFg" cx="32" cy="32" r="28"/></svg><b id="cNum">3</b></div><div><b>L\'exercice commence dans quelques secondes</b><small>Place ton téléphone et prépare-toi.</small></div><button type="button" class="btn ghost sm" id="cCancel">Pas maintenant</button>';
-    let left = 3; const fg = $('cFg'), num = $('cNum'); NEV.Sfx.beep(false);
-    const t0 = performance.now();
-    function frame() { const k = Math.min(1, (performance.now() - t0) / 3000); fg.style.strokeDashoffset = String(176 * k); if (k < 1 && countTimer) requestAnimationFrame(frame); }
-    countTimer = setInterval(function () {
-      left--; if (left > 0) { num.textContent = left; NEV.Sfx.beep(false); return; }
-      clearInterval(countTimer); countTimer = 0; num.textContent = 'GO'; NEV.Sfx.beep(true); NEV.go(GO, 400);
-    }, 1000);
-    requestAnimationFrame(frame);
-    $('cCancel').onclick = function () { clearInterval(countTimer); countTimer = 0; box.innerHTML = '<small class="muted">C\'est noté. Ta carte t\'attend : reviens quand tu es prêt.</small>'; };
+  /* ---------- retour à l'écran initial ---------- */
+  function again() {
+    clearAnim(); S.busy = false; S.cards = []; S.els = []; S.sel.clear(); S.fresh = false;
+    boxFade(0, 0); cardsEl.innerHTML = ''; hint.classList.remove('on'); banner.classList.remove('go');
+    const lw = $('gxLid'), sv = lw.querySelector('svg'); sv.style.transition = 'none'; lw.classList.remove('open'); $('gxBack').classList.remove('lit'); void sv.offsetWidth; sv.style.transition = '';
+    box(0, 0, 0); void stage.offsetWidth; gx.style.setProperty('--rayc', '255,236,200'); stage.setAttribute('aria-label', 'Boîte mystérieuse');
+    renderIdle();
   }
-
-  async function startDraw() {
-    if (busy) return; busy = true;
-    NEV.Sfx.unlock();
-    $('gactions').hidden = true;
-    const card = NEV.Gacha.ensureCard(p, user, { mode: MODE, zone: ZONE }); // tirage + enregistrement AVANT l'animation : impossible de re-tirer en rechargeant
-    NEV.track('draw', { id: card.id, tier: card.tier, mode: MODE, special: card.special || null });
-    const r = NEV.Gacha.rarity(card.rarity);
-    if (reduced) { showReveal(card, true); return; }
-    await fingerSweep(card.pick);
-    const o = await spin(card, r);
-    await explode(o, card, r);
-    showReveal(card, true);
+  $('gxAgain').onclick = again; $('gxAgain2').onclick = again;
+  function idleStill() { // écran « boîte mystérieuse » : l'image personnalisée si elle existe, sinon la boîte dessinée
+    if (CFG.heroImage) { if (hero.getAttribute('src') !== CFG.heroImage) hero.src = CFG.heroImage; hero.classList.add('on'); boxFade(0, 0); }
+    else { hero.classList.remove('on'); boxFade(1, 500); }
   }
+  function showExisting() {
+    const d = drawnOf(S.mode); if (!d) return;
+    S.cards = cardsOf(S.mode); S.cat = catOfDrawn(S.mode); S.sel.clear(); S.fresh = false;
+    gx.style.setProperty('--rayc', hexRgb(rarOf(S.cards.reduce((m, c) => (tOf(c) > tOf(m) ? c : m), S.cards[0])).color));
+    hero.classList.remove('on'); boxFade(0, 0); sizeBox(); build(); settle();
+  }
+  $('gxDraw').onclick = () => { if (drawnOf(S.mode)) showExisting(); else start(); };
+  $('gxBonus').onclick = () => {
+    if (S.busy || !(p.bonusDraws > 0)) return;
+    p.bonusDraws--;
+    if (S.mode === 'single' && !SPE && p.daily.status === 'done') { p.spe = { date: p.spe.date, zone: null, card: null, status: 'none', result: null }; NEV.player.save(p); location.href = 'gacha.html?mode=spe'; return; }
+    if (S.mode === 'multi') p.box = { date: NEV.util.todayStr(), cards: null, status: 'none', result: null, picked: null };
+    else { const sl = singleSlot(); sl.card = null; sl.status = 'none'; sl.result = null; }
+    NEV.player.save(p); S.cards = []; again();
+  };
 
-  if (slotOf().card) {
-    showReveal(slotOf().card, false);
+  /* ---------- démarrage ---------- */
+  if (SPE) {
+    document.title = 'neV.BOOSTER — Gacha Spécialisation';
+    $('gEyebrow').textContent = 'Gacha Spécialisation · ' + (zoneObj ? zoneObj.name : 'Corps entier');
+    $('gTitle').innerHTML = zoneObj ? 'Ta carte <em>' + esc(zoneObj.name.toLowerCase()) + '</em>' : 'Ta carte <em>corps entier</em>';
+    $('gLead').textContent = 'Une carte tirée dans la zone que tu as choisie. Ouvre la boîte : le hasard décide de ton défi.';
+    $('secType').hidden = true; $('secCat').hidden = true; $('gxBonus').hidden = true;
+    S.mode = 'single'; S.cat = 'all';
   } else {
-    $('btnDraw').addEventListener('click', startDraw);
-    stage.addEventListener('pointerdown', () => NEV.Sfx.unlock(), { once: true });
+    const qm = qs.get('mode'), qc = qs.get('cat');
+    S.mode = qm === 'multi' || qm === 'multiple' ? 'multi' : qm === 'single' || qm === 'simple' ? 'single' : (!singleCard() && boxObj() ? 'multi' : 'single');
+    if (qc && (qc === 'all' || G.catById(qc))) S.cat = qc; else S.cat = (G.CATEGORIES.find((c) => INFO[c.id] && INFO[c.id].count > 0) || { id: 'all' }).id;
   }
-  window.addEventListener('resize', sizeFinger);
-  window.addEventListener('pagehide', function () { clearInterval(countTimer); });
-  NEV.__gacha = { startDraw: startDraw }; // point d'entrée pour les tests
+  sizeBox();
+  window.addEventListener('resize', () => {
+    sizeBox();
+    if (S.els.length && !S.busy) { S.L = layout(); S.els.forEach((el, i) => { el.style.width = S.L.cw + 'px'; el.style.height = S.L.ch + 'px'; place(i); }); }
+  });
+  window.addEventListener('pagehide', clearAnim);
+  NEV.__gacha = { start, S, again };   // point d'entrée pour les tests
+
+  if (drawnOf(S.mode) && (SPE || qs.get('new') !== '1')) { renderIdle(); showExisting(); }
+  else if (S.mode === 'single' && blockedSingle() && boxObj() && !SPE) { S.mode = 'multi'; renderIdle(); showExisting(); }
+  else renderIdle();
 })();

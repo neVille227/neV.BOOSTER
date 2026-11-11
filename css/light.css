@@ -73,5 +73,5 @@ html[data-theme=light] .nevinst{background:#fff;color:var(--cream);border-color:
 html[data-theme=light] .nevinst .t span{color:var(--muted)}
 
 /* îlots sombres : cartes, caméra, tirage, démonstrations gardent leurs couleurs */
-html[data-theme=light] :is(.tcard,.gstage,.reveal,.xr-cambox,.xr-demo,.xr-demo-mini,.xr-trans,.xr-go,.xm-demo,.xr-nocam,.tour,.fx-pop .card,.stp .ill,.heroBox .stage){--cream:#fff1f2;--muted:#c2a3aa;--rose:#f3a6b0;--line:#4a2029;color:#fff1f2}
+html[data-theme=light] :is(.tcard,.gstage,.gx,.reveal,.xr-cambox,.xr-demo,.xr-demo-mini,.xr-trans,.xr-go,.xm-demo,.xr-nocam,.tour,.fx-pop .card,.stp .ill,.heroBox .stage){--cream:#fff1f2;--muted:#c2a3aa;--rose:#f3a6b0;--line:#4a2029;color:#fff1f2}
 html[data-theme=light] .cpTabs button.on{background:var(--grad-btn);color:#fff}

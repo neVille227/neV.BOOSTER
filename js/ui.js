@@ -39,7 +39,6 @@
     ['accueil', 'accueil.html', 'Accueil', I.home, 1, 1],
     ['quete', 'quete.html', 'Quête', I.quest, 1, 1],
     ['gacha', 'gacha.html', 'Gacha', I.gacha, 1, 1],
-    ['gacha-box', 'gacha-box.html', 'Gacha Box', I.cube, 1, 0],
     ['mythiques', 'mythiques.html', 'Cartes mythiques', I.trophy, 0, 0],
     ['specialisation', 'specialisation.html', 'Spécialisation', I.body, 1, 1],
     ['bibliotheque', 'bibliotheque.html', 'Exercices', I.book, 1, 0],
@@ -60,7 +59,7 @@
   ];
   /* Barre latérale : tout le menu, rangé par thème. */
   const GROUPS = [
-    ['Principal', ['accueil', 'quete', 'gacha', 'gacha-box', 'mythiques']],
+    ['Principal', ['accueil', 'quete', 'gacha', 'mythiques']],
     ['Entraînement', ['specialisation', 'bibliotheque', 'programmes', 'alimentation', 'conseils']],
     ['Communauté', ['social', 'clans', 'defis', 'classement', 'recompenses', 'coachs']],
     ['Mon espace', ['apropos', 'tuto', 'compte']]
@@ -72,7 +71,7 @@
   const lk = (l, inner, active) => '<a href="' + l[1] + '" data-go' + (l[0] === active ? ' class="on" aria-current="page"' : '') + '>' + inner + '</a>';
 
   const DESC = {
-    accueil: 'Ton tableau de bord', quete: 'Objectifs du jour et combo du coach', gacha: 'Ton tirage quotidien', 'gacha-box': 'La boîte mystère en 3D : 4 cartes', specialisation: 'Cible une zone du corps',
+    accueil: 'Ton tableau de bord', quete: 'Objectifs du jour et combo du coach', gacha: 'Boîte mystère : tirage simple ou multiple', specialisation: 'Cible une zone du corps',
     mythiques: 'Les 7 mouvements d\'élite, en 3D',
     bibliotheque: 'Tous les exercices, animés', programmes: 'Des enchaînements prêts à faire', conseils: 'Sécurité, sommeil, récupération',
     alimentation: 'Manger pour progresser', social: 'Profils, messages privés, contacts', clans: 'Rejoins un clan et cumule l\'XP', chat: 'Parle au coach et aux joueurs', amis: 'Ajoute des amis par code', coachs: 'Les coachs du site', apropos: 'Toi, le site, les infos légales', recompenses: 'Flammes, badges, parrainage', defis: 'Pompes, squats, gainage : bats ton record', classement: 'Public et entre amis', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'

@@ -1,3 +1,5 @@
+> **V17 : la Gacha Box est fusionnée dans la page Gacha (tirage multiple). Voir README, section V17.**
+
 # Gacha Box — guide simple
 
 Page : `gacha-box.html` (menu → « Gacha Box », tuile sur l'accueil, bouton sur la page Gacha).
