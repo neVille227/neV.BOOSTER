@@ -307,3 +307,9 @@ Page `social.html` (Accueil · Recherche · Messages · Profil) — `js/p-social
 - **Classement** : onglets Joueurs · Clans · Défis, catégories (Score + chaque défi : pompes, squats…), podium, bandeau Coach avec compte à rebours, lignes avec barre de progression.
 - **Admin** : barre latérale à icônes, barre du haut avec recherche de joueur, 6 cartes de statistiques avec courbes et évolution, graphiques (barres, anneau des niveaux), tâches récentes (`admin/tasks`), annonce rapide, courbe de fréquentation 7j/30j/90j/1an (`admin/stats/series`), page Statistiques, menu mobile. Palette du site inchangée.
 - Tests : 286 réussis (seul échec connu : `assetlinks.json`). Service worker `nev-v25`.
+
+## V16 — Intro « carte à gratter »
+- Nouveau module `js/scratch-logo.js` (canvas, sans image) : neV.BOOSTER recouvert d'une feuille d'argent qu'une pièce gratte en zigzag, puis lueur + « Booste ton quotidien. ».
+- Homme (`index.html`, `intro.js`, `intro.css`) : tracé → carte à gratter → histoire animée (l'écran « Notre vision » est retiré).
+- Femme (`femme/intro.html`, `intro.js`, `intro.css`) : carte à gratter (thème clair) → 4 scènes d'histoire → Yuki (l'écran « Ton parcours commence ici » est retiré).
+- Page Clans lisible sur mobile (`css/classement.css`). Cache du service worker : `nev-v27`.

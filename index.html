@@ -30,43 +30,14 @@
 <div id="ember" aria-hidden="true"></div>
 <button id="skip" type="button">Passer ›</button>
 
-<section class="stage" id="s-logo" aria-label="Logo neV.BOOSTER">
-  <div class="scene">
-    <svg class="orbits" viewBox="0 0 800 500" aria-hidden="true">
-      <defs><linearGradient id="og" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e0455f"/><stop offset=".5" stop-color="#ffd6dc"/><stop offset="1" stop-color="#f0b24a"/></linearGradient></defs>
-      <ellipse class="base b1" cx="400" cy="400" rx="300" ry="62"/>
-      <ellipse class="base b2" cx="400" cy="400" rx="220" ry="44"/>
-      <ellipse class="orb o1" cx="400" cy="235" rx="380" ry="70" transform="rotate(-8 400 235)"/>
-      <ellipse class="orb o2" cx="400" cy="235" rx="320" ry="120" transform="rotate(14 400 235)"/>
-      <ellipse class="orb o3" cx="400" cy="235" rx="250" ry="160" transform="rotate(-24 400 235)"/>
-      <circle class="spark" cx="86" cy="196" r="6"/><circle class="spark" cx="712" cy="270" r="5"/><circle class="spark" cx="560" cy="64" r="4"/>
-    </svg>
-    <div class="burst"></div>
-    <div class="logo" role="img" aria-label="neV.BOOSTER — logo">
-      <div class="lg-glow" aria-hidden="true"></div>
-      <div class="lg-card" aria-hidden="true">
-        <img class="lg-half lg-l" src="img/logo-nvb.webp" width="384" height="384" alt="" decoding="async" fetchpriority="high">
-        <img class="lg-half lg-r" src="img/logo-nvb.webp" width="384" height="384" alt="" decoding="async" fetchpriority="high">
-        <span class="lg-seam"></span>
-        <span class="lg-shine"></span>
-      </div>
-    </div>
-    <p class="tag">Booste ton quotidien</p>
-  </div>
+<section class="stage" id="s-logo" aria-label="neV.BOOSTER — Booste ton quotidien">
+  <canvas id="scr" class="scr" role="img" aria-label="neV.BOOSTER — Booste ton quotidien."></canvas>
 </section>
-
-<section class="stage" id="s-vision" aria-label="Notre vision">
-  <div class="vision">
-    <h2>Notre <em>vision</em></h2>
-    <p>Transformer l’entraînement en une expérience <b>interactive, motivante et ludique</b>, inspirée des Gacha : tirages, défis et progression visible.</p>
-    <p>Un corps entier à construire, <b>une carte à la fois</b>.</p>
-  </div>
-</section>
-
-<div class="prog" id="prog" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
+<div class="prog" id="prog" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span></div>
 <p class="step" id="step" aria-hidden="true"></p>
 
 <script src="intro-bg.js"></script>
+<script src="js/scratch-logo.js"></script>
 <script src="intro.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/pwa.js"></script>

@@ -37,3 +37,7 @@ html,body{height:100%;background:#FBF6F7;color:#2B0F18;font-family:Montserrat,sy
 #bar{position:absolute;left:0;top:0;height:3px;background:linear-gradient(90deg,#C32D50,#B8862B);width:0;z-index:6;transition:width 1s linear}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.sl.on .im{transform:none}}
 .intro-logo{display:none}
+
+/* carte à gratter : le canvas remplit la scène, le logo est dessiné dedans */
+.scene:has(.scr){padding:0}
+.scr{position:absolute;inset:0;width:100%;height:100%;display:block}
