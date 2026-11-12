@@ -48,5 +48,17 @@
   S.beep = function (last) { if (!ctx()) return; const t = ac.currentTime; osc('sine', last ? 1046 : 660, last ? 1046 : 660, t, last ? 0.35 : 0.15, 0.2); };
   S.ok = function () { if (!ctx()) return; const t = ac.currentTime; [660, 880, 1320].forEach(function (f, i) { osc('triangle', f, f, t + i * 0.09, 0.4, 0.22); }); };
   S.win = function () { if (!ctx()) return; const t = ac.currentTime; [523, 659, 784, 1047, 1319].forEach(function (f, i) { osc('triangle', f, f, t + i * 0.1, 0.7, 0.2); osc('sine', f / 2, f / 2, t + i * 0.1, 0.7, 0.12); }); };
+  /* Sons de la page Gacha : grondement de la boîte, ouverture, sortie d'une carte, retournement, accord selon la rareté (N, R, SR, UR, MR). */
+  S.rumble = function () { if (!ctx()) return; const t = ac.currentTime; osc('sawtooth', 60, 40, t, 0.7, 0.12); nz(t, 0.6, 200, 90, 0.12, 0.8); };
+  S.open = function () { if (!ctx()) return; const t = ac.currentTime; nz(t, 0.9, 400, 5000, 0.2, 0.6); osc('sine', 110, 330, t, 1, 0.25); osc('triangle', 660, 1320, t + 0.1, 0.9, 0.08); };
+  S.out = function () { if (!ctx()) return; const t = ac.currentTime; nz(t, 0.45, 700, 3500, 0.14, 0.8); };
+  S.flip = function () { if (!ctx()) return; const t = ac.currentTime; nz(t, 0.18, 1500, 5000, 0.16, 0.8); osc('square', 900, 900, t + 0.12, 0.06, 0.04); };
+  S.rare = function (code) {
+    if (!ctx()) return; const t = ac.currentTime;
+    const n = { N: 0, R: 2, SR: 3, UR: 4, MR: 5 }[code] || 0, base = { N: 392, R: 440, SR: 494, UR: 523, MR: 330 }[code] || 392;
+    for (let i = 0; i < n; i++) osc('triangle', base * Math.pow(1.2599, i), 0, t + i * 0.09, 0.7, 0.11);
+    if (code === 'MR') { osc('sine', 55, 30, t, 1.4, 0.4); nz(t, 0.5, 200, 2500, 0.2, 0.6); }
+    if (code === 'UR') osc('sine', 80, 45, t, 0.9, 0.3);
+  };
   S.pop = function () { if (!ctx()) return; const t = ac.currentTime; osc('sine', 300, 800, t, 0.12, 0.2); };
 })(window);

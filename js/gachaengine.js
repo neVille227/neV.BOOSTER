@@ -9,6 +9,8 @@
    Deux systèmes de tirage utilisent ce moteur :
    - le gacha du jour       : draw(p, user)
    - le gacha Spécialisation : draw(p, user, { mode: 'spe', zone })
+   Les deux tirages acceptent une CATÉGORIE (opts.cat : pecs, dos, jambes, abdos, epaules, bras, cardio) : toutes les
+   cartes tirées appartiennent alors à cette catégorie, sans exception (voir CATEGORIES et categoryInfo).
    ========================================================== */
 (function (g) {
   'use strict';
@@ -66,6 +68,20 @@
     gainage: ['abdos']
   };
 
+  /* Catégories proposées dans la page Gacha. « Épaules » regroupe les exercices qui travaillent surtout les deltoïdes
+     (ils vivent dans les familles pecs / dos / bras de la bibliothèque). */
+  const SHOULDER_HOME = ['pecs', 'dos', 'bras'];
+  const CATEGORIES = [
+    { id: 'pecs', name: 'Pectoraux', match: (ex) => ex.group === 'pecs' },
+    { id: 'abdos', name: 'Abdominaux', match: (ex) => ex.group === 'abdos' },
+    { id: 'jambes', name: 'Jambes', match: (ex) => ex.group === 'jambes' },
+    { id: 'epaules', name: 'Épaules', match: (ex) => SHOULDER_HOME.indexOf(ex.group) >= 0 && (ex.muscles || []).indexOf('shoulders') >= 0 },
+    { id: 'cardio', name: 'Cardio', match: (ex) => ex.group === 'cardio' },
+    { id: 'dos', name: 'Dos', match: (ex) => ex.group === 'dos' },
+    { id: 'bras', name: 'Bras', match: (ex) => ex.group === 'bras' }
+  ];
+  const catById = (id) => CATEGORIES.find((c) => c.id === id) || null;
+
   /* Un exercice peut-il sortir ? opts.zone : tirage de Spécialisation (mobilité autorisée). */
   function eligible(ex, setup, opts) {
     opts = opts || {};
@@ -89,6 +105,20 @@
     const unit = ex.unit || 'rep';
     const mult = (unit === 'side' || unit === 'secside') ? 2 : 1;
     return { unit, perSet: per, sets, rest: REST_SEC[L] || 40, total: per * sets * mult, doubled: !!double };
+  }
+
+  /* Exercices que ce joueur peut tirer dans une catégorie (selon son matériel et les réglages de l'admin). */
+  function categoryPool(p, catId) {
+    const c = catById(catId);
+    return NEV.EXERCISES.filter((e) => eligible(e, p.setup, {}) && (!c || c.match(e)));
+  }
+  /* Pour l'interface : combien d'exercices, et de quelles raretés, dans chaque catégorie. */
+  function categoryInfo(p) {
+    return CATEGORIES.map((c) => {
+      const list = categoryPool(p, c.id), tiers = [0, 0, 0, 0, 0];
+      list.forEach((e) => { tiers[e.tier - 1]++; });
+      return { id: c.id, name: c.name, count: list.length, tiers };
+    });
   }
 
   /* ---------- cartes spéciales ---------- */
@@ -152,10 +182,12 @@
     const cautious = false; // plus de restriction d'âge : toutes les raretés peuvent sortir
     const lvl = p.level || 1;
     const double = !!(p.daily && p.daily.double);
-    const base = { drawnAt: Date.now(), table: CARDS_ON_TABLE, pick: rng.int(CARDS_ON_TABLE), mode, zone: zoneId };
+    const cat = opts.cat && catById(opts.cat) ? catById(opts.cat) : null;   // catégorie choisie : elle est TOUJOURS respectée
+    const exclude = opts.exclude || [];
+    const base = { drawnAt: Date.now(), table: CARDS_ON_TABLE, pick: rng.int(CARDS_ON_TABLE), mode, zone: zoneId, cat: cat ? cat.id : null };
 
-    /* 1) carte spéciale ? */
-    const sp = opts.noSpecial ? null : rollSpecial(p, { mode });
+    /* 1) carte spéciale ? (jamais avec une catégorie : Repos et Tractions ne sont pas des exercices de catégorie) */
+    const sp = opts.noSpecial || cat ? null : rollSpecial(p, { mode });
     if (sp) {
       const S = SPECIALS[sp];
       if (sp === 'repos') {
@@ -182,14 +214,15 @@
     const zoneOpts = { zone: !!zoneId || mode === 'spe' };
     let zonePool = null;
     if (zoneId) zonePool = NEV.Zones.get(zoneId).ex;
-    else if (mode === 'daily' && (p.setup.zones || []).length && rng.float() < ZONE_BIAS) {
+    else if (!cat && mode === 'daily' && (p.setup.zones || []).length && rng.float() < ZONE_BIAS) {
       zonePool = [];
       p.setup.zones.forEach((z) => { const zz = NEV.Zones.get(z); if (zz) zonePool = zonePool.concat(zz.ex); });
     }
-    const base0 = NEV.EXERCISES.filter((e) => eligible(e, p.setup, zoneOpts) && (!zonePool || zonePool.indexOf(e.id) >= 0));
+    let base0 = NEV.EXERCISES.filter((e) => eligible(e, p.setup, zoneOpts) && (!zonePool || zonePool.indexOf(e.id) >= 0) && (!cat || cat.match(e)));
+    if (exclude.length) { const rest = base0.filter((e) => exclude.indexOf(e.id) < 0); if (rest.length) base0 = rest; }
     const pool = (t) => {
       let list = base0.filter((e) => e.tier === t);
-      const grp = zonePool ? null : FOCUS_GROUPS[p.setup.focus];
+      const grp = zonePool || cat ? null : FOCUS_GROUPS[p.setup.focus];
       if (grp) { const f = list.filter((e) => grp.indexOf(e.group) >= 0); if (f.length) list = f; }
       const fresh = list.filter((e) => hist.indexOf(e.id) < 0);
       return fresh.length ? fresh : list;
@@ -198,6 +231,7 @@
     const have = [1, 2, 3, 4, 5].map((t) => (pool(t).length ? 1 : 0));
     let wr = W.raw.map((w, i) => (have[i] ? w : 0));
     if (!wr.some((w) => w > 0)) wr = have.map((h) => h); // pitié forcée : aucun poids → tout ce qui existe
+    if (!wr.some((w) => w > 0) && cat) throw new Error('Aucun exercice disponible dans la catégorie « ' + cat.name + ' »');
     if (!wr.some((w) => w > 0) && zonePool) { // zone trop restreinte pour ton matériel : on ouvre à tout le corps
       const all = NEV.EXERCISES.filter((e) => eligible(e, p.setup, { zone: true }));
       const ex0 = rng.pick(all);
@@ -212,7 +246,7 @@
       return Object.assign(base, {
         id: ex.id, name: ex.name, group: ex.group, tier: ex.tier, rarity: r.id, rarityName: r.name,
         plan: plan(ex, p, double, cautious),
-        audit: { pity: p.pity || 0, level: lvl, pct: W.pct.map((v) => Math.round(v * 10) / 10), cautious, zone: zoneId, special: false }
+        audit: { pity: p.pity || 0, level: lvl, pct: W.pct.map((v) => Math.round(v * 10) / 10), cautious, zone: zoneId, cat: cat ? cat.id : null, special: false }
       });
     }
   }
@@ -235,38 +269,44 @@
     return { unit: pl.unit, perSet: pl.perSet, sets, rest: pl.rest, total: pl.perSet * sets * mult, doubled: false };
   }
 
-  /* Tire les cartes de la boîte. Ne sauvegarde rien : c'est ensureBox qui le fait. */
-  function drawBox(p, user) {
-    const B = boxCfg(), n = Math.max(2, Math.min(6, B.cards | 0));
+  /* Tire les cartes de la boîte. Ne sauvegarde rien : c'est ensureBox qui le fait.
+     opts.cat : une catégorie → toutes les cartes en font partie, toutes différentes (un combo n'entre que si chacun de ses
+     exercices est de cette catégorie). opts.n : nombre de cartes voulu (4 par défaut). */
+  function drawBox(p, user, opts) {
+    opts = opts || {};
+    const B = boxCfg(), cat = opts.cat && catById(opts.cat) ? catById(opts.cat) : null;
+    let n = Math.max(2, Math.min(6, (opts.n || B.cards) | 0));
+    if (cat) n = Math.min(n, categoryPool(p, cat.id).length);   // jamais deux fois le même exercice
+    if (n < 1) throw new Error('Aucun exercice disponible dans la catégorie « ' + cat.name + ' »');
     const dbl = !!(p.daily && p.daily.double && p.daily.status !== 'done');
     const sets = Math.max(1, Math.min(4, B.sets | 0)) * (dbl ? 2 : 1);
-    const pool = comboPool(p);
-    const comboAt = pool.length && rng.float() < B.comboChance ? rng.int(n) : -1;
+    const pool = comboPool(p).filter((c) => !cat || c.items.every((it) => { const ex = NEV.Ex.byId(it[0]); return ex && cat.match(ex); }));
+    const comboAt = pool.length && n > 1 && rng.float() < B.comboChance ? rng.int(n) : -1;
     const fake = Object.assign({}, p, { history: (p.history || []).slice() });
-    const cards = [];
+    const cards = [], used = [];
     for (let i = 0; i < n; i++) {
       if (i === comboAt) {
         const hist = fake.history.slice(0, 4).map((h) => h.id);
-        const fresh = pool.filter((c) => !c.items.some((it) => hist.indexOf(it[0]) >= 0));
+        const fresh = pool.filter((c) => !c.items.some((it) => hist.indexOf(it[0]) >= 0 || used.indexOf(it[0]) >= 0));
         const c = rng.pick(fresh.length ? fresh : pool);
         const steps = c.items.map((it) => { const ex = NEV.Ex.byId(it[0]); const pl = plan(ex, p, false, false); return { id: ex.id, name: ex.name, tier: ex.tier, group: ex.group, plan: boxPlan(pl, sets) }; });
         const tier = Math.max(1, Math.min(5, Math.round(steps.reduce((a, s) => a + s.tier, 0) / steps.length)));
         cards.push({ type: 'combo', id: c.id, name: c.name, lvl: c.lvl || '', tier, rarity: 'combo', steps });
-        steps.forEach((s) => fake.history.unshift({ id: s.id }));
+        steps.forEach((s) => { fake.history.unshift({ id: s.id }); used.push(s.id); });
         continue;
       }
-      const c = draw(fake, user, { mode: 'daily', noSpecial: true });
+      const c = draw(fake, user, { mode: 'daily', noSpecial: true, cat: cat && cat.id, exclude: used });
       cards.push({ type: 'single', id: c.id, name: c.name, group: c.group, tier: c.tier, rarity: c.rarity, rarityName: c.rarityName, plan: boxPlan(c.plan, sets) });
-      fake.history.unshift({ id: c.id });
+      fake.history.unshift({ id: c.id }); used.push(c.id);
     }
-    return { date: util.todayStr(), cards, status: 'drawn', drawnAt: Date.now(), result: null };
+    return { date: util.todayStr(), cards, cat: cat ? cat.id : null, status: 'drawn', drawnAt: Date.now(), result: null, picked: null };
   }
 
   /* Renvoie la boîte du jour ; la tire et l'enregistre si ce n'est pas déjà fait (impossible de re-tirer en rechargeant). */
-  function ensureBox(p, user) {
+  function ensureBox(p, user, opts) {
     NEV.player.ensureDay(p);
     if (!p.box.cards) {
-      const b = drawBox(p, user);
+      const b = drawBox(p, user, opts);
       p.box = b;
       p.pity = b.cards.some((c) => c.type === 'single' && c.tier >= 3) ? 0 : (p.pity || 0) + 1;
       NEV.player.save(p);
@@ -296,6 +336,7 @@
   NEV.Gacha = {
     amount: (pl) => NEV.Ex.amountText(pl.unit, pl.perSet),
     RARITIES, SPECIALS, SPECIAL_RULE, WEIGHTS, weights, draw, ensureCard, plan, eligible, specialInfo, trainingDays,
+    CATEGORIES, catById, categoryPool, categoryInfo,
     CARDS_ON_TABLE, PITY_HARD, rarity: rarityOf, BOX, drawBox, ensureBox, comboPool, boxCfg
   };
 })(window);

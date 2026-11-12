@@ -12,6 +12,7 @@
   $('box').innerHTML =
     '<section><h2>Mes informations</h2><div class="kpi" style="grid-template-columns:1fr">' + rows.map((r) => '<div style="text-align:left;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap"><span>' + r[0] + '</span><b style="font-size:1rem;color:#fff">' + r[1] + '</b></div>').join('') + '</div>' +
     (server && !u.verified ? '<p class="muted">Ton adresse n\'est pas encore confirmée. <button type="button" class="btn ghost sm" id="bVerif">Renvoyer le lien</button> <span id="mVerif" class="muted"></span></p>' : '') + '</section>' +
+    '<section id="secPhoto"><h2>Photo de profil</h2>' + (server ? '<div class="avpick"><div class="avpick-ph" id="apPh" role="img" aria-label="Aperçu de ta photo de profil"></div><div><div class="avpick-b"><button type="button" class="btn" id="apUp">Envoyer une photo</button><button type="button" class="btn ghost" id="apDel" hidden>Supprimer</button></div><p class="muted" style="margin:10px 0 0;font-size:.86rem">JPEG, PNG ou WebP. Elle est recadrée en carré et réduite automatiquement.</p></div></div><p class="avpick-m" id="apMsg" role="status" aria-live="polite"></p>' : '<p class="muted">La photo de profil est disponible avec un compte en ligne.</p>') + '</section>' +
     (server ? '<section><h2>Classement</h2><p>Par défaut, tu n\'apparais que dans le classement entre amis (quand vous avez chacun ajouté le code de l\'autre). Tu peux aussi apparaître dans le classement public, avec ton seul pseudo.</p><label class="check"><input type="checkbox" id="cBoard"' + (u.publicBoard ? ' checked' : '') + '><span>Apparaître dans le classement public</span></label></section>' : '') +
     '<section><h2>Appli et rappel</h2><p>Installe neV.BOOSTER sur l\'écran d\'accueil : il s\'ouvre en plein écran et les pages déjà vues restent consultables sans réseau.</p><button type="button" class="btn ghost" id="bInst" hidden>Installer l\'appli</button><p class="muted" id="mInst"></p>' +
     '<div id="rem" hidden><label class="check"><input type="checkbox" id="cRem"><span>Me rappeler ma séance du jour</span></label><div class="field" style="max-width:220px;margin-top:12px"><label for="rHour">À partir de</label><select id="rHour">' + [6,8,10,12,14,16,17,18,19,20,21].map((h) => '<option value="' + h + '">' + h + ' h</option>').join('') + '</select></div><p class="muted">Honnêtement : le rappel s\'affiche quand tu ouvres l\'appli après cette heure et que ta séance n\'est pas faite. Un navigateur ne peut pas réveiller ton téléphone tout seul sans service d\'envoi dédié.</p></div></section>' +
@@ -21,6 +22,36 @@
     (server ? '<div class="field" style="max-width:340px"><label for="dpw">Mot de passe</label><input id="dpw" type="password" autocomplete="current-password"></div>' : '') +
     '<div class="err" id="eDel" role="alert"></div><button type="button" class="btn" id="bDel" style="background:linear-gradient(135deg,#7a0f26,#c0283f)">Supprimer mon compte</button></section>' +
     '<p class="muted">Voir aussi : <a href="confidentialite.html">Confidentialité</a> · <a href="conditions.html">Conditions d\'utilisation</a> · <a href="mentions-legales.html">Mentions légales</a>.</p>';
+  (async function photo() {
+    const ph = $('apPh'); if (!ph || !NEV.AvatarUpload) return;
+    const AU = NEV.AvatarUpload, msg = (t, k) => { const m = $('apMsg'); m.textContent = t || ''; m.className = 'avpick-m' + (k ? ' ' + k : ''); };
+    let prof = null;
+    const draw = () => {
+      const a = prof && prof.avatar;
+      if (AU.isPhoto(a)) { ph.className = 'avpick-ph'; ph.innerHTML = '<img alt="">'; ph.firstChild.src = a; }
+      else if (a && /^p[1-8]$/.test(a)) { ph.className = 'avpick-ph'; ph.textContent = String((prof && prof.handle) || '?').charAt(0).toUpperCase(); }
+      else { ph.className = 'avpick-ph evo'; ph.innerHTML = '<img alt="">'; ph.firstChild.src = 'img/avatar-' + (prof && prof.sex === 'f' ? 'f' : 'm') + '.webp'; }
+      $('apDel').hidden = !AU.isPhoto(a); $('apUp').textContent = AU.isPhoto(a) ? 'Changer la photo' : 'Envoyer une photo';
+    };
+    const r = await AU.me();
+    if (!r.ok) { $('apUp').disabled = true; msg(r.error, 'bad'); ph.textContent = '?'; return; }
+    prof = r.profile; draw();
+    $('apUp').addEventListener('click', async () => {
+      const b = $('apUp'); b.disabled = true; msg('');
+      const pk = await AU.pick();
+      if (pk.cancelled) { b.disabled = false; return; }
+      if (!pk.ok) { b.disabled = false; msg(pk.error, 'bad'); return; }
+      const sv = await AU.save(pk.data); b.disabled = false;
+      if (!sv.ok) { msg(sv.error, 'bad'); return; }
+      prof.avatar = pk.data; draw(); msg('Photo de profil mise à jour.', 'ok');
+    });
+    $('apDel').addEventListener('click', async () => {
+      if (!window.confirm('Supprimer ta photo de profil ?')) return;
+      const b = $('apDel'); b.disabled = true; const sv = await AU.remove(); b.disabled = false;
+      if (!sv.ok) { msg(sv.error, 'bad'); return; }
+      prof.avatar = 'evo'; draw(); msg('Photo supprimée.', 'ok');
+    });
+  })();
   const v = $('bVerif'); if (v) v.addEventListener('click', async () => { v.disabled = true; const r = await NEV.cloud.api('verify/resend', 'POST', {}); $('mVerif').textContent = r.ok ? (r.data.mail ? 'Lien envoyé.' : 'Demande enregistrée (envoi d\'e-mails non activé).') : (r.data.error || 'Impossible.'); });
   const cb = $('cBoard'); if (cb) cb.addEventListener('change', async () => { const r = await NEV.cloud.api('account/board', 'POST', { public: cb.checked }); if (!r.ok) { cb.checked = !cb.checked; } });
   (function pwa() {

@@ -207,3 +207,13 @@ html[data-theme=light] .mbar{background:#fffffff2;border-top-color:var(--line)}
 @media(max-width:700px){body.has-mbar .yuki,body.pg-social .yuki{bottom:74px}body.pg-social .chatFab{bottom:88px;width:60px;height:60px}body.pg-social .chatPanel{bottom:158px}body.pg-social .helpfab{bottom:156px;right:16px}}
 .mbar a{position:relative}.mbar .badge{position:absolute;top:-2px;left:calc(50% + 6px);min-width:18px;height:18px;font-size:.66rem}
 .mbar .nb-dot{position:absolute;top:-2px;left:calc(50% + 6px);margin:0;min-width:18px;height:18px;font-size:.66rem;padding:0 4px}
+
+/* Photo de profil (page Mon compte) */
+.avpick{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.avpick-ph{width:96px;height:96px;border-radius:50%;flex:none;overflow:hidden;display:grid;place-items:center;font-weight:900;font-size:2.2rem;color:#fff;background:linear-gradient(135deg,var(--wine),var(--red));box-shadow:0 0 0 3px #e0455f55,0 12px 30px #0006}
+.avpick-ph img{width:100%;height:100%;object-fit:cover;display:block}
+.avpick-ph.evo img{object-position:50% 4%;transform:scale(2.2);transform-origin:50% 8%}
+.avpick-b{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.avpick-b .btn{min-height:44px}
+.avpick-m{margin:10px 0 0;min-height:1.2em;font-size:.86rem}
+.avpick-m.bad{color:#ff8d9d}.avpick-m.ok{color:var(--gold)}

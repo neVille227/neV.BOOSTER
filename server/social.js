@@ -173,7 +173,7 @@ module.exports = function (ctx) {
     }
     if (r === 'me' && m === 'PUT') {
       const w = limit('sp:' + me, 40, HOUR); if (w) return fail(res, 429, 'Trop de modifications. Réessaie plus tard.');
-      const b = await readBody(req, 90000), cur = S.profile(me), f = {};
+      const b = await readBody(req, 90000, 61000), cur = S.profile(me), f = {};
       if (b.handle != null) {
         const h = String(b.handle).replace(/^@+/, '').trim();
         if (!HANDLE.test(h)) return fail(res, 400, 'Le @pseudo fait 3 à 20 caractères : lettres, chiffres ou _.', 'handle');
@@ -245,7 +245,7 @@ module.exports = function (ctx) {
     if (r === 'send' && m === 'POST') {
       const w = limit('sm:' + me, 40, 60000); if (w) return fail(res, 429, 'Tu écris trop vite. Patiente quelques secondes.');
       if (user.mutedUntil && user.mutedUntil > now()) return fail(res, 403, 'Tu ne peux pas écrire pour le moment.');
-      const b = await readBody(req, 220000), p = S.profileByHandle(String(b.to || '').replace(/^@+/, '')), u = p ? S.userById(p.uid) : null;
+      const b = await readBody(req, 220000, 201000), p = S.profileByHandle(String(b.to || '').replace(/^@+/, '')), u = p ? S.userById(p.uid) : null;
       if (!p || !u || u.banned || p.uid === me) return fail(res, 404, 'Destinataire introuvable.', 'to');
       if (S.iBlocked(me, p.uid)) return fail(res, 403, 'Tu as bloqué ce joueur : débloque-le pour lui écrire.', 'to');
       if (!canDm(me, p)) return fail(res, 403, p.dm === 'friends' ? 'Ce joueur n\'accepte les messages que de ses amis.' : 'Ce joueur n\'accepte pas de messages.', 'to');

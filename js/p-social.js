@@ -239,7 +239,8 @@
     if (self) { cur.view = 'me'; tabs('profile'); }
     let h = self ? '' : '<button class="back" type="button" data-back>← Retour</button>';
     const i = p.info || {};
-    h += '<section class="sp-hero">' + avo(p.avatar, p.handle, p.sex, p.online, 'xl') + '<div class="sp-hero-t"><h2>@' + esc(p.handle) + '</h2>';
+    const hasPhoto = self && NEV.AvatarUpload && NEV.AvatarUpload.isPhoto(p.avatar);
+    h += '<section class="sp-hero">' + (self && !guest ? '<span class="avedit" id="avedit">' + avo(p.avatar, p.handle, p.sex, p.online, 'xl') + '<button type="button" class="avcam" data-avcam="1" aria-label="' + (hasPhoto ? 'Changer ma photo de profil' : 'Ajouter une photo de profil') + '" title="' + (hasPhoto ? 'Changer la photo' : 'Ajouter une photo') + '"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.6"/></svg></button></span>' : avo(p.avatar, p.handle, p.sex, p.online, 'xl')) + '<div class="sp-hero-t"><h2>@' + esc(p.handle) + '</h2>';
     if (p.locked) h += '<div class="lockbox">' + (p.vis === 'friends' ? 'Ce profil est réservé à ses contacts.' : 'Ce profil est privé.') + '</div>';
     else {
       h += '<div class="sp-lvl">' + esc(lvlTxt(p.xp, p.sex)) + '</div>' + xpbar(p.xp, p.sex);
@@ -248,7 +249,7 @@
     }
     h += '<div class="acts" id="pa" data-h="' + esc(p.handle) + '">';
     if (guest) h += '<a class="b" href="' + SIGN + '" data-go>Créer un compte pour écrire</a>';
-    else if (self) h += '<a class="b" href="#/profile/edit">Modifier le profil</a><button type="button" class="b g" data-share="1">Partager</button>';
+    else if (self) h += '<a class="b" href="#/profile/edit">Modifier le profil</a><button type="button" class="b g" data-avcam="1">' + (hasPhoto ? 'Changer la photo' : 'Ajouter une photo') + '</button>' + (hasPhoto ? '<button type="button" class="b g" data-avdel="1">Supprimer ma photo</button>' : '') + '<button type="button" class="b g" data-share="1">Partager</button>';
     else if (p.blockedByMe) h += '<button class="b g" data-bl="0" type="button">Débloquer</button>';
     else {
       if (p.canMessage) h += '<a class="b" href="#/messages/' + enc(p.handle) + '">Message</a>';
@@ -365,7 +366,7 @@
     const i = me.info || {}; let avatar = me.avatar;
     const sel = (v, o) => o.map((x) => '<option value="' + x[0] + '"' + (x[0] === v ? ' selected' : '') + '>' + x[1] + '</option>').join('');
     body.innerHTML = '<h2>Mon profil</h2><form class="fm" id="pf" novalidate>' +
-      '<div><label>Photo ou avatar</label><div class="avs" id="avs"></div><span class="hint">Choisis un avatar ou envoie une photo (elle est réduite automatiquement).</span></div>' +
+      '<div><label>Photo ou avatar</label><div class="avs" id="avs"></div><span class="hint">Choisis un avatar ou envoie ta photo : elle est recadrée en carré et réduite automatiquement.</span></div>' +
       '<label>@pseudo (unique)<input type="text" id="fh" maxlength="20" autocomplete="off" autocapitalize="off" value="' + esc(me.handle) + '"><span class="hint">3 à 20 caractères : lettres, chiffres ou _. C\'est avec lui qu\'on te retrouve.</span></label>' +
       '<label>Biographie<textarea id="fb" rows="3" maxlength="160" placeholder="Quelques mots sur toi">' + esc(me.bio) + '</textarea><span class="hint" id="bc"></span></label>' +
       '<label>Parcours<select id="fs">' + sel(me.sex, [['m', 'Masculin'], ['f', 'Féminin']]) + '</select></label>' +
@@ -383,7 +384,7 @@
     drawAv();
     $('fs').addEventListener('change', drawAv);
     $('avs').addEventListener('click', (e) => { const b = e.target.closest('[data-a]'); if (b && b.dataset.a !== 'photo') { avatar = b.dataset.a; drawAv(); } });
-    $('avs').addEventListener('change', async (e) => { if (e.target.id !== 'fph' || !e.target.files[0]) return; const d = await shrink(e.target.files[0], 200, 0.8); if (d && d.length <= 59000) { avatar = d; drawAv(); } else $('ferr').textContent = 'Photo trop lourde ou illisible.'; });
+    $('avs').addEventListener('change', async (e) => { if (e.target.id !== 'fph' || !e.target.files[0]) return; const rs = await NEV.AvatarUpload.process(e.target.files[0]); if (rs.ok) { avatar = rs.data; $('ferr').textContent = ''; drawAv(); } else $('ferr').textContent = rs.error; });
     const bc = () => { $('bc').textContent = $('fb').value.length + ' / 160'; }; bc(); $('fb').addEventListener('input', bc);
     $('pf').addEventListener('submit', async (e) => {
       e.preventDefault(); $('fsave').disabled = true; $('ferr').textContent = '';
@@ -411,6 +412,15 @@
       const r = await api('block', 'POST', { handle: h, on: on }); if (!r.ok) return toast(r.j.error || 'Action impossible.');
       toast(on ? '@' + h + ' est bloqué.' : '@' + h + ' est débloqué.');
       cur.view === 'chat' ? loadChat(cur.handle) : cur.view === 'profile' ? viewMyProfile() : viewProfile(h); return;
+    }
+    if (t.dataset.avcam || t.dataset.avdel) {
+      const AU = NEV.AvatarUpload; if (!AU) return; t.disabled = true;
+      let res;
+      if (t.dataset.avdel) { if (!confirm('Supprimer ta photo de profil ?')) { t.disabled = false; return; } res = await AU.remove(); }
+      else { const pk = await AU.pick(); if (pk.cancelled) { t.disabled = false; return; } if (!pk.ok) { t.disabled = false; toast(pk.error); return; } res = await AU.save(pk.data); }
+      t.disabled = false;
+      if (!res.ok) { toast(res.error || 'Enregistrement impossible.'); return; }
+      toast(t.dataset.avdel ? 'Photo supprimée.' : 'Photo de profil mise à jour.'); viewProfile(cur.handle || (me && me.handle)); return;
     }
     if (t.dataset.share) {
       const url = location.origin + location.pathname.replace(/[^/]*$/, '') + 'social.html#/u/' + encodeURIComponent(cur.handle);
