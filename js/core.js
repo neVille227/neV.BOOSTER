@@ -276,7 +276,7 @@
     login: { last: null, streak: 0, best: 0, days: [] },
     badges: {},
     ref: { count: 0, paid: 0, by: null, welcomed: false },
-    aura: 'none', auras: ['none'],
+    aura: 'none', auras: ['none'], avatar: null,
     updated: 0
   });
   const P = (NEV.player = {
@@ -427,4 +427,51 @@
       return { already: false, xpGain, p };
     }
   });
+
+  /* ───────── Avatar personnalisable : peau, cheveux, yeux, tenue, couleur d'accent ─────────
+     Stocké dans le profil du joueur (p.avatar) ; null = apparence d'origine. Lu par l'avatar illustré et les mannequins 3D. */
+  (function () {
+    const hex2 = (h) => { h = String(h || '').replace('#', ''); if (h.length === 3) h = h.replace(/./g, '$&$&'); const n = parseInt(h, 16) || 0; return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+    const toHex = (a) => '#' + a.map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+    const shade = (h, t) => { const c = hex2(h), k = t >= 0 ? 255 : 0, q = Math.abs(t); return toHex(c.map((v) => v + (k - v) * q)); };
+    const SKINS = [['Porcelaine', '#f7d9c4'], ['Clair', '#efbd97'], ['Hâlé', '#d9a077'], ['Doré', '#c18460'], ['Brun', '#9a6446'], ['Ébène', '#6b4430']];
+    const HAIRS = [['Noir', '#17101c'], ['Châtain', '#4a2f22'], ['Brun clair', '#7a5334'], ['Blond', '#d8b36a'], ['Roux', '#b24a24'], ['Gris', '#9a9aa6'], ['Violet', '#6a3fb0'], ['Rose', '#e0559a'], ['Bleu', '#2f6fd0'], ['Blanc', '#eeeaf2']];
+    const EYES = [['Marron', ['#3b2230', '#8a4f3f']], ['Noisette', ['#3b2a18', '#a8742a']], ['Vert', ['#183a2c', '#4fae7a']], ['Bleu', ['#142a4a', '#4f9be0']], ['Gris', ['#25282f', '#8d97a6']], ['Violet', ['#2b1a4d', '#b06ad6']]];
+    const OUTFITS = [['Nuit', '#17111d'], ['Bordeaux', '#5a1224'], ['Rouge', '#a3162f'], ['Bleu nuit', '#17284f'], ['Vert', '#16473a'], ['Violet', '#3f2478'], ['Anthracite', '#33303c'], ['Blanc', '#e6e2ec']];
+    const ACCENTS = [['Rose', '#ff5fae'], ['Rouge', '#ff3d5a'], ['Or', '#f0b84a'], ['Cyan', '#3ed6e8'], ['Vert', '#4ee38a'], ['Violet', '#a98aff'], ['Orange', '#ff8a3d'], ['Blanc', '#ffffff']];
+    const cache = { uid: null, raw: null, val: {} };
+    const clean = (a) => {
+      a = a && typeof a === 'object' ? a : {};
+      const ok = (v, list, i) => (typeof v === 'string' && list.some((x) => (i ? x[i] : x[1]) === v) ? v : null);
+      const o = {};
+      o.skin = ok(a.skin, SKINS); o.hair = ok(a.hair, HAIRS); o.eyes = typeof a.eyes === 'string' && EYES.some((e) => e[0] === a.eyes) ? a.eyes : null;
+      o.outfit = ok(a.outfit, OUTFITS); o.accent = ok(a.accent, ACCENTS);
+      return o;
+    };
+    NEV.Avatar = {
+      SKINS: SKINS, HAIRS: HAIRS, EYES: EYES, OUTFITS: OUTFITS, ACCENTS: ACCENTS, shade: shade,
+      skinSet(h) { return { a: shade(h, 0.22), b: h, c: shade(h, -0.14), d: shade(h, -0.34), m: shade(h, 0.12) }; },
+      outfitSet(h) { return [shade(h, 0.1), h, shade(h, -0.42)]; },
+      eyeSet(name) { const e = EYES.find((x) => x[0] === name); return e ? e[1] : EYES[0][1]; },
+      clean: clean,
+      /* apparence courante (homme/femme) : {skin, hair, eyes, outfit, accent} ; valeurs null = d'origine */
+      get() {
+        try {
+          const u = (auth.current() || {}).id; if (!u) return {};
+          const raw = NEV.store.get(P.key(u), null); const a = raw && raw.avatar;
+          const k = JSON.stringify(a || null);
+          if (cache.uid === u && cache.raw === k) return cache.val;
+          cache.uid = u; cache.raw = k; cache.val = clean(a); return cache.val;
+        } catch (e) { return {}; }
+      },
+      set(patch) {
+        const u = (auth.current() || {}).id; if (!u) return null;
+        const p = P.load(u); p.avatar = clean(Object.assign({}, p.avatar || {}, patch || {}));
+        P.save(p); cache.raw = null; return p.avatar;
+      },
+      reset() { const u = (auth.current() || {}).id; if (!u) return; const p = P.load(u); p.avatar = null; P.save(p); cache.raw = null; },
+      /* couleurs three.js (nombres 0xRRGGBB) pour les mannequins 3D ; null = d'origine */
+      three(a) { a = a || this.get(); const n = (h) => (h ? parseInt(h.slice(1), 16) : null); return { skin: n(a.skin), hair: n(a.hair), outfit: n(a.outfit ? shade(a.outfit, -0.45) : null), accent: n(a.accent) }; }
+    };
+  })();
 })(window);

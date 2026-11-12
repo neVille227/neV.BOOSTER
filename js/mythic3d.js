@@ -70,15 +70,16 @@ function pickProfile(f){P=PROFILES[f?'female':'male'];P.border='rgba(255,70,50,.
 /* ───────── matériaux ───────── */
 var GROUPS=['chest','delts','triceps','biceps','abs','core','quads','lats'];
 function makeMats(){
- var base=K(P.skin);
+ var A3=(function(){try{return (NEV.Avatar&&NEV.Avatar.three())||{}}catch(e){return {}}})();
+ var base=K(A3.skin!=null?A3.skin:P.skin);
  function skin(){var m=new T.MeshPhysicalMaterial({color:base.clone(),roughness:.4,metalness:.02,clearcoat:.45,clearcoatRoughness:.34});
   m.onBeforeCompile=function(sh){sh.fragmentShader=sh.fragmentShader.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );','float nvRim=pow(1.0-saturate(dot(normalize(vNormal),normalize(vViewPosition))),2.6);outgoingLight+=vec3(1.,.3,.22)*nvRim*.62;\ngl_FragColor = vec4( outgoingLight, diffuseColor.a );')};
   return m}
  var M={base:base,sk:skin(),
-  sh:new T.MeshStandardMaterial({color:K(0x121118),roughness:.8,metalness:0}),
+  sh:new T.MeshStandardMaterial({color:K(A3.outfit!=null?A3.outfit:0x121118),roughness:.8,metalness:0}),
   wb:new T.MeshStandardMaterial({color:K(0x2c2a37),roughness:.55,metalness:.1}),
-  br:new T.MeshStandardMaterial({color:K(0x17161e),roughness:.7,metalness:0}),
-  hr:new T.MeshStandardMaterial({color:K(0x1b1922),roughness:.42,metalness:.25}),g:{},h:{}};
+  br:new T.MeshStandardMaterial({color:K(A3.outfit!=null?A3.outfit:0x17161e),roughness:.7,metalness:0}),
+  hr:new T.MeshStandardMaterial({color:K(A3.hair!=null?A3.hair:0x1b1922),roughness:.42,metalness:.25}),g:{},h:{}};
  GROUPS.forEach(function(k){
   M.g[k]=skin();
   M.h[k]=new T.MeshBasicMaterial({color:K(0xff2d2d),transparent:true,opacity:.3,blending:T.AdditiveBlending,side:T.BackSide,depthWrite:false})});

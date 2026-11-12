@@ -343,3 +343,8 @@ Tirage simple : la carte sort de la boîte, tourne 8 fois (2880°) avec lumière
 ## V21 — Tuto : vidéo « explorateur », histoire animée supprimée
 - La section « La vidéo en 85 secondes » du Tuto lit `media/neVBOOSTER-video.mp4` (87 s, 1280×720, avec musique) : visite guidée, compte créé, Gacha simple et multiple, Spécialisation, exercices/combos/mythiques, alimentation et conseils, quête, récompenses, communauté.
 - Supprimés : « Son histoire animée (avec voix) » et sa version simple (`histoire-anime.html`, `histoire.html`, leurs CSS/JS, `story-*.js`, `histoire3d.js`, les médias `histoire-*`). Liens retirés du Tuto, de À propos et du pied de page. `figure3d.js` reste (héros 3D de l'accueil). `sw.js` = nev-v32.
+
+## V22 — Avatar personnalisable
+- Nouvelle page `avatar.html` (menu « Mon espace → Mon avatar », lien depuis l'accueil) : teint de peau, cheveux, yeux, tenue, couleur d'accent, aperçu en direct, curseur d'évolution.
+- Stockage : `p.avatar` dans le profil (synchronisé comme le reste). `null` = apparence d'origine, donc aucun changement de thème pour qui ne personnalise pas.
+- `NEV.Avatar` (js/core.js) : palettes, `get()`, `set()`, `reset()`. Lu par `js/avatar-illus.js` (avatar illustré partout) et par les mannequins 3D (`mannequin3d.js`, `mythic3d.js`).
