@@ -324,3 +324,9 @@ Page `social.html` (Accueil · Recherche · Messages · Profil) — `js/p-social
 - Image personnalisée de l'écran d'accueil : `js/gacha-config.js` → `heroImage: 'img/gacha-mains.webp'` (image dont tu as les droits).
 - Photo de profil personnalisée : `js/avatar-upload.js` (compte, social, messages) ; le serveur accepte les images jusqu'à 61 ko (profil) et 201 ko (message).
 - Service worker : `nev-v28`.
+
+## V18 — Introduction racontée
+
+- Après la carte à gratter, l'ouverture du site (homme et femme) enchaîne sur `intro-nvb.html` : 7 séquences illustrées (constat, idée, hasard, régularité, niveaux, vision, GO), voix off grave (`media/intro-voix-grave.mp3`, extraite de la vidéo « voix grave »), sous-titres mot à mot calés sur la voix.
+- Fin : GO ou « Passer » → création du compte (homme) ou accueil (joueuse). `histoire-anime.html` reste accessible depuis le pied de page.
+- Service worker : `nev-v29`.
