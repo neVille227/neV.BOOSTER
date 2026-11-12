@@ -223,6 +223,7 @@
   function flipCard(i, quiet) {
     const el = S.els[i]; if (!el || el.classList.contains('flipped')) return;
     mountArt(el); el.classList.add('flipped');
+    if (!quiet && !reduced && S.cards.length > 1) { try { el.querySelector('.gxc-in').animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(900deg)' }], { duration: 950, easing: 'cubic-bezier(.3,.7,.25,1)' }); } catch (e) { /* ignoré */ } }
     const c = S.cards[i]; el.setAttribute('aria-label', c.name + ', ' + planText(c) + ', ' + (c.special ? 'carte spéciale' : rarOf(c).name));
     if (!quiet) { NEV.Sfx.flip(); setTimeout(() => fx(i), 260); }
     updateResult();
@@ -264,7 +265,7 @@
     later(emerge, 2600);                                                    // 4 · les cartes sortent
   }
   function emerge() {
-    const o = openPt(), L = S.L, n = S.cards.length, step = n === 1 ? 0 : 470, dur = n === 1 ? 2000 : 1150;
+    const o = openPt(), L = S.L, n = S.cards.length, step = n === 1 ? 0 : 470, dur = n === 1 ? 1200 : 1150;
     $('gxBusy').textContent = n === 1 ? 'Ta carte sort de la boîte…' : 'Les cartes sortent une à une…';
     if (n === 1) mountArt(S.els[0]);
     S.cards.forEach((c, i) => {
@@ -273,21 +274,65 @@
         const from = tf(o.x, o.y + L.ch * 0.05, L.cw, L.ch, 0, 0.3), up = tf(o.x, Math.max(L.ch * 0.5 + 8, o.y - L.ch * 0.75), L.cw, L.ch, n === 1 ? 0 : q.rot * 0.5, n === 1 ? 1.05 : 0.85), to = tf(q.x, q.y, L.cw, L.ch, q.rot, 1);
         el.style.transform = from;
         S.anims.push(el.animate([{ transform: from, opacity: 0 }, { transform: up, opacity: 1, offset: 0.45 }, { transform: to, opacity: 1 }], { duration: dur, easing: 'cubic-bezier(.25,.8,.3,1)', fill: 'forwards' }));
-        if (n === 1) { // la carte sort, pivote, se retourne
-          const inner = el.querySelector('.gxc-in'); inner.style.transition = 'none';
-          S.anims.push(inner.animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(540deg)' }], { duration: dur, easing: 'cubic-bezier(.3,.6,.25,1)', fill: 'forwards' }));
-        }
       }, i * step);
     });
     const total = (n - 1) * step + dur;
     later(() => { boxFade(0, 700); rays.classList.remove('on'); }, Math.max(600, total - 600));
-    later(settle, total + 80);
+    if (n === 1) later(crazy, total + 80); else later(settle, total + 80);
+  }
+
+  /* ---------- la carte seule : 8 tours, lumière, puis explosion en morceaux ---------- */
+  function shatter(q, r, tier) {
+    const cx = q.left + q.width / 2, cy = q.top + q.height / 2, w = q.width * 1.3, h = q.height * 1.3, x0 = cx - w / 2, y0 = cy - h / 2;
+    const C = 4, R = 6, pts = [], tris = [];
+    for (let j = 0; j <= R; j++) { pts[j] = []; for (let i = 0; i <= C; i++) pts[j][i] = [i / C * 100 + (i && i < C ? (Math.random() - 0.5) * 14 : 0), j / R * 100 + (j && j < R ? (Math.random() - 0.5) * 10 : 0)]; }
+    for (let j = 0; j < R; j++) for (let i = 0; i < C; i++) { const a = pts[j][i], b = pts[j][i + 1], c = pts[j + 1][i], d = pts[j + 1][i + 1]; tris.push([a, b, c], [b, d, c]); }
+    tris.forEach((t) => {
+      const sh = document.createElement('div'); sh.className = 'shard';
+      sh.style.cssText = 'left:' + x0 + 'px;top:' + y0 + 'px;width:' + w + 'px;height:' + h + 'px;clip-path:polygon(' + t.map((p2) => p2[0].toFixed(1) + '% ' + p2[1].toFixed(1) + '%').join(',') + ');background:linear-gradient(' + Math.round(Math.random() * 360) + 'deg,#f6d58a,#8e1b3c 45%,' + r.color + ');';
+      document.body.appendChild(sh);
+      const px = (t[0][0] + t[1][0] + t[2][0]) / 3 - 50, py = (t[0][1] + t[1][1] + t[2][1]) / 3 - 50;
+      const dist = 160 + Math.random() * (260 + tier * 60), ang = Math.atan2(py, px) + (Math.random() - 0.5) * 0.8;
+      if (!sh.animate) { sh.remove(); return; }
+      sh.animate([{ transform: 'none', opacity: 1 }, { transform: 'translate(' + Math.cos(ang) * dist + 'px,' + (Math.sin(ang) * dist + 120 + Math.random() * 160) + 'px) rotate(' + (Math.random() - 0.5) * 900 + 'deg) scale(.3)', opacity: 0 }], { duration: 1100 + Math.random() * 500, easing: 'cubic-bezier(.2,.7,.4,1)' }).onfinish = () => sh.remove();
+    });
+  }
+  function crazy() {
+    const c = S.cards[0], r = rarOf(c), t = tOf(c), el = S.els[0], inner = el.querySelector('.gxc-in');
+    const q = el.getBoundingClientRect(), cx = q.left + q.width / 2, cy = q.top + q.height / 2, T = 2900;
+    $('gxBusy').textContent = 'Ta carte tourne…';
+    gx.classList.add('crazy'); NEV.Sfx.rise(2.9);
+    S.anims.push(inner.animate([                                   // 8 tours (8 × 360°), de plus en plus vite
+      { transform: 'rotateY(0deg) rotateZ(0deg) scale(1)', offset: 0, easing: 'cubic-bezier(.5,0,.9,.7)' },
+      { transform: 'rotateY(720deg) rotateZ(-5deg) scale(1.08)', offset: 0.45, easing: 'cubic-bezier(.4,0,1,.8)' },
+      { transform: 'rotateY(1980deg) rotateZ(6deg) scale(1.18)', offset: 0.8 },
+      { transform: 'rotateY(2880deg) rotateZ(-3deg) scale(1.3)', offset: 1 }
+    ], { duration: T, fill: 'forwards' }));
+    S.anims.push(el.animate([{ filter: 'hue-rotate(0deg) brightness(1)' }, { filter: 'hue-rotate(540deg) brightness(1.3)', offset: 0.7 }, { filter: 'hue-rotate(1100deg) brightness(2.1)' }], { duration: T, fill: 'forwards' }));
+    const t0 = performance.now();
+    const iv = setInterval(() => {
+      const k = (performance.now() - t0) / T;
+      NEV.Fx.stream(cx, cy + 40, { n: 2 + Math.round(k * 6), w: 50 + k * 80, colors: [r.color, '#ff6a3d'] });
+      if (k > 0.4 && Math.random() < 0.5) NEV.Fx.shake(stage, 200, 2 + k * 10);
+    }, 70);
+    S.timers.push(iv);
+    later(() => {                                                   // l'explosion révèle la carte
+      clearInterval(iv);
+      gx.classList.remove('crazy'); el.style.visibility = 'hidden';
+      NEV.Sfx.boom(t); NEV.Fx.flash(t >= 5 ? '#fff' : r.glow, 800); NEV.Fx.shake(stage, 700, 16);
+      shatter(q, r, t);
+      const cols = [r.color, r.glow, '#ffd45e', '#ff8a3d', '#fff'];
+      NEV.Fx.burst(cx, cy, { n: 70 + t * 40, power: 1 + t * 0.15, colors: cols });
+      ring(cx, cy, 160, r.color, 900); later(() => ring(cx, cy, 160, '#fff', 900), 130);
+      if (t >= 4) later(() => NEV.Fx.burst(cx, cy, { n: 120, power: 1.4, colors: cols }), 250);
+      later(settle, 900);
+    }, T);
   }
 
   /* ---------- état final (sans animation en cours) ---------- */
   function clearAnim() { S.timers.forEach(clearTimeout); S.timers = []; S.anims.forEach((a) => { try { a.cancel(); } catch (e) { /* ignoré */ } }); S.anims = []; }
   function settle() {
-    clearAnim();
+    clearAnim(); gx.classList.remove('crazy'); S.els.forEach((e) => { e.style.visibility = ''; });
     S.L = layout();
     S.els.forEach((el, i) => { el.style.width = S.L.cw + 'px'; el.style.height = S.L.ch + 'px'; place(i); });
     $('gxLid').classList.add('open'); $('gxBack').classList.add('lit'); boxFade(0, 0); rays.classList.remove('on'); box(0, 0, 0);
@@ -301,7 +346,7 @@
     S.els.forEach((el) => { try { NEV.Card.tilt(el.querySelector('.gxc-front')); } catch (e) { /* ignoré */ } });
     S.busy = false;
     const fresh = S.fresh && !S.skipped; S.fresh = false; S.skipped = false;
-    if (single && fresh) fx(0);
+    if (single && fresh) { fx(0); if (!reduced) S.els[0].animate([{ filter: 'brightness(4) blur(8px)', opacity: 0.2 }, { filter: 'none', opacity: 1 }], { duration: 650, easing: 'ease-out' }); }
     afterSettle(single);
   }
   function afterSettle() {

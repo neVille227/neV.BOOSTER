@@ -139,3 +139,9 @@ html[data-theme=light] .gx-recap li{background:#fff}
 html[data-theme=light] .prob div{background:#fff}
 .prob b{display:block;font-size:1.05rem;color:var(--cream)}
 @media(max-width:560px){.prob{grid-template-columns:repeat(3,1fr)}}
+
+/* rotation x8 et explosion de la carte */
+.gx.crazy .gx-stage{animation:gxCrazy .4s linear infinite}
+@keyframes gxCrazy{to{filter:hue-rotate(40deg)}}
+.shard{position:fixed;z-index:121;pointer-events:none;will-change:transform,opacity}
+@media(prefers-reduced-motion:reduce){.gx.crazy .gx-stage{animation:none}}

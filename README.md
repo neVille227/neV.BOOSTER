@@ -336,3 +336,6 @@ Page `social.html` (Accueil · Recherche · Messages · Profil) — `js/p-social
 - **Exercices** (`bibliotheque.html`) : trois onglets — Cartes exercice, Cartes combo (Programmes 1 à 5, combos par zone, combos du coach ; un avatar animé par étape), Cartes mythiques. Avec `?zone=`, tout est filtré sur la zone, avec le bouton Gacha de la zone et « Mettre en favori ».
 - **Alimentation et conseils** (`alimentation.html`) : une seule page, deux parties, un sommaire. `p-alimentation.js` et `p-conseils.js` sont des fabriques (`NEV.Nutri.*`) assemblées par `p-nutrition.js`.
 - `programmes.html`, `mythiques.html`, `conseils.html` redirigent vers les nouvelles pages ; menus mis à jour ; `sw.js` = nev-v30.
+
+## V20 — Retour de l'animation de la carte (Gacha)
+Tirage simple : la carte sort de la boîte, tourne 8 fois (2880°) avec lumière et braises, puis explose en morceaux et se révèle. Tirage multiple : chaque carte se retourne avec un tour et demi. `sw.js` = nev-v31.
