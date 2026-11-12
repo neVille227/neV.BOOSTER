@@ -2,9 +2,9 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a0507">
-<title>neV.BOOSTER — Gacha du jour</title>
+<title>neV.BOOSTER — Gacha</title>
 <script src="js/theme.js"></script>
 <link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="css/nev.css">
@@ -15,24 +15,128 @@
 </head>
 <body>
 <div class="page"><div class="wrap">
-  <div class="eyebrow">Gacha du jour</div>
-  <h1 class="big" id="gTitle">Ton tirage du <em>jour</em></h1>
-  <p class="lead" id="gLead">Cinq cartes, une seule pour toi. Le doigt choisit, le hasard décide de ton entraînement.</p>
-  <div id="gAlert" style="margin-top:16px"></div>
+  <div class="eyebrow" id="gEyebrow">Gacha</div>
+  <h1 class="big" id="gTitle">La boîte <em>mystère</em></h1>
+  <p class="lead" id="gLead">Choisis ton tirage et ta catégorie, ouvre la boîte : le hasard décide de ton défi, dans le groupe musculaire que tu as choisi.</p>
+  <div id="gAlert" class="gx-alert"></div>
 
-  <section class="pickrow" id="pick" aria-label="Choisis ton tirage" hidden>
-    <button type="button" class="pk" id="pkOne"><div class="pkh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="11" height="16" rx="2" transform="rotate(-8 10 11)"/><rect x="9" y="5" width="11" height="16" rx="2" transform="rotate(8 14 13)"/></svg><b>Tirer une carte</b></div><span>1 carte parmi 5, une séance claire.</span><span class="chip red">Tirage du jour</span></button>
-    <a class="pk" href="gacha-box.html" data-go><div class="pkh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9"/></svg><b>Gacha Box</b></div><span>La boîte 3D : 4 cartes, un combo.</span><span class="chip gold">4 cartes</span></a>
+  <section class="gx" id="gx" data-phase="idle" aria-label="Gacha">
+    <div class="gx-bar">
+      <span class="gx-cap" id="gxCap">Boîte mystérieuse</span>
+      <span class="gx-btns">
+        <button type="button" class="gx-pill" id="gxSkip">Passer l'animation ›</button>
+        <button type="button" class="gx-pill" id="gxSnd" aria-pressed="true">Son : oui</button>
+      </span>
+    </div>
+    <div class="gx-stage" id="gxStage" role="img" aria-label="Boîte mystérieuse">
+      <div class="gx-rays" id="gxRays" aria-hidden="true"></div>
+      <img class="gx-hero" id="gxHero" alt="" aria-hidden="true" decoding="async">
+      <div class="gx-banner" id="gxBanner" aria-hidden="true"></div>
+
+      <div class="gx-part" id="gxBack">
+        <svg viewBox="0 0 400 400" aria-hidden="true">
+          <defs>
+            <linearGradient id="gxWl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a1a34"/><stop offset="1" stop-color="#2a0912"/></linearGradient>
+            <linearGradient id="gxWr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#651329"/><stop offset="1" stop-color="#220810"/></linearGradient>
+            <radialGradient id="gxHg"><stop offset="0" style="stop-color:rgb(var(--rayc,255,236,200))" stop-opacity=".95"/><stop offset=".5" style="stop-color:rgb(var(--rayc,255,236,200))" stop-opacity=".35"/><stop offset="1" style="stop-color:rgb(var(--rayc,255,236,200))" stop-opacity="0"/></radialGradient>
+          </defs>
+          <ellipse cx="200" cy="392" rx="170" ry="16" fill="#000" opacity=".55"/>
+          <polygon points="60,170 200,100 200,225 60,295" fill="url(#gxWl)"/>
+          <polygon points="200,100 340,170 340,295 200,225" fill="url(#gxWr)"/>
+          <ellipse class="gx-halo" cx="200" cy="168" rx="190" ry="120" fill="url(#gxHg)"/>
+        </svg>
+      </div>
+
+      <div class="gx-cards" id="gxCards" aria-live="off"></div>
+
+      <div class="gx-part" id="gxFront">
+        <svg viewBox="0 0 400 400" aria-hidden="true">
+          <defs>
+            <linearGradient id="gxFl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a1226"/><stop offset="1" stop-color="#1a070d"/></linearGradient>
+            <linearGradient id="gxFr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6e1a31"/><stop offset="1" stop-color="#220a11"/></linearGradient>
+            <linearGradient id="gxGd" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6d58a"/><stop offset="1" stop-color="#c07a1c"/></linearGradient>
+          </defs>
+          <polygon points="60,170 200,240 200,380 60,310" fill="url(#gxFl)"/>
+          <polygon points="200,240 340,170 340,310 200,380" fill="url(#gxFr)"/>
+          <polyline points="60,170 200,240 340,170" fill="none" stroke="url(#gxGd)" stroke-width="2.8" stroke-linejoin="round"/>
+          <line x1="200" y1="240" x2="200" y2="380" stroke="#f6d58a" stroke-opacity=".22" stroke-width="1.5"/>
+          <g transform="translate(130 276) skewY(26.57)"><polygon points="0,-34 24,0 0,34 -24,0" fill="url(#gxGd)" style="filter:drop-shadow(0 0 8px #ff3b5c)"/><polygon points="0,-14 10,0 0,14 -10,0" fill="#2a0a14" opacity=".7"/></g>
+          <polygon points="262,288 290,274 290,300 262,314" fill="none" stroke="#f6d58a" stroke-opacity=".6" stroke-width="2"/>
+          <polygon points="276,283 283,286 276,300 269,297" fill="#f6d58a" opacity=".85" transform="translate(0 -2)"/>
+        </svg>
+      </div>
+
+      <div class="gx-part" id="gxLid">
+        <svg viewBox="0 0 400 400" aria-hidden="true">
+          <defs><linearGradient id="gxLt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a1a34"/><stop offset="1" stop-color="#2a0912"/></linearGradient></defs>
+          <polygon points="52,150 200,224 200,262 52,188" fill="#2a0a14" stroke="#f6d58a" stroke-opacity=".55" stroke-width="1.6" stroke-linejoin="round"/>
+          <polygon points="200,224 348,150 348,188 200,262" fill="#3a0e1b" stroke="#f6d58a" stroke-opacity=".55" stroke-width="1.6" stroke-linejoin="round"/>
+          <polygon points="200,76 348,150 200,224 52,150" fill="url(#gxLt)" stroke="#f6d58a" stroke-opacity=".95" stroke-width="2.2" stroke-linejoin="round"/>
+          <polygon points="200,100 316,150 200,200 84,150" fill="none" stroke="#f6d58a" stroke-opacity=".28" stroke-width="1.2"/>
+        </svg>
+      </div>
+
+      <p class="gx-hint" id="gxHint"></p>
+      <div class="gx-flash" id="gxFlash"></div>
+    </div>
   </section>
 
-  <section class="gstage" id="gstage" aria-label="Zone de tirage">
-    <button type="button" class="snd" id="snd" aria-pressed="false">Son : oui</button>
-    <div id="board">
-      <div class="gtable" id="gtable"></div>
-      <p class="gmsg" id="gmsg" role="status"></p>
-      <div class="gactions" id="gactions"><button type="button" class="btn big" id="btnDraw">Tirer ma carte</button></div>
+  <section class="panel gx-panel" id="gxPanel" aria-label="Commandes du tirage">
+    <!-- 1 · type de tirage et catégorie -->
+    <div class="gx-view" id="vIdle">
+      <div class="gx-sec" id="secType">
+        <p class="gx-lbl"><i>1</i>Type de tirage</p>
+        <div class="gx-seg" id="gxSeg" role="group" aria-label="Type de tirage">
+          <button type="button" data-mode="single" aria-pressed="true"><b>Tirage simple</b><small>1 carte</small></button>
+          <button type="button" data-mode="multi" aria-pressed="false"><b>Tirage multiple</b><small>4 cartes</small></button>
+        </div>
+      </div>
+      <div class="gx-sec" id="secCat">
+        <p class="gx-lbl"><i>2</i>Catégorie d'exercices</p>
+        <div class="gx-chips" id="gxChips" role="group" aria-label="Catégorie d'exercices"></div>
+      </div>
+      <p class="gx-note" id="gxNote" role="status"></p>
+      <div class="gx-act">
+        <button type="button" class="gx-cta" id="gxDraw">TIRER</button>
+        <button type="button" class="gx-ghost" id="gxBonus" hidden>🎁 Tirage bonus</button>
+      </div>
+      <div class="gx-legend" id="gxLegend" aria-label="Taux de rareté"></div>
     </div>
-    <div class="reveal" id="reveal" hidden></div>
+
+    <!-- 2 · animation en cours -->
+    <div class="gx-view" id="vBusy"><p class="gx-status" id="gxBusy" role="status">Ouverture de la boîte…</p></div>
+
+    <!-- 3 · résultat : retourner, sélectionner, relever le défi -->
+    <div class="gx-view" id="vResult">
+      <p class="gx-status" id="gxRes" role="status" aria-live="polite"></p>
+      <div class="gx-meta" id="gxMeta"></div>
+      <div class="gx-act">
+        <button type="button" class="gx-ghost" id="gxAll">Tout révéler</button>
+        <button type="button" class="gx-cta sm" id="gxGo">RELEVER CE DÉFI</button>
+        <button type="button" class="gx-ghost" id="gxAgain">Autre tirage</button>
+      </div>
+    </div>
+
+    <!-- 4 · confirmation du tirage multiple -->
+    <div class="gx-view" id="vConfirm">
+      <p class="gx-status" id="gxConfT"></p>
+      <ol class="gx-recap" id="gxConfL"></ol>
+      <div class="gx-act">
+        <button type="button" class="gx-ghost" id="gxEdit">Modifier ma sélection</button>
+        <button type="button" class="gx-cta sm" id="gxStart">LANCER LA SÉANCE</button>
+      </div>
+    </div>
+
+    <!-- 5 · défi validé -->
+    <div class="gx-view" id="vDone">
+      <p class="gx-status ok" id="gxDoneT">Défi validé ✓</p>
+      <ol class="gx-recap" id="gxDoneL"></ol>
+      <div class="gx-act">
+        <a class="gx-ghost" href="accueil.html" data-go>Retour à l'accueil</a>
+        <button type="button" class="gx-ghost" id="gxAgain2">Autre tirage</button>
+      </div>
+    </div>
+    <div class="sr" id="gxLive" aria-live="polite"></div>
   </section>
 
   <details class="odds panel" style="margin-top:22px">
@@ -40,6 +144,7 @@
     <p class="muted" id="oddsTxt" style="margin:10px 0 0"></p>
     <div class="prob" id="prob"></div>
     <p class="muted" id="spTxt" style="margin:12px 0 0;font-size:.88rem"></p>
+    <p class="muted" id="boxTxt" style="margin:12px 0 0;font-size:.88rem"></p>
   </details>
 </div></div>
 <script src="js/core.js"></script>
@@ -52,12 +157,14 @@
 <script src="js/ex-extra.js"></script>
 <script src="js/exercises.js"></script>
 <script src="js/zones.js"></script>
+<script src="js/combos.js"></script>
 <script src="js/gachaengine.js"></script>
 <script src="js/figure.js"></script>
 <script src="js/card.js"></script>
 <script src="js/mannequin3d.js"></script>
 <script src="js/sfx.js"></script>
 <script src="js/fx.js"></script>
+<script src="js/gacha-config.js"></script>
 <script src="js/p-gacha.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/pwa.js"></script>

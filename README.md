@@ -307,3 +307,20 @@ Page `social.html` (Accueil · Recherche · Messages · Profil) — `js/p-social
 - **Classement** : onglets Joueurs · Clans · Défis, catégories (Score + chaque défi : pompes, squats…), podium, bandeau Coach avec compte à rebours, lignes avec barre de progression.
 - **Admin** : barre latérale à icônes, barre du haut avec recherche de joueur, 6 cartes de statistiques avec courbes et évolution, graphiques (barres, anneau des niveaux), tâches récentes (`admin/tasks`), annonce rapide, courbe de fréquentation 7j/30j/90j/1an (`admin/stats/series`), page Statistiques, menu mobile. Palette du site inchangée.
 - Tests : 286 réussis (seul échec connu : `assetlinks.json`). Service worker `nev-v25`.
+
+## V16 — Intro « carte à gratter »
+- Nouveau module `js/scratch-logo.js` (canvas, sans image) : neV.BOOSTER recouvert d'une feuille d'argent qu'une pièce gratte en zigzag, puis lueur + « Booste ton quotidien. ».
+- Homme (`index.html`, `intro.js`, `intro.css`) : tracé → carte à gratter → histoire animée (l'écran « Notre vision » est retiré).
+- Femme (`femme/intro.html`, `intro.js`, `intro.css`) : carte à gratter (thème clair) → 4 scènes d'histoire → Yuki (l'écran « Ton parcours commence ici » est retiré).
+- Page Clans lisible sur mobile (`css/classement.css`). Cache du service worker : `nev-v27`.
+
+
+## V17 — Gacha unique et photo de profil
+
+- **Une seule page Gacha** (`gacha.html`, `css/gacha.css`, `js/p-gacha.js`) remplace Gacha et Gacha Box. Parcours : boîte mystérieuse → tirage simple (1 carte) ou multiple (4 cartes) → catégorie (Pectoraux, Abdominaux, Jambes, Épaules, Cardio, Dos, Bras, Au hasard) → TIRER → zoom 3D, pause, couvercle, lumière, sortie des cartes → révélation → validation.
+- Le tirage est décidé par le moteur **avant** l'animation et enregistré (`NEV.Gacha.ensureCard` / `ensureBox`, option `cat`) : la catégorie est toujours respectée, seule la rareté est tirée (N, R, SR, UR, MR).
+- Tirage multiple : on retourne les cartes, on sélectionne celles à relever (`p.box.picked`), on confirme, puis `exercice.html?src=box` ne joue que les cartes choisies (`NEV.player.boxPlayed`).
+- `gacha-box.html` redirige vers `gacha.html?mode=multi`. Supprimés : `p-gacha-box.js`, `gacha-box3d.js`, `gacha-box-cards.js`, `gacha-box.css`.
+- Image personnalisée de l'écran d'accueil : `js/gacha-config.js` → `heroImage: 'img/gacha-mains.webp'` (image dont tu as les droits).
+- Photo de profil personnalisée : `js/avatar-upload.js` (compte, social, messages) ; le serveur accepte les images jusqu'à 61 ko (profil) et 201 ko (message).
+- Service worker : `nev-v28`.
