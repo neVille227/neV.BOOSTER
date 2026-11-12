@@ -30,7 +30,9 @@
   function run() {
     T.forEach(clearTimeout); T = [];
     var at = 0;
-    D.forEach(function (d, i) { T.push(setTimeout(function () { show(i); }, (reduced ? i * 2500 : at * 1000))); at += d; });
+    /* Après la carte à gratter : l'introduction racontée (voix off), puis l'accueil. */
+    T.push(setTimeout(function () { show(0); }, 0));
+    T.push(setTimeout(function () { location.href = '../intro-nvb.html?intro=1&sex=f'; }, reduced ? 1500 : D[0] * 1000));
   }
   document.getElementById('again').addEventListener('click', run);
   run();

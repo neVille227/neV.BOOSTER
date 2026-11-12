@@ -27,7 +27,7 @@
     if(leaving)return; leaving=true; clear(); mark(2);
     if(scr) scr.stop();
     document.documentElement.classList.add('nev-leaving');   // flou + éclat d'une seconde, puis l'histoire animée
-    setTimeout(function(){location.href='histoire-anime.html?intro=1'},reduced?0:750);
+    setTimeout(function(){location.href='intro-nvb.html?intro=1'},reduced?0:750);
   }
   function toAccount(){
     if(leaving)return; leaving=true; clear();
