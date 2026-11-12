@@ -1,0 +1,14 @@
+À SUPPRIMER du dépôt (histoire animée et version simple, plus utilisées) :
+histoire-anime.html
+histoire.html
+css/histoire-anime.css
+css/histoire.css
+js/histoire-anime.js
+js/histoire-anime-data.js
+js/story-scenes.js
+js/story-rig.js
+js/histoire3d.js
+media/histoire-voix.mp3
+media/histoire-neVBOOSTER-paysage.mp4
+media/histoire-neVBOOSTER-portrait.mp4
+(Garde js/figure3d.js : il sert encore à l'accueil.)

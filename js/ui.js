@@ -128,7 +128,7 @@
     if (active !== 'tuto') doc.body.appendChild(help);
     if (!doc.querySelector('.sitefoot')) {
       const foot = doc.createElement('footer'); foot.className = 'sitefoot';
-      foot.innerHTML = '<div class="wrap"><span>neV.BOOSTER · Booste ton quotidien</span><nav aria-label="Informations légales"><a href="conditions.html" data-go>Conditions</a><a href="confidentialite.html" data-go>Confidentialité</a><a href="mentions-legales.html" data-go>Mentions légales</a><a href="histoire.html" data-go>Son histoire en 3D</a>' + (user ? '<a href="compte.html" data-go>Mon compte</a>' : '') + '</nav></div>';
+      foot.innerHTML = '<div class="wrap"><span>neV.BOOSTER · Booste ton quotidien</span><nav aria-label="Informations légales"><a href="conditions.html" data-go>Conditions</a><a href="confidentialite.html" data-go>Confidentialité</a><a href="mentions-legales.html" data-go>Mentions légales</a>' + (user ? '<a href="compte.html" data-go>Mon compte</a>' : '') + '</nav></div>';
       doc.body.appendChild(foot);
     }
     const logout = function () { NEV.auth.logout(); NEV.go('connexion.html'); };
