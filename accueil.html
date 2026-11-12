@@ -34,6 +34,8 @@
   .heroBox .name{font-weight:900;font-size:1.35rem;margin-top:6px}
   .heroBox .bar{width:86%;margin:12px auto 6px}
   .heroBox small{color:var(--muted)}
+  .heroEdit{margin-top:12px;padding:9px 16px;border-radius:99px;border:1px solid #ffffff2a;font-weight:800;font-size:.82rem;text-decoration:none;color:inherit}
+  html[data-theme=light] .heroEdit{border-color:var(--line)}
   .coachC{border-radius:20px;padding:20px;background:linear-gradient(135deg,#a62445,#ff7043);color:#fff}
   .coachC .tg{display:inline-block;padding:5px 12px;border-radius:99px;background:#0000004d;font-size:.66rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
   .coachC h3{margin:12px 0;font-size:1.15rem;font-weight:900;line-height:1.25}
@@ -80,7 +82,7 @@
       <section class="panel qdc c-qd" id="qd" aria-labelledby="qdT"></section>
     </div>
     <div class="col c2">
-      <section class="panel heroBox" id="heroBox"><div class="eyebrow">Ton avatar</div><div class="stage" id="hero"></div><div class="name" id="heroName"></div><div class="bar"><i id="heroBar" style="width:0"></i></div><small id="heroXp"></small></section>
+      <section class="panel heroBox" id="heroBox"><div class="eyebrow">Ton avatar</div><div class="stage" id="hero"></div><div class="name" id="heroName"></div><div class="bar"><i id="heroBar" style="width:0"></i></div><small id="heroXp"></small><a class="heroEdit" href="avatar.html" data-go>Personnaliser mon avatar</a></section>
     </div>
     <div class="col c3">
       <section class="coachC c-coach" id="coachC"><span class="tg">Annonce du coach</span><h3 id="coachT">Il y a un défi, va le voir.</h3><a href="defis.html" data-go>Voir le défi</a></section>

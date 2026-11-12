@@ -48,8 +48,9 @@
   const GROUPS = ['chest', 'delts', 'uarm', 'forearms', 'abs', 'back', 'glutes', 'quads', 'calves', 'neck', 'hands'];
   const MUSCLE_GROUP = { chest: ['chest'], shoulders: ['delts'], triceps: ['uarm'], biceps: ['uarm'], forearms: ['forearms'], hands: ['hands'], abs: ['abs'], core: ['abs'], obliques: ['abs'], back: ['back'], lowback: ['back'], lats: ['back'], traps: ['back', 'neck'], glutes: ['glutes'], quads: ['quads'], hamstrings: ['quads'], calves: ['calves'], neck: ['neck'] };
   function col(hex) { return new T.Color(hex).convertSRGBToLinear(); }
+  function av3() { try { return (NEV.Avatar && NEV.Avatar.three()) || {}; } catch (e) { return {}; } }
   function skin() {
-    const m = new T.MeshPhysicalMaterial({ color: col(PF.skin), roughness: 0.42, metalness: 0.02, clearcoat: 0.45, clearcoatRoughness: 0.34, emissive: new T.Color(0x000000) });
+    const m = new T.MeshPhysicalMaterial({ color: col(av3().skin != null ? av3().skin : PF.skin), roughness: 0.42, metalness: 0.02, clearcoat: 0.45, clearcoatRoughness: 0.34, emissive: new T.Color(0x000000) });
     m.onBeforeCompile = function (sh) {
       sh.fragmentShader = sh.fragmentShader.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );',
         'float nvRim = pow(1.0 - saturate(dot(normalize(vNormal), normalize(vViewPosition))), 2.6); outgoingLight += vec3(' + PF.rimc.join(',') + ') * nvRim * .6;\n gl_FragColor = vec4( outgoingLight, diffuseColor.a );');
@@ -57,7 +58,7 @@
     return m;
   }
   function makeMats() {
-    const M = { skin: skin(), sh: new T.MeshStandardMaterial({ color: col(0x16141d), roughness: 0.8 }), wb: new T.MeshStandardMaterial({ color: col(0x34303f), roughness: 0.55, metalness: 0.1 }), br: new T.MeshStandardMaterial({ color: col(0x17161e), roughness: 0.7 }), hr: new T.MeshStandardMaterial({ color: col(0x1b1922), roughness: 0.42, metalness: 0.25 }), g: {} };
+    const M = { skin: skin(), sh: new T.MeshStandardMaterial({ color: col(av3().outfit != null ? av3().outfit : 0x16141d), roughness: 0.8 }), wb: new T.MeshStandardMaterial({ color: col(0x34303f), roughness: 0.55, metalness: 0.1 }), br: new T.MeshStandardMaterial({ color: col(av3().outfit != null ? av3().outfit : 0x17161e), roughness: 0.7 }), hr: new T.MeshStandardMaterial({ color: col(av3().hair != null ? av3().hair : 0x1b1922), roughness: 0.42, metalness: 0.25 }), g: {} };
     GROUPS.forEach(function (k) { M.g[k] = k === 'glutes' ? new T.MeshStandardMaterial({ color: col(0x16141d), roughness: 0.8, emissive: new T.Color(0) }) : skin(); });
     return M;
   }

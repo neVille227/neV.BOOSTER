@@ -52,6 +52,7 @@
     ['recompenses', 'recompenses.html', 'Récompenses', I.gift, 0, 0],
     ['tuto', 'tuto.html', 'Tuto', I.help, 0, 0],
     ['apropos', 'apropos.html', 'À propos', I.info, 0, 0],
+    ['avatar', 'avatar.html', 'Mon avatar', I.me, 0, 0],
     ['compte', 'compte.html', 'Mon compte', I.me, 0, 0]
   ];
   /* Barre latérale : tout le menu, rangé par thème. */
@@ -59,7 +60,7 @@
     ['Principal', ['accueil', 'quete', 'gacha']],
     ['Entraînement', ['specialisation', 'bibliotheque', 'alimentation']],
     ['Communauté', ['social', 'clans', 'defis', 'classement', 'recompenses', 'coachs']],
-    ['Mon espace', ['apropos', 'tuto', 'compte']]
+    ['Mon espace', ['avatar', 'apropos', 'tuto', 'compte']]
   ];
 
   /* Espace communautaire unique : Profils et messages, Chat et Amis sont trois onglets d'une même entrée de menu. */
@@ -70,7 +71,7 @@
   const DESC = {
     accueil: 'Ton tableau de bord', quete: 'Objectifs du jour et combo du coach', gacha: 'Boîte mystère : tirage simple ou multiple', specialisation: 'Touche une zone du corps, on te montre ses exercices',
     bibliotheque: 'Exercices, combos et cartes mythiques, animés',
-    alimentation: 'Repas, sommeil, eau et récupération', social: 'Profils, messages privés, contacts', clans: 'Rejoins un clan et cumule l\'XP', chat: 'Parle au coach et aux joueurs', amis: 'Ajoute des amis par code', coachs: 'Les coachs du site', apropos: 'Toi, le site, les infos légales', recompenses: 'Flammes, badges, parrainage', defis: 'Pompes, squats, gainage : bats ton record', classement: 'Public et entre amis', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'
+    avatar: 'Peau, cheveux, yeux, tenue : crée ton avatar', alimentation: 'Repas, sommeil, eau et récupération', social: 'Profils, messages privés, contacts', clans: 'Rejoins un clan et cumule l\'XP', chat: 'Parle au coach et aux joueurs', amis: 'Ajoute des amis par code', coachs: 'Les coachs du site', apropos: 'Toi, le site, les infos légales', recompenses: 'Flammes, badges, parrainage', defis: 'Pompes, squats, gainage : bats ton record', classement: 'Public et entre amis', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'
   };
   I.menu = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 8h16M4 16h16"/></svg>';
   I.close = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
