@@ -261,7 +261,7 @@
     if (!p.locked) {
       h += '<div class="sp-tiles">' + tile(p.streak || 0, 'Flammes') + tile(p.xp || 0, 'XP cumulés') + tile(stageOf(p.xp, p.sex).stage.n, 'Niveau') + tile(p.contacts || 0, 'Contacts') + '</div>';
       h += '<div class="sp-cols"><div><h3>Badges</h3>' + badges(p) + '</div><div><h3>Repères</h3><ul class="sp-act"><li><b>' + (p.streak || 0) + '</b> jour' + (p.streak > 1 ? 's' : '') + ' de série en cours</li><li><b>' + (p.sessions || 0) + '</b> séance' + (p.sessions > 1 ? 's' : '') + ' validée' + (p.sessions > 1 ? 's' : '') + '</li><li>Palier actuel : <b>' + esc(stageOf(p.xp, p.sex).stage.name) + '</b></li>' + (p.since ? '<li>Membre depuis ' + esc(new Date(p.since).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })) + '</li>' : '') + '</ul></div></div>';
-      if (self) h += '<h3>Cartes mythiques</h3><div class="sp-myth">' + MYTH.map((n) => '<div class="sp-mc"><span>MR</span><b>' + esc(n) + '</b></div>').join('') + '<a class="b g" href="mythiques.html" data-go>Voir la collection</a></div><div id="myc"></div>';
+      if (self) h += '<h3>Cartes mythiques</h3><div class="sp-myth">' + MYTH.map((n) => '<div class="sp-mc"><span>MR</span><b>' + esc(n) + '</b></div>').join('') + '<a class="b g" href="bibliotheque.html?tab=myth" data-go>Voir la collection</a></div><div id="myc"></div>';
     }
     body.innerHTML = h;
     if (self && !p.locked) api('friends').then((x) => {

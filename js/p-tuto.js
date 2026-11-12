@@ -49,8 +49,8 @@
     '<a href="gacha.html?mode=multi" data-go><b>Tirage multiple</b><span>La boîte mystère : 4 cartes, tu choisis tes défis.</span></a>' +
     '<a href="specialisation.html" data-go><b>Travailler une zone du corps</b><span>Cou, épaules, abdos, jambes, doigts…</span></a>' +
     '<a href="bibliotheque.html" data-go><b>Voir tous les exercices</b><span>La bibliothèque, par catégories et difficulté.</span></a>' +
-    '<a href="programmes.html" data-go><b>Suivre un programme</b><span>25 programmes prêts à lancer.</span></a>' +
-    '<a href="conseils.html" data-go><b>Mieux dormir, mieux récupérer</b><span>Sommeil, eau, lait, échauffement.</span></a>' +
+    '<a href="bibliotheque.html?tab=combo" data-go><b>Suivre un programme</b><span>25 programmes prêts à lancer.</span></a>' +
+    '<a href="alimentation.html#conseils" data-go><b>Mieux dormir, mieux récupérer</b><span>Sommeil, eau, lait, échauffement.</span></a>' +
     '<a href="alimentation.html" data-go><b>Savoir quoi manger</b><span>Pourquoi tu as faim, menus et calculateur.</span></a>' +
     '<a href="recompenses.html" data-go><b>Voir mes flammes et badges</b><span>Et inviter des amis.</span></a>' +
     '<a href="chat.html" data-go><b>Parler avec la communauté</b><span>Le chat des utilisateurs et de l\'équipe.</span></a></div>');
@@ -100,11 +100,11 @@
     acc('Comment gagner plus de flammes ?', 'Connecte-toi chaque jour, atteins les paliers de 7 et 30 jours d\'affilée, et parraine des amis.') +
     acc('Puis-je changer mon maximum de pompes ?', 'Oui. Quand tu progresses, refais le test et mets-le à jour : tes cartes s\'adaptent à ton nouveau niveau.') +
     acc('À quelle heure change le jour ?', 'À minuit, selon l\'heure de ton appareil.') +
-    acc('Où trouver des conseils sur le sommeil et la nourriture ?', 'Dans les pages <a href="conseils.html" data-go>Conseils</a> et <a href="alimentation.html" data-go>Alimentation</a>.'));
+    acc('Où trouver des conseils sur le sommeil et la nourriture ?', 'Dans les pages <a href="alimentation.html" data-go>Alimentation et conseils</a>.'));
 
   $('toc').innerHTML = S.map((s) => '<a href="#' + s.id + '">' + s.ico + ' ' + esc(s.title) + '</a>').join('');
   $('art').innerHTML = S.map((s) => '<section id="' + s.id + '"><h2><span class="ico">' + s.ico + '</span>' + esc(s.title) + '</h2>' + s.html + '</section>').join('') +
-    '<div class="cta"><a class="btn" href="gacha.html" data-go>Tirer ma carte</a><a class="btn ghost" href="conseils.html" data-go>Voir les conseils</a></div>';
+    '<div class="cta"><a class="btn" href="gacha.html" data-go>Tirer ma carte</a><a class="btn ghost" href="alimentation.html#conseils" data-go>Voir les conseils</a></div>';
   const hv = $('hvid');   /* la vidéo de l'histoire s'adapte à l'écran : portrait sur téléphone debout, paysage sinon */
   if (hv) hv.src = (window.matchMedia && window.matchMedia('(orientation: portrait)').matches) ? 'media/histoire-neVBOOSTER-portrait.mp4' : 'media/histoire-neVBOOSTER-paysage.mp4';
   const links = Array.from($('toc').querySelectorAll('a'));

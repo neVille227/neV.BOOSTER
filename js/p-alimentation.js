@@ -1,10 +1,10 @@
 /* neV.BOOSTER — page Alimentation (publique) */
-(async function () {
+NEV.Nutri = NEV.Nutri || {};
+NEV.Nutri.alim = function (ctx) {
   'use strict';
   const $ = (id) => document.getElementById(id);
   const esc = NEV.util.esc, F = NEV.FOODS, byId = {};
   F.forEach((f) => { byId[f.id] = f; });
-  const ctx = await NEV.bootPublic('alimentation');
   const user = ctx.user;
   const co = (ico, cls, html) => '<div class="callout ' + cls + '"><span class="ci">' + ico + '</span><p>' + html + '</p></div>';
   const acc = (q, a) => '<details class="acc"><summary>' + q + '</summary><div class="in">' + a + '</div></details>';
@@ -15,7 +15,7 @@
   const add = (a, b) => ({ kcal: a.kcal + b.kcal, p: a.p + b.p, g: a.g + b.g, l: a.l + b.l });
   const ZERO = { kcal: 0, p: 0, g: 0, l: 0 };
 
-  $('tip').innerHTML = '<div class="tip-ico" aria-hidden="true">🍽️</div><div><b>Le principe</b><p>Des protéines à chaque repas, des féculents pour l\'énergie, des légumes et des fruits pour les vitamines, de l\'eau, et du sommeil pour que tout cela serve à tes muscles.</p></div>';
+  const tipHtml = '<div class="tip-ico" aria-hidden="true">🍽️</div><div><b>Le principe</b><p>Des protéines à chaque repas, des féculents pour l\'énergie, des légumes et des fruits pour les vitamines, de l\'eau, et du sommeil pour que tout cela serve à tes muscles.</p></div>';
 
   const S = [];
   const sec = (id, ico, title, html) => S.push({ id, ico, title, html });
@@ -71,7 +71,7 @@
     '<p>Pas obligatoires. La nourriture d\'abord. Une poudre de protéines peut dépanner si tu ne manges pas assez de protéines, mais ce n\'est jamais indispensable.</p>' +
     co('🚫', 'warn', 'Méfie-toi des « boosters », « brûleurs de graisse » et produits sans étiquette claire : ils peuvent être dangereux. Les produits dopants et hormones sont interdits pour progresser. <b>Moins de 18 ans : pas de complément sans avis médical.</b>'));
 
-  sec('mythes', '🧪', 'Mythes',
+  sec('mythes-alim', '🧪', 'Mythes',
     acc('« Il faut manger énormément de viande »', 'Non. Haricots, œufs, poisson, arachide, lait et soja font très bien l\'affaire, associés à des féculents.') +
     acc('« Les féculents font grossir »', 'Pas par eux-mêmes. Ils donnent l\'énergie ; c\'est la quantité totale sur la durée qui compte.') +
     acc('« Manger après 20 h fait grossir »', 'Ce qui compte, c\'est le total sur la journée, pas l\'heure précise.') +
@@ -81,7 +81,7 @@
     acc('« Il faut manger tout de suite après la séance »', 'Un repas dans les 2 heures suffit largement.') +
     acc('« Un régime très strict fait fondre plus vite »', 'Il fait surtout perdre du muscle, de l\'énergie et du moral. Pas de régime extrême.'));
 
-  sec('faq', '❓', 'Questions fréquentes',
+  sec('faq-alim', '❓', 'Questions fréquentes',
     acc('Combien de repas par jour ?', '3 repas et 1 ou 2 collations est un bon rythme pour répondre à la faim sans te surcharger.') +
     acc('Je n\'ai pas faim le matin, que faire ?', 'Commence par peu : un fruit, une boisson de lait ou de soja, quelques arachides. L\'appétit revient avec l\'habitude.') +
     acc('Je suis toujours fatigué malgré le sommeil.', 'Vérifie que tu manges assez (surtout féculents et protéines), que tu bois, et parle-en à un médecin si cela dure : fer, paludisme, anémie…') +
@@ -93,14 +93,7 @@
     acc('Comment prendre du poids sainement ?', 'Ajoute des collations riches (arachide, banane, yaourt, œufs) et un peu plus de féculents, sans te forcer à l\'excès.') +
     acc('Comment perdre du gras sans perdre mes muscles ?', 'Reste régulier, garde les protéines, évite les régimes stricts. Pour les moins de 18 ans, ne cherche pas à maigrir sans avis médical.'));
 
-  $('toc').innerHTML = S.map((s) => '<a href="#' + s.id + '">' + s.ico + ' ' + esc(s.title.length > 26 ? s.title.slice(0, 24) + '…' : s.title) + '</a>').join('');
-  $('art').innerHTML = S.map((s) => '<section id="' + s.id + '"><h2><span class="ico">' + s.ico + '</span>' + esc(s.title) + '</h2>' + s.html + '</section>').join('') +
-    '<div class="cta"><a class="btn" href="conseils.html" data-go>Voir les conseils</a><a class="btn ghost" href="tuto.html" data-go>Le tuto du site</a></div>';
-  const links = Array.from($('toc').querySelectorAll('a'));
-  if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) links.forEach((a) => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id)); }), { rootMargin: '-20% 0px -70% 0px' });
-    S.forEach((s) => { const el = $(s.id); if (el) io.observe(el); });
-  }
+  return { S: S, tip: tipHtml, after: function () {
 
   /* ----- tableau d'aliments ----- */
   function table() {
@@ -176,4 +169,5 @@
     }).join('') + '</div><p class="muted" style="margin-top:10px">Total estimé : <b>' + Math.round(T.kcal) + ' kcal</b> · <b>' + Math.round(T.p) + ' g</b> de protéines. C\'est un exemple : adapte les quantités à ta faim.</p>';
   }
   $('mgo').addEventListener('click', menu); ['mb', 'ml', 'mv', 'mf', 'mn'].forEach((id) => $(id).addEventListener('change', menu)); menu();
-})();
+  } };
+};

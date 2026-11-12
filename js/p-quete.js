@@ -22,7 +22,7 @@
   const pm = POOL[sd % POOL.length];
   const Q = [
     { id: 'card', t: 'Valider la carte du jour', s: p.daily.status === 'done' ? 'Bravo !' : 'Un seul tirage par jour.', auto: p.daily.status === 'done', link: p.daily.status === 'none' ? ['gacha.html', 'Tirer'] : p.daily.status === 'done' ? null : ['exercice.html', 'Lancer'] },
-    { id: 'water', t: 'Boire ' + ws.goal + ' verres d\'eau', s: ws.n + ' / ' + ws.goal + ' verres', auto: ws.n >= ws.goal, link: ['conseils.html#eau', 'Compteur'] },
+    { id: 'water', t: 'Boire ' + ws.goal + ' verres d\'eau', s: ws.n + ' / ' + ws.goal + ' verres', auto: ws.n >= ws.goal, link: ['alimentation.html#eau', 'Compteur'] },
     { id: 'warm', t: 'T\'échauffer 3 minutes', s: 'Épaules, poignets, hanches.', auto: false },
     { id: 'extra', t: pm[0], s: pm[1], auto: false },
     { id: 'bonus', t: 'Bonus : un tirage Spécialisation ou un combo', s: 'Facultatif, rien n\'est imposé.', auto: spe || comboToday, bonus: true, link: spe || comboToday ? null : ['specialisation.html', 'Choisir'] }
@@ -54,7 +54,7 @@
   const stp = NEV.Combos.steps(sg, p, user);
   $('sugg').innerHTML = '<div class="eyebrow">Suggestion du jour</div><h3 style="margin-top:4px">' + esc(sg.title) + '</h3><p class="muted" style="margin:0 0 8px">Carte ' + sg.n + ' · niveau ' + esc(sg.lvl) + ' · ≈ ' + NEV.Combos.minutes(sg, p, user) + ' min</p><ol style="margin:0 0 12px;padding-left:1.2em;font-size:.9rem;color:#ecd2d6">' +
     stp.map((s) => '<li>' + esc(s.ex.name) + ' <span class="muted">— ' + s.plan.sets + ' × ' + esc(NEV.Ex.amountText(s.plan.unit, s.plan.perSet)) + '</span></li>').join('') + '</ol>' +
-    '<a class="btn ok sm" href="exercice.html?src=combo&id=' + encodeURIComponent(sg.id) + '" data-go>Lancer cette carte</a> <a class="btn ghost sm" href="programmes.html#n' + lv + '" data-go>Tous les programmes</a>';
+    '<a class="btn ok sm" href="exercice.html?src=combo&id=' + encodeURIComponent(sg.id) + '" data-go>Lancer cette carte</a> <a class="btn ghost sm" href="bibliotheque.html?tab=combo' + '" data-go>Tous les programmes</a>';
 
   /* ---------- calendrier des 28 derniers jours ---------- */
   const trained = {}, other = {};

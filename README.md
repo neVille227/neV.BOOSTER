@@ -330,3 +330,9 @@ Page `social.html` (Accueil · Recherche · Messages · Profil) — `js/p-social
 - Après la carte à gratter, l'ouverture du site (homme et femme) enchaîne sur `intro-nvb.html` : 7 séquences illustrées (constat, idée, hasard, régularité, niveaux, vision, GO), voix off grave (`media/intro-voix-grave.mp3`, extraite de la vidéo « voix grave »), sous-titres mot à mot calés sur la voix.
 - Fin : GO ou « Passer » → création du compte (homme) ou accueil (joueuse). `histoire-anime.html` reste accessible depuis le pied de page.
 - Service worker : `nev-v29`.
+
+## V19 — Spécialisation, Exercices, Alimentation et conseils
+- **Spécialisation** : animation « Notre vision » (texte qui s'écrit, bouton Passer), puis le corps de face et de dos sans noms. On touche une zone : on arrive sur `bibliotheque.html?zone=<id>`. Plus de combos ici.
+- **Exercices** (`bibliotheque.html`) : trois onglets — Cartes exercice, Cartes combo (Programmes 1 à 5, combos par zone, combos du coach ; un avatar animé par étape), Cartes mythiques. Avec `?zone=`, tout est filtré sur la zone, avec le bouton Gacha de la zone et « Mettre en favori ».
+- **Alimentation et conseils** (`alimentation.html`) : une seule page, deux parties, un sommaire. `p-alimentation.js` et `p-conseils.js` sont des fabriques (`NEV.Nutri.*`) assemblées par `p-nutrition.js`.
+- `programmes.html`, `mythiques.html`, `conseils.html` redirigent vers les nouvelles pages ; menus mis à jour ; `sw.js` = nev-v30.
