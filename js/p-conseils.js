@@ -1,9 +1,9 @@
 /* neV.BOOSTER — page Conseils (publique) */
-(async function () {
+NEV.Nutri = NEV.Nutri || {};
+NEV.Nutri.cons = function (ctx) {
   'use strict';
   const $ = (id) => document.getElementById(id);
   const esc = NEV.util.esc;
-  const ctx = await NEV.bootPublic('conseils');
   const user = ctx.user;
   const today = NEV.util.todayStr();
   const co = (ico, cls, html) => '<div class="callout ' + cls + '"><span class="ci">' + ico + '</span><p>' + html + '</p></div>';
@@ -46,7 +46,7 @@
     'Dormir tard le week-end ne rattrape pas toute la fatigue : garde des horaires réguliers.'
   ];
   const day = Math.floor(NEV.util.parseDay(today) / 86400000);
-  $('tip').innerHTML = '<div class="tip-ico" aria-hidden="true">💡</div><div><b>Conseil du jour</b><p>' + esc(TIPS[day % TIPS.length]) + '</p></div>';
+  const tipHtml = '<div class="tip-ico" aria-hidden="true">💡</div><div><b>Conseil du jour</b><p>' + esc(TIPS[day % TIPS.length]) + '</p></div>';
 
   /* ---------- contenu ---------- */
   const S = [];
@@ -130,16 +130,7 @@
     acc('Est-ce dangereux pour un adolescent ?', 'Les exercices au poids du corps bien exécutés sont sûrs. Évite les charges lourdes et parle à un adulte en cas de doute.') +
     acc('Comment rester motivé ?', 'Fixe un petit objectif, suis ta série, gagne des flammes et des badges, et entraîne-toi avec un ami (parrainage).'));
 
-  /* ---------- rendu ---------- */
-  $('toc').innerHTML = S.map((s) => '<a href="#' + s.id + '">' + s.ico + ' ' + esc(s.title) + '</a>').join('');
-  $('art').innerHTML = S.map((s) => '<section id="' + s.id + '"><h2><span class="ico">' + s.ico + '</span>' + esc(s.title) + '</h2>' + s.html + '</section>').join('') +
-    '<div class="cta"><a class="btn" href="alimentation.html" data-go>Voir l\'alimentation</a><a class="btn ghost" href="tuto.html" data-go>Le tuto du site</a>' + (user ? '<a class="btn ok" href="gacha.html" data-go>Mon gacha du jour</a>' : '<a class="btn ok" href="connexion.html" data-go>Créer mon compte</a>') + '</div>';
-
-  const links = Array.from($('toc').querySelectorAll('a'));
-  if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) links.forEach((a) => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id)); }), { rootMargin: '-20% 0px -70% 0px' });
-    S.forEach((s) => { const el = $(s.id); if (el) io.observe(el); });
-  }
+  return { S: S, tip: tipHtml, after: function () {
 
   /* calculateur de coucher */
   const fmt = (m) => { m = ((m % 1440) + 1440) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
@@ -179,4 +170,5 @@
   }
   checks('warm', ['Marche rapide ou jumping jacks doux (1 min)', 'Cercles d\'épaules et de bras (30 s)', 'Rotations des poignets et des chevilles (30 s)', 'Chat-vache ou rotations du buste (1 min)', '5 squats lents et 5 pompes faciles pour finir'], 'warm');
   checks('chk', ['J\'ai assez dormi cette nuit', 'J\'ai bu au moins mon objectif d\'eau', 'J\'ai mangé des protéines à chaque repas', 'Je me suis échauffé', 'J\'ai fait ma séance', 'Je me suis étiré doucement', 'Je me couche à une heure raisonnable'], 'chk', 'cBar', 'cMsg');
-})();
+  } };
+};

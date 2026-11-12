@@ -39,12 +39,9 @@
     ['accueil', 'accueil.html', 'Accueil', I.home, 1, 1],
     ['quete', 'quete.html', 'Quête', I.quest, 1, 1],
     ['gacha', 'gacha.html', 'Gacha', I.gacha, 1, 1],
-    ['mythiques', 'mythiques.html', 'Cartes mythiques', I.trophy, 0, 0],
     ['specialisation', 'specialisation.html', 'Spécialisation', I.body, 1, 1],
     ['bibliotheque', 'bibliotheque.html', 'Exercices', I.book, 1, 0],
-    ['programmes', 'programmes.html', 'Programmes', I.list, 1, 0],
-    ['conseils', 'conseils.html', 'Conseils', I.leaf, 0, 0],
-    ['alimentation', 'alimentation.html', 'Alimentation', I.apple, 0, 0],
+    ['alimentation', 'alimentation.html', 'Alimentation et conseils', I.apple, 1, 0],
     ['social', 'social.html', 'Communauté', I.at, 0, 0],
     ['chat', 'chat.html', 'Chat', I.chat, 0, 0],
     ['amis', 'amis.html', 'Amis', I.users, 0, 0],
@@ -59,8 +56,8 @@
   ];
   /* Barre latérale : tout le menu, rangé par thème. */
   const GROUPS = [
-    ['Principal', ['accueil', 'quete', 'gacha', 'mythiques']],
-    ['Entraînement', ['specialisation', 'bibliotheque', 'programmes', 'alimentation', 'conseils']],
+    ['Principal', ['accueil', 'quete', 'gacha']],
+    ['Entraînement', ['specialisation', 'bibliotheque', 'alimentation']],
     ['Communauté', ['social', 'clans', 'defis', 'classement', 'recompenses', 'coachs']],
     ['Mon espace', ['apropos', 'tuto', 'compte']]
   ];
@@ -71,10 +68,9 @@
   const lk = (l, inner, active) => '<a href="' + l[1] + '" data-go' + (l[0] === active ? ' class="on" aria-current="page"' : '') + '>' + inner + '</a>';
 
   const DESC = {
-    accueil: 'Ton tableau de bord', quete: 'Objectifs du jour et combo du coach', gacha: 'Boîte mystère : tirage simple ou multiple', specialisation: 'Cible une zone du corps',
-    mythiques: 'Les 7 mouvements d\'élite, en 3D',
-    bibliotheque: 'Tous les exercices, animés', programmes: 'Des enchaînements prêts à faire', conseils: 'Sécurité, sommeil, récupération',
-    alimentation: 'Manger pour progresser', social: 'Profils, messages privés, contacts', clans: 'Rejoins un clan et cumule l\'XP', chat: 'Parle au coach et aux joueurs', amis: 'Ajoute des amis par code', coachs: 'Les coachs du site', apropos: 'Toi, le site, les infos légales', recompenses: 'Flammes, badges, parrainage', defis: 'Pompes, squats, gainage : bats ton record', classement: 'Public et entre amis', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'
+    accueil: 'Ton tableau de bord', quete: 'Objectifs du jour et combo du coach', gacha: 'Boîte mystère : tirage simple ou multiple', specialisation: 'Touche une zone du corps, on te montre ses exercices',
+    bibliotheque: 'Exercices, combos et cartes mythiques, animés',
+    alimentation: 'Repas, sommeil, eau et récupération', social: 'Profils, messages privés, contacts', clans: 'Rejoins un clan et cumule l\'XP', chat: 'Parle au coach et aux joueurs', amis: 'Ajoute des amis par code', coachs: 'Les coachs du site', apropos: 'Toi, le site, les infos légales', recompenses: 'Flammes, badges, parrainage', defis: 'Pompes, squats, gainage : bats ton record', classement: 'Public et entre amis', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'
   };
   I.menu = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 8h16M4 16h16"/></svg>';
   I.close = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';

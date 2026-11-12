@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0a0507">
-<title>neV.BOOSTER — Bibliothèque</title>
+<title>neV.BOOSTER — Exercices</title>
 <script src="js/theme.js"></script>
 <link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="css/nev.css">
@@ -15,22 +15,52 @@
 <link rel="stylesheet" href="css/content.css">
 <link rel="stylesheet" href="css/lib.css">
 <link rel="stylesheet" href="css/bibliotheque.css">
+<link rel="stylesheet" href="css/mythic.css">
+<link rel="stylesheet" href="css/exhub.css">
 </head>
 <body>
 <div class="page"><div class="wrap">
-  <div class="eyebrow">Bibliothèque</div>
-  <h1 class="big">Tous les exercices, <em>en cartes</em></h1>
+  <div class="eyebrow" id="eyebrow">Exercices</div>
+  <h1 class="big" id="title">Tous les exercices, <em>en cartes</em></h1>
   <p class="lead" id="lead"></p>
-  <div class="fbar" id="fbar">
-    <input type="search" id="q" placeholder="Rechercher un exercice ou un muscle" aria-label="Rechercher">
-    <button type="button" class="btn ghost" id="shuf">🔀 Mélanger</button>
+
+  <section class="panel zone-head" id="zhead" hidden></section>
+
+  <div class="xtabs" id="tabs" role="tablist" aria-label="Type de cartes">
+    <button type="button" role="tab" data-tab="ex" aria-selected="true"><b>Cartes exercice</b><small id="nEx"></small></button>
+    <button type="button" role="tab" data-tab="combo" aria-selected="false"><b>Cartes combo</b><small id="nCb"></small></button>
+    <button type="button" role="tab" data-tab="myth" aria-selected="false"><b>Cartes mythiques</b><small>7 mouvements d'élite</small></button>
   </div>
-  <div class="fchips" id="cats" role="group" aria-label="Catégories"></div>
-  <div class="fchips" id="tiers" role="group" aria-label="Difficulté"></div>
-  <label class="check" style="margin:8px 0"><input type="checkbox" id="nomat"><span>Sans matériel seulement</span></label>
-  <p class="muted" id="count" aria-live="polite"></p>
-  <div class="xg lib" id="grid"></div>
-  <div class="cta" style="justify-content:center"><button type="button" class="btn ghost" id="more" hidden>Voir plus</button></div>
+
+  <!-- 1 · cartes exercice -->
+  <section class="xpane" id="pEx" role="tabpanel">
+    <div class="fbar" id="fbar">
+      <input type="search" id="q" placeholder="Rechercher un exercice ou un muscle" aria-label="Rechercher">
+      <button type="button" class="btn ghost" id="shuf">🔀 Mélanger</button>
+    </div>
+    <div class="fchips" id="cats" role="group" aria-label="Catégories"></div>
+    <div class="fchips" id="tiers" role="group" aria-label="Difficulté"></div>
+    <label class="check" style="margin:10px 0"><input type="checkbox" id="nomat"><span>Sans matériel seulement</span></label>
+    <p class="muted" id="count" aria-live="polite"></p>
+    <div class="xg lib" id="grid"></div>
+    <div class="cta" style="justify-content:center"><button type="button" class="btn ghost" id="more" hidden>Voir plus</button></div>
+  </section>
+
+  <!-- 2 · cartes combo -->
+  <section class="xpane" id="pCb" role="tabpanel" hidden>
+    <p class="sec-s" id="cbLead"></p>
+    <div class="fchips" id="cbf" role="group" aria-label="Familles de combos"></div>
+    <p class="muted" id="cbh"></p>
+    <div class="cbx" id="cbList"></div>
+    <div class="cta" style="justify-content:center"><button type="button" class="btn ghost" id="cbMore" hidden>Voir plus</button></div>
+  </section>
+
+  <!-- 3 · cartes mythiques -->
+  <section class="xpane" id="pMy" role="tabpanel" hidden>
+    <p class="sec-s">Les 7 mouvements d'élite du Gacha. Chaque carte brûle d'une aura rouge : seuls les plus forts les maîtrisent. Ton avatar les exécute en 3D.</p>
+    <div class="mc-grid" id="mcGrid"></div>
+    <p class="muted mc-note">Ces mouvements demandent des années de pratique : ils ne sortent pas du tirage du jour. Progresse avec les cartes classiques, puis viens ici chercher ton prochain objectif.</p>
+  </section>
 </div></div>
 <script src="js/core.js"></script>
 <script src="js/cloud.js"></script>
@@ -43,11 +73,13 @@
 <script src="js/exercises.js"></script>
 <script src="js/zones.js"></script>
 <script src="js/combos.js"></script>
+<script src="js/programmes.js"></script>
 <script src="js/gachaengine.js"></script>
 <script src="js/figure.js"></script>
 <script src="js/card.js"></script>
 <script src="js/mannequin3d.js"></script>
 <script src="js/exmodal.js"></script>
+<script src="js/mythic3d.js"></script>
 <script src="js/p-bibliotheque.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/pwa.js"></script>
