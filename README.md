@@ -339,3 +339,7 @@ Page `social.html` (Accueil · Recherche · Messages · Profil) — `js/p-social
 
 ## V20 — Retour de l'animation de la carte (Gacha)
 Tirage simple : la carte sort de la boîte, tourne 8 fois (2880°) avec lumière et braises, puis explose en morceaux et se révèle. Tirage multiple : chaque carte se retourne avec un tour et demi. `sw.js` = nev-v31.
+
+## V21 — Tuto : vidéo « explorateur », histoire animée supprimée
+- La section « La vidéo en 85 secondes » du Tuto lit `media/neVBOOSTER-video.mp4` (87 s, 1280×720, avec musique) : visite guidée, compte créé, Gacha simple et multiple, Spécialisation, exercices/combos/mythiques, alimentation et conseils, quête, récompenses, communauté.
+- Supprimés : « Son histoire animée (avec voix) » et sa version simple (`histoire-anime.html`, `histoire.html`, leurs CSS/JS, `story-*.js`, `histoire3d.js`, les médias `histoire-*`). Liens retirés du Tuto, de À propos et du pied de page. `figure3d.js` reste (héros 3D de l'accueil). `sw.js` = nev-v32.

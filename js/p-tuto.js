@@ -32,10 +32,7 @@
   const sec = (id, ico, title, html) => S.push({ id, ico, title, html });
 
   sec('video', '🎬', 'La vidéo en 85 secondes',
-    '<video class="vid" controls preload="none" playsinline poster="img/banner-small.jpg" aria-label="Présentation de neV.BOOSTER (85 secondes, avec musique)"><source src="media/neVBOOSTER-video.mp4" type="video/mp4">Ton navigateur ne lit pas cette vidéo.</video><p class="muted" style="font-size:.84rem">Intro, tirage de la carte, séance filmée, quête, spécialisation, bibliothèque, programmes et récompenses. Avec le son !</p>');
-
-  sec('histoire', '🎞️', 'Son histoire animée (avec voix)',
-    '<p>Un jeune homme maigre, un miroir, un refus… puis 90 jours de séances. Une animation 3D où les personnages bougent : <b>touche, glisse, incline ton téléphone</b>. Voix off en français, pause et « Passer ».</p><p><a class="btn" href="histoire-anime.html" data-go>Voir l\'histoire animée</a> <a class="btn ghost" href="histoire.html" data-go>Version simple</a></p><video class="vid" id="hvid" controls preload="none" playsinline poster="img/banner-small.jpg" aria-label="L\'histoire de neV.BOOSTER en vidéo, avec voix et musique (1 min 45)"></video><p class="muted" style="font-size:.84rem">La vidéo (1 min 45) s\'adapte à ton écran : <a href="media/histoire-neVBOOSTER-paysage.mp4" download>paysage 16:9</a> · <a href="media/histoire-neVBOOSTER-portrait.mp4" download>portrait 9:16</a>.</p>');
+    '<video class="vid" controls preload="none" playsinline poster="img/banner-small.jpg" aria-label="Visite complète de neV.BOOSTER : visite guidée, création d\'un compte et toutes les fonctionnalités (87 secondes, avec musique)"><source src="media/neVBOOSTER-video.mp4" type="video/mp4">Ton navigateur ne lit pas cette vidéo.</video><p class="muted" style="font-size:.84rem">On explore le site : la visite guidée, un compte créé en quelques secondes, puis le Gacha (simple et multiple), la Spécialisation, les exercices, combos et cartes mythiques, l\'alimentation et les conseils, la quête, les récompenses et la communauté. Avec le son !</p>');
 
   sec('gacha-multiple', '📦', 'Le tirage multiple',
     '<p>Sur la page Gacha, tu choisis un <b>tirage simple</b> (1 carte) ou <b>multiple</b> (4 cartes), puis une <b>catégorie</b> : pectoraux, abdominaux, jambes, épaules, cardio, dos, bras, ou « Au hasard ». La boîte s\'avance, s\'ouvre, et les cartes sortent. La catégorie est toujours respectée ; seule la rareté est tirée au sort.</p><ul><li><b>Un tirage par jour et par type</b> : le résultat est décidé avant l\'animation et ne change pas si tu quittes la page.</li><li><b>Tirage multiple</b> : retourne les cartes, sélectionne celles que tu relèves, valide, puis lance la séance (3 secondes de transition, puis un compte à rebours de 7 secondes par exercice).</li><li><b>« Passer l\'animation »</b> est toujours disponible ; le bouton Son coupe les sons.</li></ul><p><a class="btn" href="gacha.html?mode=multi" data-go>Ouvrir le tirage multiple</a></p>');
@@ -105,8 +102,6 @@
   $('toc').innerHTML = S.map((s) => '<a href="#' + s.id + '">' + s.ico + ' ' + esc(s.title) + '</a>').join('');
   $('art').innerHTML = S.map((s) => '<section id="' + s.id + '"><h2><span class="ico">' + s.ico + '</span>' + esc(s.title) + '</h2>' + s.html + '</section>').join('') +
     '<div class="cta"><a class="btn" href="gacha.html" data-go>Tirer ma carte</a><a class="btn ghost" href="alimentation.html#conseils" data-go>Voir les conseils</a></div>';
-  const hv = $('hvid');   /* la vidéo de l'histoire s'adapte à l'écran : portrait sur téléphone debout, paysage sinon */
-  if (hv) hv.src = (window.matchMedia && window.matchMedia('(orientation: portrait)').matches) ? 'media/histoire-neVBOOSTER-portrait.mp4' : 'media/histoire-neVBOOSTER-paysage.mp4';
   const links = Array.from($('toc').querySelectorAll('a'));
   if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) links.forEach((a) => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id)); }), { rootMargin: '-20% 0px -70% 0px' });
