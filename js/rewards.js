@@ -92,6 +92,7 @@
     B('ph', 'Phénix', 'Journée ratée… puis enchaînement doublé réussi.', 'flame', 'bolt', '', '#ff6a4d', '#7a0f26', 'doubled', 1),
     B('cam', 'Œil de lynx', '10 séances validées par la caméra.', 'circle', 'eye', '', GREEN[0], GREEN[1], 'verified', 10),
     B('p50', 'Pompes 50', 'Maximum de 50 pompes ou plus.', 'shield', 'dumbbell', '', RUBY[0], RUBY[1], 'pushups', 50),
+    B('q100', 'Squats 100', 'Maximum de 100 squats ou plus.', 'shield', 'dumbbell', '', RUBY[0], RUBY[1], 'squats', 100),
     B('x1000', '1000 XP', 'Tu as gagné 1000 XP.', 'hex', 'bolt', '', GOLD[0], GOLD[1], 'xp', 1000)
   ];
 
@@ -105,14 +106,17 @@
     collection: { label: 'Exercices différents tirés', get: (p) => Object.keys(p.collection).length },
     doubled: { label: 'Enchaînements doublés réussis', get: (p) => p.history.filter((h) => h.doubled).length },
     verified: { label: 'Séances validées par caméra', get: (p) => p.history.filter((h) => h.verified).length },
-    pushups: { label: 'Maximum de pompes', get: (p) => p.maxPushups || 0 },
+    pushups: { label: 'Maximum de pompes', get: (p) => (p.sex === 'f' ? 0 : p.maxPushups || 0) },
+    squats: { label: 'Maximum de squats', get: (p) => p.maxSquats || 0 },
     flames: { label: 'Flammes gagnées au total', get: (p) => p.flamesTotal },
     welcomed: { label: 'Inscrit avec un code de parrain', get: (p) => (p.ref.by ? 1 : 0) },
     manual: { label: 'Offert à la main par l\'admin', get: () => 0 }
   };
 
   let custom = [];
-  const defs = () => DEFAULT_BADGES.concat(custom.map((b) => Object.assign({}, b, { custom: true })));
+  /* Parcours femme : pas de badge « pompes » ni de carte mythique ; parcours homme : pas de badge « squats ». */
+  const F_NO = ['p50', 'e5'], M_NO = ['q100'];
+  const defs = (all) => DEFAULT_BADGES.filter((d) => all || (NEV.sex === 'f' ? F_NO : M_NO).indexOf(d.id) < 0).concat(custom.map((b) => Object.assign({}, b, { custom: true })));
   const earned = (p, d) => !!(RULES[d.rule && d.rule.t] && d.rule.t !== 'manual' && RULES[d.rule.t].get(p) >= Number(d.rule.v));
 
   /* ---------- auras du héros (contre des flammes) ---------- */

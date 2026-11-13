@@ -219,16 +219,66 @@
   const byId = {};
   Z.forEach((z) => { byId[z.id] = z; });
 
+  /* ───────── Parcours féminin ─────────
+     Zones : buste et poitrine, ventre, taille, fessiers, cuisses, mollets, bas du dos, cardio doux, souplesse.
+     Aucune zone de bras, d'épaules, de cou ni de dos « prise de masse » ; seuls les exercices du parcours femme sont proposés. */
+  const F_ORDER = ['poitrine', 'abdos', 'obliques', 'fessiers', 'cuisses', 'mollets', 'lombaires', 'cardio', 'mobilite'];
+  const F_OVER = {
+    poitrine: {
+      name: 'Buste et poitrine', thumb: 'presse-paumes',
+      desc: 'Un buste bien tenu, une poitrine soutenue et une posture qui s\'ouvre : on travaille en douceur, sans prise de masse.',
+      how: 'Presses de paumes, mouvements légers avec des bouteilles et ouverture du haut du dos : le but est de raffiner et de tonifier, pas de gonfler.',
+      care: 'Épaules basses et dos droit. Arrête si tu sens une gêne dans l\'épaule ou le cou.',
+      add: ['presse-paumes-lente', 'presse-paumes-pause', 'pullover-sac', 'anges-inverses', 'retraction-omoplates'],
+      combos: [
+        ['f1', 'Buste tonique tout doux', 'Débutant', 'Presses de paumes et ouverture de la poitrine : tonifie sans musculation lourde.', [['presse-paumes', 3], ['presse-paumes-lente', 2], ['etirement-pectoraux', 2]]],
+        ['f2', 'Buste et posture', 'Intermédiaire', 'Un buste qui se tient droit : presse, bouteilles légères et omoplates.', [['presse-paumes-pause', 3], ['developpe-bouteilles', 2], ['anges-inverses', 2], ['retraction-omoplates', 2]]]
+      ]
+    },
+    abdos: { add: ['crunch-lent', 'planche-genoux-lente'], combos: [['f1', 'Ventre plat tout doux', 'Débutant', 'Trois mouvements lents pour sentir le ventre travailler.', [['crunch-lent', 3], ['planche-genoux', 3], ['dead-bug', 2]]], ['f2', 'Gainage élégant', 'Intermédiaire', 'Planches courtes et contrôlées pour un ventre ferme.', [['planche-genoux-lente', 3], ['planche', 2], ['planche-laterale-genou', 2], ['dead-bug', 2]]]] },
+    obliques: { name: 'Taille', combos: [['f1', 'Taille fine', 'Tous niveaux', 'Planches latérales et rotations légères.', [['planche-laterale-genou', 2], ['toucher-pied-oppose', 3], ['flexion-laterale-bouteille', 2]]]] },
+    fessiers: {
+      add: ['curtsy-lunge', 'squat-sumo-pulse', 'squat-sumo-pause', 'pont-fessier-pause', 'pont-fessier-marche', 'donkey-kick-pulse', 'kickback-genou-plie'],
+      combos: [['f1', 'Fessiers galbés', 'Débutant', 'Ponts, kickbacks et pulses : des fessiers fermes et dessinés.', [['pont-fessier-pause', 3], ['donkey-kick-pulse', 3], ['kickback-genou-plie', 3]]], ['f2', 'Fessiers et cuisses fuselés', 'Intermédiaire', 'Révérences, sumo pulsé et hip thrust.', [['squat-sumo-pulse', 3], ['curtsy-lunge', 3], ['hip-thrust-chaise', 3]]]]
+    },
+    cuisses: { add: ['squat-chaise-doux', 'squat-sumo-pulse', 'fente-laterale-lente', 'curtsy-lunge'], combos: [['f1', 'Cuisses fuselées', 'Débutant', 'Squats doux et fentes lentes pour affiner les jambes.', [['squat-chaise-doux', 3], ['fente-laterale-lente', 2], ['pont-fessier', 3]]]] },
+    mollets: {},
+    lombaires: {},
+    cardio: { desc: 'Du cardio doux et rythmé pour brûler des calories sans forcer sur les articulations.' },
+    mobilite: {
+      name: 'Souplesse et étirements', desc: 'Une silhouette souple et gracieuse : hanches, dos et jambes qui se délient, avec des étirements et des maintiens lents.',
+      add: ['souplesse-fente-basse', 'souplesse-pont-doux', 'souplesse-chat-vache-lent', 'posture-enfant', 'etirement-fessiers-allongee', 'genou-poitrine'],
+      combos: [['f1', 'Souplesse du matin', 'Tous niveaux', 'Réveille le dos et les hanches en douceur.', [['souplesse-chat-vache-lent', 2], ['souplesse-fente-basse', 2], ['posture-enfant', 1]]], ['f2', 'Souplesse du soir', 'Tous niveaux', 'Détends le bas du corps avant de dormir.', [['souplesse-pont-doux', 2], ['etirement-fessiers-allongee', 2], ['genou-poitrine', 2], ['etirement-cuisses', 2]]]]
+    }
+  };
+  const isF = () => g.NEV && g.NEV.sex === 'f';
+  const okId = (id) => { const e = NEV.Ex && NEV.Ex.byId(id); return !!e && !e.special && NEV.Ex.sexOk(e, 'f'); };
+  const fCache = {};
+  function fview(id) {
+    if (F_ORDER.indexOf(id) < 0 || !byId[id]) return null;
+    if (fCache[id]) return fCache[id];
+    const z = byId[id], o = F_OVER[id] || {};
+    const ex = z.ex.concat(o.add || []).filter((x, i, a) => a.indexOf(x) === i && okId(x));
+    const keep = z.combos.filter((c) => c.items.length >= 2 && c.items.every((it) => okId(it[0])));
+    const mine = (o.combos || []).map((c) => ({ id: id + '-' + c[0], zone: id, name: c[1], lvl: c[2], blurb: c[3], items: c[4] }));
+    const v = Object.assign({}, z, { ex, combos: mine.concat(keep) });
+    ['name', 'desc', 'how', 'care', 'thumb'].forEach((k) => { if (o[k]) v[k] = o[k]; });
+    return (fCache[id] = v);
+  }
+  const FZ = () => F_ORDER.map(fview).filter(Boolean);
+
   NEV.ZONES = Z;
   NEV.Zones = {
     VISION,
-    list: () => Z,
-    get: (id) => byId[id] || null,
+    list: () => (isF() ? FZ() : Z),
+    get: (id) => (isF() ? fview(id) : byId[id] || null),
+    /* Zone masquée dans le parcours de cette joueuse (carte du corps). */
+    hidden: (id) => isF() && F_ORDER.indexOf(id) < 0,
     /* Exercices d'une zone (objets complets), dans l'ordre de la liste. */
-    exercises(id) { const z = byId[id]; return z ? z.ex.map((e) => NEV.Ex.byId(e)).filter(Boolean) : []; },
+    exercises(id) { const z = NEV.Zones.get(id); return z ? z.ex.map((e) => NEV.Ex.byId(e)).filter(Boolean) : []; },
     /* Les zones qui contiennent un exercice. */
-    zonesOf(exId) { return Z.filter((z) => z.ex.indexOf(exId) >= 0).map((z) => z.id); },
-    combo(id) { for (const z of Z) { const c = z.combos.find((x) => x.id === id); if (c) return c; } return null; },
-    allCombos() { return Z.reduce((a, z) => a.concat(z.combos), []); }
+    zonesOf(exId) { return NEV.Zones.list().filter((z) => z.ex.indexOf(exId) >= 0).map((z) => z.id); },
+    combo(id) { for (const z of NEV.Zones.list()) { const c = z.combos.find((x) => x.id === id); if (c) return c; } return null; },
+    allCombos() { return NEV.Zones.list().reduce((a, z) => a.concat(z.combos), []); }
   };
 })(window);

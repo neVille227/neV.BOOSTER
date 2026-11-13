@@ -93,8 +93,8 @@
   });
 
   /* ====================== BICEPS ====================== */
-  X('tractions-supination', 'Tractions prise serrée (menton)', 5, 4, ['bar'], 'rep', [1, 2, 4, 6, 8], {
-    works: 'Biceps, dos', dose: 'Séries courtes : moitié de ton maximum', gacha: false, special: 'tractions',
+  X('tractions-supination', 'Tractions prise serrée (menton)', 5, 5, ['bar'], 'rep', [1, 2, 4, 6, 8], {
+    works: 'Biceps, dos', dose: 'Séries courtes : moitié de ton maximum', gacha: true, for: 'm',
     warn: 'Utilise une vraie barre fixée solidement. Jamais une porte, une table bancale ou une branche douteuse.',
     exec: 'Mains à la largeur des épaules, paumes vers toi, suspends-toi bras tendus puis monte le menton au-dessus de la barre.',
     steps: ['Prise paumes vers toi, largeur d\'épaules.', 'Suspension active : épaules loin des oreilles.', 'Tire les coudes vers les hanches, menton au-dessus de la barre.', 'Redescends en 2 à 3 secondes.'],
@@ -155,15 +155,15 @@
     steps: ['Debout, bras tendus devant toi.', 'Plie les coudes et ramène-les derrière le buste.', 'Serre les omoplates 1 seconde.', 'Reviens lentement.'],
     mistakes: ['Hausser les épaules.', 'Cambrer le dos.'], easy: 'Contre un mur.', hard: 'Tiens 3 secondes.', cam: S('side', 'elbow', 55, 'rep'), gacha: true
   });
-  X('tractions', 'Tractions', 2, 4, ['bar'], 'rep', [1, 2, 4, 6, 8], {
-    works: 'Grand dorsal, biceps, avant-bras', dose: 'Séries courtes : la moitié de ton maximum de pompes', gacha: false, special: 'tractions',
+  X('tractions', 'Tractions', 2, 5, ['bar'], 'rep', [1, 2, 4, 6, 8], {
+    works: 'Grand dorsal, biceps, avant-bras', dose: 'Séries courtes : la moitié de ton maximum de pompes', gacha: true, for: 'm',
     warn: 'Utilise une vraie barre fixée solidement. Jamais une porte, une table bancale ou une branche douteuse.',
     exec: 'Suspendu à la barre, bras tendus. Tire les coudes vers les hanches jusqu\'à passer le menton au-dessus de la barre, puis redescends lentement.',
     steps: ['Mains un peu plus larges que les épaules, suspension active.', 'Tire les coudes vers le bas, poitrine vers la barre.', 'Menton au-dessus de la barre.', 'Redescends en 2 à 3 secondes, bras presque tendus.'],
     mistakes: ['Se balancer ou donner des coups de jambes.', 'Faire des demi-amplitudes.'], easy: 'Tractions inversées ou descentes lentes.', hard: 'Pause de 2 s en haut.', cam: S('front', 'shy', 0.25, 'rep'), fromMax: 0.5, fromMin: 1, fromCap: 40
   });
-  X('tractions-inversees', 'Tractions inversées sous une table', 2, 4, ['table'], 'rep', [3, 5, 8, 10, 12], {
-    works: 'Grand dorsal, haut du dos, biceps', dose: 'Séries courtes : la moitié de ton maximum de pompes', gacha: false, special: 'tractions',
+  X('tractions-inversees', 'Tractions inversées sous une table', 2, 5, ['table'], 'rep', [3, 5, 8, 10, 12], {
+    works: 'Grand dorsal, haut du dos, biceps', dose: 'Séries courtes : la moitié de ton maximum de pompes', gacha: true, for: 'm',
     warn: 'La table doit être très lourde, stable et ne pas glisser (plaque-la contre un mur). Sinon, ne fais pas cet exercice.',
     exec: 'Allongé sous une table solide, saisis le bord, corps gainé. Tire la poitrine vers le bord, puis redescends lentement.',
     steps: ['Allonge-toi sous le bord de la table, mains en prise sur le bord.', 'Corps en ligne droite, talons au sol.', 'Tire la poitrine vers le bord.', 'Redescends lentement.'],
@@ -404,6 +404,6 @@
   // --- repos actif : comme la respiration lente ---
   A['repos-actif'] = Object.assign({}, A['respiration-lente']);
 
-  // cartes spéciales : chaque exercice marqué `special` ne sort que via Repos ou Tractions
+  // carte spéciale : seul le Repos (les tractions sont maintenant des cartes mythiques, côté hommes)
   mark('repos-actif', { gacha: false });
 })(window);

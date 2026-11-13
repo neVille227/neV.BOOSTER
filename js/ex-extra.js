@@ -208,4 +208,48 @@
   V('rowing-sac', 'rowing-sac-pause', { k: 1.4, hold: 1800 });
   V('planche', 'planche-jambe-levee', {});
   V('crunch-velo', 'crunch-velo-lent', { k: 1.9 });
+
+  /* ───────── Parcours féminin : buste et posture, souplesse (fiches ajoutées) ───────── */
+  E('presse-paumes-lente', 'Presse de paumes lente', 1, 2, [], 'sec', [12, 16, 20, 25, 30], 'f', {
+    works: 'Buste, poitrine, épaules (tonicité douce)', dose: '3 séries de 15 à 25 secondes',
+    exec: 'Paumes jointes devant la poitrine, coudes écartés : presse les mains l\'une contre l\'autre en expirant, relâche très lentement.',
+    steps: ['Debout ou assise, dos droit, paumes jointes à hauteur de poitrine.', 'Presse les paumes l\'une contre l\'autre, sans lever les épaules.', 'Tiens en respirant calmement, puis relâche lentement.'],
+    mistakes: ['Hausser les épaules.', 'Retenir sa respiration.'], easy: 'Presse moins fort.', hard: 'Monte les mains au-dessus de la tête, puis descends.',
+    cam: S('front', 'manual', 0, 'manual')
+  });
+  E('presse-paumes-pause', 'Presse de paumes avec pause', 1, 3, [], 'sec', [10, 14, 18, 22, 26], 'f', {
+    works: 'Buste, poitrine, épaules', dose: '3 séries de 10 à 20 secondes',
+    exec: 'Même geste que la presse de paumes, mais tu marques une pause de 3 secondes à chaque pression maximale.',
+    steps: ['Paumes jointes devant la poitrine.', 'Presse fort pendant 3 secondes.', 'Relâche, respire, recommence.'],
+    mistakes: ['Pousser avec le haut du dos.', 'Plier les poignets.'], easy: 'Pause de 1 seconde.', hard: 'Pause de 5 secondes.',
+    cam: S('front', 'manual', 0, 'manual')
+  });
+  V('presse-paumes', 'presse-paumes-lente', { k: 1.8, hold: 900 });
+  V('presse-paumes', 'presse-paumes-pause', { k: 1.2, hold: 2200 });
+
+  E('souplesse-fente-basse', 'Fente basse (ouverture des hanches)', 7, 2, [], 'secside', [15, 20, 25, 30, 40], 'f', {
+    works: 'Souplesse des hanches, fléchisseurs, cuisses', dose: '2 à 3 passages de 20 à 30 secondes par côté',
+    exec: 'Un genou au sol, l\'autre pied devant : pousse doucement le bassin vers l\'avant, buste droit, jusqu\'à sentir l\'étirement devant la hanche.',
+    steps: ['Un genou au sol (sur un coussin), l\'autre pied en avant.', 'Pousse le bassin vers l\'avant, dos droit.', 'Tiens en respirant lentement, puis change de côté.'],
+    mistakes: ['Cambrer le bas du dos.', 'Rebondir.'], easy: 'Pied avant sur une marche.', hard: 'Lève le bras du côté du genou au sol.',
+    cam: S('side', 'manual', 0, 'manual')
+  });
+  V('fentes-arriere', 'souplesse-fente-basse', { k: 2.2, hold: 3000 });
+  E('souplesse-pont-doux', 'Pont doux (souplesse du dos)', 7, 2, [], 'sec', [15, 20, 25, 30, 40], 'f', {
+    works: 'Souplesse de la colonne, fessiers, hanches', dose: '3 maintiens de 15 à 30 secondes',
+    exec: 'Sur le dos, genoux pliés : monte le bassin lentement, vertèbre après vertèbre, tiens en haut en respirant, puis redescends en déroulant.',
+    steps: ['Sur le dos, pieds à plat à la largeur du bassin.', 'Monte le bassin en déroulant le dos.', 'Tiens en haut, respire, puis redescends lentement.'],
+    mistakes: ['Monter trop haut en cambrant les lombaires.', 'Pousser sur la nuque.'], easy: 'Monte moins haut.', hard: 'Lève un pied du sol.',
+    cam: S('side', 'manual', 0, 'manual')
+  });
+  V('pont-fessier', 'souplesse-pont-doux', { k: 2.0, hold: 3200 });
+  E('souplesse-chat-vache-lent', 'Chat-vache très lent', 7, 1, [], 'rep', [6, 8, 10, 12, 14], 'f', {
+    works: 'Souplesse de la colonne, dos, ventre', dose: '2 séries de 8 à 12 mouvements lents',
+    exec: 'À quatre pattes : creuse le dos en inspirant, arrondis-le en expirant, très lentement, en suivant ta respiration.',
+    steps: ['À quatre pattes, mains sous les épaules.', 'Inspire : creuse le dos, regard vers l\'avant.', 'Expire : arrondis le dos, menton vers la poitrine.'],
+    mistakes: ['Aller trop vite.', 'Forcer l\'amplitude.'], easy: 'Amplitude réduite.', hard: 'Marque 3 secondes à chaque extrémité.',
+    cam: S('side', 'manual', 0, 'manual')
+  });
+  V('chat-vache', 'souplesse-chat-vache-lent', { k: 2.0, hold: 900 });
+  /* les étirements existants sont tirables dans la version femme (souplesse) : voir gachaengine.eligible */
 })(window);

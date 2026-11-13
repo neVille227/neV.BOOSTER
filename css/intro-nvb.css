@@ -210,3 +210,40 @@ body{font-family:var(--font);color:var(--ink);overflow:hidden}
 .nv.narrow .s3 .card{--w:15cqw}.nv.narrow .fan{gap:1.2cqw}
 .nv.narrow .brand{font-size:14px}
 @media (prefers-reduced-motion:reduce){.nv *{animation-duration:.01s!important;transition-duration:.01s!important}.dots{display:none}}
+
+/* ───────── Version femme : même introduction, fond clair (blanc, rose très pâle, rouge) ───────── */
+html[data-theme=light]{--bg:#fbf6f7;--red:#c32d50;--red-hi:#c32d50;--rose:#7a1f33;--gold:#b8862b;--ink:#2b0f18;--mute:#7c5c66;color-scheme:light}
+html[data-theme=light],html[data-theme=light] body,html[data-theme=light] .nv{background:#fbf6f7}
+html[data-theme=light] .nv::after{background:radial-gradient(120% 100% at 50% 45%,transparent 55%,rgba(195,45,80,.1))}
+html[data-theme=light] .bg::after{background:linear-gradient(180deg,rgba(255,255,255,.5),rgba(255,255,255,.1) 40%,rgba(251,240,242,.88))}
+html[data-theme=light] .bg,html[data-theme=light] .b0,html[data-theme=light] .b1,html[data-theme=light] .b2,html[data-theme=light] .b3,html[data-theme=light] .b4,html[data-theme=light] .b5,html[data-theme=light] .b6{background:radial-gradient(60% 55% at 50% 48%,rgba(195,45,80,.14),transparent 72%),radial-gradient(40% 40% at 70% 70%,rgba(240,178,74,.14),transparent),#fbf6f7}
+html[data-theme=light] .ht{background:radial-gradient(rgba(195,45,80,.2) 1px,transparent 1.5px) 0 0/9px 9px}
+html[data-theme=light] .btn{border-color:rgba(122,31,51,.28);background:rgba(255,255,255,.82);color:#2b0f18}
+html[data-theme=light] .btn:hover{background:rgba(195,45,80,.12)}
+html[data-theme=light] .btn[aria-pressed=true]{background:#c32d50;color:#fff;border-color:#c32d50}
+html[data-theme=light] .btn:focus-visible,html[data-theme=light] .go:focus-visible,html[data-theme=light] .seg:focus-visible,html[data-theme=light] .alt:focus-visible{outline-color:#c32d50}
+html[data-theme=light] .brand b{color:#c32d50}
+html[data-theme=light] .pic{background:#f6e1e6;border-color:rgba(195,45,80,.7);box-shadow:0 0 4cqmin rgba(195,45,80,.22),0 3cqmin 7cqmin rgba(122,31,51,.22)}
+html[data-theme=light] .pic::after{background:linear-gradient(180deg,transparent 65%,rgba(122,31,51,.28))}
+html[data-theme=light] .q{color:#c32d50;text-shadow:0 0 1.4cqmin #fff}
+html[data-theme=light] .qm{fill:#c32d50;filter:drop-shadow(0 0 4px #fff)}
+html[data-theme=light] .dots i{background:#c32d50}
+html[data-theme=light] .card .f{background:linear-gradient(160deg,#fff,#fbe9ee);box-shadow:0 .8cqmin 2.4cqmin rgba(122,31,51,.22),inset 0 0 2cqmin rgba(195,45,80,.1)}
+html[data-theme=light] .x10{text-shadow:none}
+html[data-theme=light] .wordmark b,html[data-theme=light] .dn b{text-shadow:none}
+html[data-theme=light] .it{background:rgba(255,255,255,.7)}
+html[data-theme=light] .it small{color:#9a7580}
+html[data-theme=light] .it.act{color:#2b0f18;background:rgba(195,45,80,.12);box-shadow:0 0 2cqmin rgba(195,45,80,.22)}
+html[data-theme=light] .fl i{border-color:rgba(195,45,80,.35)}
+html[data-theme=light] .fl svg{fill:rgba(195,45,80,.35)}
+html[data-theme=light] .fl.lit i{background:rgba(195,45,80,.14);box-shadow:0 0 1.6cqmin rgba(195,45,80,.3)}
+html[data-theme=light] .flare::before{background:linear-gradient(90deg,transparent,#c32d50 14%,#7a1f33 50%,#c32d50 86%,transparent)}
+html[data-theme=light] .flare i{background:linear-gradient(180deg,transparent,#c32d50,transparent)}
+html[data-theme=light] .lgc{background:#fff;box-shadow:0 0 3cqmin rgba(195,45,80,.35)}
+html[data-theme=light] .go{border-color:rgba(122,31,51,.5);background:linear-gradient(90deg,#8e1b3a,#c32d50);color:#fff}
+html[data-theme=light] .cap{color:#2b0f18;text-shadow:0 0 12px #fff,0 0 3px #fff}
+html[data-theme=light] .seg{background:rgba(195,45,80,.22)}
+html[data-theme=light] .start{background:rgba(251,246,247,.9)}
+html[data-theme=light] .start .alt:hover{color:#c32d50}
+html[data-theme=light] .start .go svg{fill:#fff}
+html[data-theme=light] .orbits ellipse{filter:drop-shadow(0 0 4px rgba(195,45,80,.5))}

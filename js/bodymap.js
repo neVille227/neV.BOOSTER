@@ -35,6 +35,7 @@
   function mount(el, o) {
     o = o || {};
     el.innerHTML = '<svg viewBox="0 0 400 356" aria-hidden="true" focusable="false"><defs><linearGradient id="bzOn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8a3d"/><stop offset="1" stop-color="#e0455f"/></linearGradient></defs>' + fig(100, false) + fig(300, true) + '</svg>';
+    if (NEV.Zones && NEV.Zones.hidden) el.querySelectorAll('.bz').forEach((n) => { if (NEV.Zones.hidden(n.dataset.z)) { n.classList.remove('bz'); n.classList.add('body'); n.removeAttribute('data-z'); } });
     const sync = (id) => el.querySelectorAll('.bz').forEach((n) => n.classList.toggle('on', n.dataset.z === id));
     el.addEventListener('click', (e) => { const n = e.target.closest('.bz'); if (n && o.onPick) o.onPick(n.dataset.z); });
     sync(o.selected);

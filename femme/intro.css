@@ -1,7 +1,7 @@
 :root{color-scheme:dark;--c1:#C32D50;--pk:#7A1F33;--gold:#B8862B}
 *{box-sizing:border-box;margin:0}
 html,body{height:100%;background:#FBF6F7;color:#2B0F18;font-family:Montserrat,system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
-#stage{position:relative;height:100%;max-height:100svh;aspect-ratio:9/16;max-width:100%;margin:0 auto;background:radial-gradient(120% 80% at 50% 30%,#FFFFFF,#FBF0F2 55%,#F6E1E6);overflow:hidden}
+#stage{position:relative;height:100svh;width:100%;margin:0 auto;background:radial-gradient(120% 80% at 50% 30%,#FFFFFF,#FBF0F2 55%,#F6E1E6);overflow:hidden}
 .scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity 1s;pointer-events:none;padding:8% 7%}
 .scene.on{opacity:1;pointer-events:auto}
 .sls{position:absolute;inset:0}
@@ -41,3 +41,24 @@ html,body{height:100%;background:#FBF6F7;color:#2B0F18;font-family:Montserrat,sy
 /* carte à gratter : le canvas remplit la scène, le logo est dessiné dedans */
 .scene:has(.scr){padding:0}
 .scr{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+/* affiche neV.BOOSTER : fondu flottant avec voile de fumée, adapté à tous les écrans (mobile, tablette, PC) */
+#stage{height:100vh;height:100svh}
+.scene:has(.poster){padding:0}
+.poster{position:relative;width:min(88vw,78svh,680px);aspect-ratio:1;margin:auto;display:grid;place-items:center}
+.poster img{position:relative;z-index:1;width:100%;height:100%;object-fit:contain;display:block;opacity:0;filter:blur(18px);transform:translateY(26px) scale(.92);
+  -webkit-mask-image:linear-gradient(to right,transparent,#000 13%,#000 87%,transparent),linear-gradient(to bottom,transparent,#000 9%,#000 94%,transparent);-webkit-mask-composite:source-in;
+  mask-image:linear-gradient(to right,transparent,#000 13%,#000 87%,transparent),linear-gradient(to bottom,transparent,#000 9%,#000 94%,transparent);mask-composite:intersect}
+.scene.on .poster img{animation:posterIn 2.8s cubic-bezier(.2,.7,.2,1) .25s forwards,posterFloat 5.5s ease-in-out 3.1s infinite}
+@keyframes posterIn{0%{opacity:0;filter:blur(18px);transform:translateY(26px) scale(.92)}60%{opacity:.9;filter:blur(4px)}100%{opacity:1;filter:blur(0);transform:none}}
+@keyframes posterFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.smoke{position:absolute;z-index:2;border-radius:50%;pointer-events:none;opacity:0;filter:blur(26px);background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,230,236,.6) 45%,rgba(255,255,255,0) 72%)}
+.smoke.k1{width:70%;height:55%;left:-12%;bottom:-6%}
+.smoke.k2{width:65%;height:50%;right:-10%;top:12%}
+.smoke.k3{width:80%;height:50%;left:10%;top:-8%}
+.scene.on .smoke.k1{animation:smokeA 3.6s ease-out .1s forwards}
+.scene.on .smoke.k2{animation:smokeB 3.8s ease-out .3s forwards}
+.scene.on .smoke.k3{animation:smokeA 3.4s ease-out .5s forwards}
+@keyframes smokeA{0%{opacity:.95;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(-8%,-22%) scale(1.5)}}
+@keyframes smokeB{0%{opacity:.9;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(10%,-26%) scale(1.55)}}
+@media (prefers-reduced-motion:reduce){.poster img{opacity:1!important;filter:none!important;transform:none!important}.smoke{display:none}}

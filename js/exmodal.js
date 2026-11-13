@@ -42,7 +42,7 @@
       '<p class="muted xm-note">' + esc((ex.cam && ex.cam.place) || '') + '</p></div>' +
       '<div class="xm-txt"><div class="eyebrow">' + esc((NEV.CATS.find((c) => c.id === ex.group) || {}).name || 'Exercice') + '</div>' +
       '<h2>' + esc(ex.name) + '</h2><div class="xm-chips">' + chips(ex) + '</div>' +
-      (ex.warn ? '<div class="xr-warn' + (ex.special === 'tractions' ? ' strong' : '') + '">⚠️ ' + esc(ex.warn) + '</div>' : '') +
+      (ex.warn ? '<div class="xr-warn' + (/^tractions/.test(ex.id) ? ' strong' : '') + '">⚠️ ' + esc(ex.warn) + '</div>' : '') +
       (ex.exec ? '<p class="xm-exec">' + esc(ex.exec) + '</p>' : '') +
       (ex.steps && ex.steps.length ? '<h3>Comment faire</h3><ol>' + ex.steps.map((s) => '<li>' + esc(s) + '</li>').join('') + '</ol>' : '') +
       (ex.mistakes && ex.mistakes.length ? '<h3>Erreurs à éviter</h3>' + list(ex.mistakes) : '') +

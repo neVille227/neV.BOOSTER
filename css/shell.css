@@ -7,10 +7,13 @@
 /* ---------- fond illustré (homme : Baki assis ; femme : Yuki lumineuse) ---------- */
 body{isolation:isolate}
 body::before{content:"";position:fixed;z-index:-1;pointer-events:none;right:1vw;bottom:0;height:78vh;width:82vh;background:url(../img/bg-baki.webp) no-repeat center bottom/contain;opacity:.3}
-html[data-sex=f] body::before{right:0;height:100vh;width:56vh;background:url(../img/bg-yuki.webp) no-repeat center/cover;opacity:.55;mix-blend-mode:multiply;-webkit-mask-image:radial-gradient(ellipse 62% 60% at 50% 48%,#000 55%,transparent 100%);mask-image:radial-gradient(ellipse 62% 60% at 50% 48%,#000 55%,transparent 100%)}
+/* Fond d'écran de Yuki (version femme) : toujours centré au milieu, sur mobile, tablette et PC. L'image (9:16) occupe toute la hauteur, ses bords se fondent dans le fond clair. */
+html[data-sex=f] body::before{left:0;right:0;top:0;bottom:0;width:auto;height:auto;transform:none;background:url(../img/bg-yuki.webp) no-repeat 50% 40%/auto 100%;opacity:.5;mix-blend-mode:multiply;-webkit-mask-image:radial-gradient(ellipse 52% 62% at 50% 46%,#000 52%,transparent 100%);mask-image:radial-gradient(ellipse 52% 62% at 50% 46%,#000 52%,transparent 100%)}
+@media(min-aspect-ratio:1/1){html[data-sex=f] body::before{-webkit-mask-image:radial-gradient(ellipse 24% 62% at 50% 46%,#000 52%,transparent 100%);mask-image:radial-gradient(ellipse 24% 62% at 50% 46%,#000 52%,transparent 100%)}}
+@supports(height:100dvh){html[data-sex=f] body::before{height:100dvh}}
 @media(max-width:900px){
   body::before{right:50%;transform:translateX(50%);height:56vh;width:60vh;opacity:.16}
-  html[data-sex=f] body::before{height:86vh;width:48vh;opacity:.42}
+  html[data-sex=f] body::before{opacity:.4}
 }
 .nev-intro body::before,body.noart::before{display:none}
 

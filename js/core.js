@@ -245,6 +245,17 @@
     const n = x <= 5 ? 1 : x <= 15 ? 2 : x <= 30 ? 3 : x <= 50 ? 4 : 5;
     return LEVELS[n - 1];
   };
+  /* Parcours femme : le niveau vient du maximum de SQUATS. Correspondance par paliers vers l'échelle interne (équivalent « pompes »). */
+  const SQ_PTS = [[0, 0], [15, 5], [40, 15], [80, 30], [120, 50]];
+  NEV.squatsToPush = function (s) {
+    s = Math.max(1, Math.round(Number(s) || 1));
+    if (s > 120) return Math.ceil(50 + (s - 120) * 0.25);
+    for (let i = 1; i < SQ_PTS.length; i++) if (s <= SQ_PTS[i][0]) { const a = SQ_PTS[i - 1], b = SQ_PTS[i]; return Math.ceil(a[1] + (s - a[0]) * (b[1] - a[1]) / (b[0] - a[0])); }
+    return 1;
+  };
+  const RANGE_F = ['1 à 15 squats', '16 à 40 squats', '41 à 80 squats', '81 à 120 squats', '121 squats et plus'];
+  /* Libellé de la fourchette d'un niveau, dans l'unité du parcours (pompes pour lui, squats pour elle). */
+  NEV.levelRange = function (l, sex) { return (sex || NEV.sex) === 'f' ? RANGE_F[l.n - 1] : l.range; };
   const HERO = [
     { n: 1, name: 'Maigrichon', nameF: 'Débutante', xp: 0 }, { n: 2, name: 'Éveillé', nameF: 'Éveillée', xp: 100 }, { n: 3, name: 'Athlète', nameF: 'Athlète', xp: 300 },
     { n: 4, name: 'Costaud', nameF: 'Tonique', xp: 700 }, { n: 5, name: 'Colosse', nameF: 'Sculptée', xp: 1400 }, { n: 6, name: 'Légende', nameF: 'Légende', xp: 2600 }

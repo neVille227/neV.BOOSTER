@@ -12,7 +12,7 @@
   const STEPS = [
     { t: 'Salut, moi c\'est Nev !', x: 'Je suis ta petite flamme. Je te fais visiter neV.BOOSTER en une minute. Tu peux m\'arrêter quand tu veux.' },
     { sel: '#today', t: 'Ta carte du jour', x: 'Chaque jour, tu tires une carte : c\'est ton exercice. Tu tires, tu t\'entraînes, tu valides.' },
-    { t: 'Les raretés', dots: true, x: 'Gris : commun. Violet : rare. Rose : épique. Or : légendaire. Rouge : mythique. Blanc et écarlate : cartes spéciales (Repos et Tractions).' },
+    { t: 'Les raretés', dots: true, x: 'Gris : commun. Violet : rare. Rose : épique. Or : légendaire. Rouge : mythique (tractions et mouvements d\'élite). Blanc et écarlate : la carte spéciale Repos.' },
     { sel: '#heroBox', t: 'Ton personnage', x: 'Il grandit avec ton XP. Plus tu t\'entraînes, plus il évolue.' },
     { sel: '#stats', t: 'Tes chiffres', x: 'Ta série de jours, tes séances, ton XP et tes flammes. Un jour manqué, et le lendemain les séries sont doublées.' },
     { sel: '#tiles', t: 'Les raccourcis', x: 'Quête, gacha, classement, récompenses, conseils… tout est à un clic.' },

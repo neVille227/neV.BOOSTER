@@ -45,6 +45,49 @@
     const L = LEVELS[Math.floor(i / 5)];
     return { id: 'prog-' + (i + 1), n: i + 1, prog: true, lvlId: L.id, lvl: L.name, name: 'Carte ' + (i + 1) + ' · ' + p[0], title: p[0], blurb: p[1], items: p[2] };
   });
-  NEV.Programmes = { LEVELS, list, get: (id) => list.find((c) => c.id === id) || null };
-  if (NEV.Combos) NEV.Combos.register(list);
+  /* ───────── Parcours féminin : 25 cartes (5 niveaux × 5 thèmes), sans pompes ni prise de masse ───────── */
+  const T = [
+    ['Fessiers galbés', 'Repos 45–75 s. Serre la fesse en haut du mouvement, sans cambrer le bas du dos.', [
+      [['pont-fessier-pause', 2], ['kickback-genou-plie', 2], ['extension-hanche-debout', 2], ['squat-chaise-doux', 2]],
+      [['pont-fessier', 2], ['donkey-kick-pulse', 2], ['squat-sumo', 2], ['fente-laterale-lente', 2]],
+      [['hip-thrust-chaise', 3], ['curtsy-lunge', 3], ['donkey-kick-pulse', 3], ['squat-sumo-pause', 2]],
+      [['pont-fessier-marche', 3], ['squat-sumo-pause', 3], ['fentes-arriere', 3], ['hip-thrust-chaise', 3]],
+      [['pont-une-jambe', 3], ['squat-bulgare', 3], ['curtsy-lunge', 3], ['pont-fessier-marche', 3]]]],
+    ['Ventre plat et gainage', 'Repos 45–75 s. Expire en contractant le ventre, nuque détendue.', [
+      [['crunch-lent', 2], ['planche-genoux', 2], ['dead-bug', 2]],
+      [['crunch-inverse', 2], ['planche-genoux-lente', 2], ['planche-laterale-genou', 2], ['dead-bug', 2]],
+      [['crunch-velo', 3], ['planche', 2], ['toucher-pied-oppose', 2], ['releves-jambes', 2]],
+      [['planche', 3], ['planche-laterale', 3], ['russian-twist', 3], ['dead-bug', 3]],
+      [['hollow-body', 3], ['planche-laterale-hanche', 2], ['planche', 3], ['releves-jambes', 3]]]],
+    ['Souplesse et étirements', 'Aucun rebond. Respire lentement et n\'étire jamais jusqu\'à la douleur.', [
+      [['souplesse-chat-vache-lent', 2], ['posture-enfant', 1], ['genou-poitrine', 2], ['etirement-fessiers-allongee', 2]],
+      [['souplesse-fente-basse', 2], ['souplesse-pont-doux', 2], ['etirement-cuisses', 2], ['etirement-mollets', 2]],
+      [['chat-vache', 2], ['souplesse-fente-basse', 3], ['souplesse-pont-doux', 3], ['etirement-pectoraux', 2], ['posture-enfant', 2]],
+      [['souplesse-fente-basse', 3], ['souplesse-pont-doux', 3], ['etirement-fessiers-allongee', 3], ['mobilite-chevilles', 2], ['etirement-cuisses', 3]],
+      [['souplesse-chat-vache-lent', 3], ['souplesse-fente-basse', 4], ['souplesse-pont-doux', 4], ['etirement-fessiers-allongee', 3], ['etirement-cuisses', 3]]]],
+    ['Buste et posture', 'Épaules basses, dos droit. Mouvements lents et légers : on raffine, on ne cherche pas à gonfler.', [
+      [['presse-paumes', 2], ['retraction-omoplates', 2], ['superman', 2], ['etirement-pectoraux', 2]],
+      [['presse-paumes-lente', 2], ['anges-inverses', 2], ['bird-dog', 2], ['etirement-pectoraux', 2]],
+      [['presse-paumes-pause', 3], ['developpe-bouteilles', 2], ['anges-inverses', 3], ['swimmer', 2]],
+      [['presse-paumes-pause', 3], ['developpe-bouteilles', 3], ['pullover-sac', 2], ['anges-inverses', 3], ['bird-dog', 3]],
+      [['presse-paumes-pause', 3], ['developpe-bouteilles', 3], ['pullover-sac', 3], ['swimmer', 3], ['superman', 3]]]],
+    ['Corps tonique et silhouette', 'Repos 45–90 s. Un circuit doux : squats, ventre, fessiers, souffle.', [
+      [['squats', 2], ['pont-fessier', 2], ['crunch', 2], ['marche-genoux-hauts', 2]],
+      [['squat-sumo', 2], ['crunch-inverse', 2], ['pas-chasses', 2], ['planche-genoux', 2]],
+      [['squats', 3], ['fentes-arriere', 3], ['planche', 2], ['jumping-jacks', 2], ['pont-fessier', 3]],
+      [['squat-lent', 3], ['curtsy-lunge', 3], ['russian-twist', 3], ['skaters', 3], ['planche-laterale', 2]],
+      [['squat-bulgare', 3], ['hip-thrust-chaise', 3], ['hollow-body', 3], ['saut-corde', 3], ['planche-laterale', 3]]]]
+  ];
+  const listF = [];
+  for (let lv = 0; lv < 5; lv++) T.forEach((t, k) => {
+    const n = lv * 5 + k + 1, L = LEVELS[lv];
+    listF.push({ id: 'progf-' + n, n, prog: true, fem: true, lvlId: L.id, lvl: L.name, name: 'Carte ' + n + ' · ' + t[0], title: t[0], blurb: t[1], items: t[2][lv] });
+  });
+  const isF = () => g.NEV && g.NEV.sex === 'f';
+  NEV.Programmes = {
+    LEVELS,
+    get list() { return isF() ? listF : list; },
+    get: (id) => list.concat(listF).find((c) => c.id === id) || null
+  };
+  if (NEV.Combos) NEV.Combos.register(list.concat(listF));
 })(window);
