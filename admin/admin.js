@@ -351,7 +351,7 @@
   /* ---------- joueurs ---------- */
   VIEWS.joueurs = async function () {
     let users = await A.users(), q = '';
-    const defs = R.defs();
+    const defs = R.defs(true);
     function table() {
       const k = q.toLowerCase();
       const L = users.filter((u) => !k || (u.pseudo + ' ' + u.email + ' ' + u.code).toLowerCase().indexOf(k) >= 0).sort((a, b) => (b.xp || 0) - (a.xp || 0));

@@ -108,6 +108,8 @@
 
   /* Après l'intro : création du compte (parcours d'ouverture du site) ou accueil (joueuse, ou page ouverte seule). */
   const QS=new URLSearchParams(location.search); let female=QS.get('sex')==='f'; try{ if(localStorage.getItem('nev.sex')==='f') female=true; }catch(e){}
+  /* parcours féminin : même introduction sur fond clair (thème clair + logo rose) */
+  if(female){ if(window.NEV&&NEV.previewSex&&NEV.sex!=='f') NEV.previewSex('f'); document.querySelectorAll('img[src="img/logo-nvb.webp"]').forEach(function(i){ i.src='img/logo-nvb-f.webp'; }); }
   const NEXT = (QS.has('intro') && !female) ? 'connexion.html' : 'accueil.html';
   let t=0, cur=-1, playing=false, voice=false, last=0;
   const idxAt = x => { let i=0; while(i<N-1 && x>=T[i+1]) i++; return i; };

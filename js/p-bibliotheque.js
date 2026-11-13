@@ -11,7 +11,8 @@
   const hasEq = (ex) => (ex.equip || []).every((k) => !!(P.setup && P.setup.equip && P.setup.equip[k]));
   const missOf = (ex) => (ex.equip || []).filter((k) => !(P.setup && P.setup.equip && P.setup.equip[k])).map((k) => NEV.EQUIP[k]);
   const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-  const sexOk = (e) => !e.for || e.for === (NEV.sex || 'm');
+  const FEM = NEV.sex === 'f';
+  const sexOk = (e) => NEV.Ex.sexOk(e, NEV.sex || 'm');
 
   const ALL = (zone ? Z.exercises(zone.id) : NEV.Ex.list()).filter(sexOk);
   const prio = () => (P.setup.zones || (P.setup.zones = []));
@@ -41,12 +42,13 @@
     };
     renderZone();
   } else {
-    $('lead').textContent = ALL.length + ' exercices répartis en ' + NEV.CATS.length + ' catégories, du plus facile au plus extrême, plus les combos et les cartes mythiques. Touche une carte pour voir l\'animation, les étapes, les erreurs à éviter et les variantes.';
+    $('lead').textContent = ALL.length + ' exercices répartis en ' + (FEM ? NEV.CATS.filter((c) => ALL.some((e) => e.group === c.id)).length : NEV.CATS.length) + ' catégories, du plus doux au plus exigeant, plus les combos' + (FEM ? '.' : ' et les cartes mythiques.') + ' Touche une carte pour voir l\'animation, les étapes, les erreurs à éviter et les variantes.';
   }
 
   /* ---------- onglets ---------- */
   let tab = QS.get('tab') || (location.hash === '#combo' ? 'combo' : (location.hash === '#myth' ? 'myth' : 'ex'));
-  const PANES = { ex: 'pEx', combo: 'pCb', myth: 'pMy' };
+  const PANES = FEM ? { ex: 'pEx', combo: 'pCb' } : { ex: 'pEx', combo: 'pCb', myth: 'pMy' };
+  if (FEM) { const mb = document.querySelector('#tabs [data-tab=myth]'); if (mb) mb.hidden = true; const mp = $('pMy'); if (mp) mp.hidden = true; }
   let mythDone = false, cbDone = false;
   function setTab(t, push) {
     if (!PANES[t]) t = 'ex'; tab = t;
@@ -63,13 +65,14 @@
   let order = ALL.slice(), cat = '', tier = 0, q = '', nomat = false, shown = PAGE, view = [];
   $('nEx').textContent = ALL.length + ' exercices';
 
+  const F_LAB = { pecs: 'Buste', dos: 'Posture' };
   function chips() {
     const cn = (id) => ALL.filter((e) => !id || e.group === id).length;
     const cats = NEV.CATS.filter((c) => cn(c.id));
     $('cats').innerHTML = cats.length > 1 ? '<button type="button" class="fchip' + (!cat ? ' on' : '') + '" data-c="">Tout<small>' + ALL.length + '</small></button>' +
-      cats.map((c) => '<button type="button" class="fchip' + (cat === c.id ? ' on' : '') + '" data-c="' + c.id + '">' + esc(c.short) + '<small>' + cn(c.id) + '</small></button>').join('') : '';
+      cats.map((c) => '<button type="button" class="fchip' + (cat === c.id ? ' on' : '') + '" data-c="' + c.id + '">' + esc(FEM && F_LAB[c.id] ? F_LAB[c.id] : c.short) + '<small>' + cn(c.id) + '</small></button>').join('') : '';
     $('tiers').innerHTML = '<button type="button" class="fchip' + (!tier ? ' on' : '') + '" data-t="0">Toutes difficultés</button>' +
-      [1, 2, 3, 4, 5].map((t) => '<button type="button" class="fchip' + (tier === t ? ' on' : '') + '" data-t="' + t + '">' + esc(NEV.Gacha.RARITIES[t - 1].name) + ' · ' + esc(NEV.Ex.TIER_NAMES[t]) + '</button>').join('');
+      (FEM ? [1, 2, 3, 4] : [1, 2, 3, 4, 5]).map((t) => '<button type="button" class="fchip' + (tier === t ? ' on' : '') + '" data-t="' + t + '">' + esc(NEV.Gacha.RARITIES[t - 1].name) + ' · ' + esc(NEV.Ex.TIER_NAMES[t]) + '</button>').join('');
   }
   function filter() {
     const k = norm(q.trim());
@@ -114,14 +117,14 @@
   $('grid').addEventListener('click', (e) => { const b = e.target.closest('[data-open]'); if (b) openEx(b.dataset.open); });
 
   /* =========== 2 · cartes combo, chaque étape est animée par un avatar =========== */
-  const coach = () => ((NEV.cfg && NEV.cfg.combos) || []).filter((c) => NEV.Combos.valid(c)).map((c) => Object.assign({ coach: true }, c));
+  const coach = () => ((NEV.cfg && NEV.cfg.combos) || []).filter((c) => NEV.Combos.valid(c) && c.items.every((it) => sexOk(NEV.Ex.byId(it[0])))).map((c) => Object.assign({ coach: true }, c));
   const inZone = (c) => !zone || c.items.some((it) => zone.ex.indexOf(it[0]) >= 0);
   const FAMS = [];
   if (zone) {
     FAMS.push({ id: 'zone', name: 'Combos « ' + zone.name + ' »', hint: 'Des enchaînements prêts à lancer pour cette zone. Les séries s\'adaptent à ton niveau.', list: () => zone.combos });
     FAMS.push({ id: 'prog', name: 'Programmes complets', hint: 'Les cartes d\'entraînement qui contiennent au moins un exercice de cette zone.', list: () => PR.list.filter(inZone), lv: true });
   } else {
-    FAMS.push({ id: 'prog', name: 'Programmes', hint: '25 cartes d\'entraînement à domicile, 5 niveaux, tout le corps. Choisis une seule carte par séance.', list: () => PR.list, lv: true });
+    FAMS.push({ id: 'prog', name: 'Programmes', hint: FEM ? '25 cartes d\'entraînement à domicile pensées pour toi : fessiers, ventre, souplesse, buste et silhouette. 5 niveaux, une seule carte par séance.' : '25 cartes d\'entraînement à domicile, 5 niveaux, tout le corps. Choisis une seule carte par séance.', list: () => PR.list, lv: true });
     FAMS.push({ id: 'zone', name: 'Combos par zone', hint: 'Un enchaînement par groupe musculaire, prêt à lancer.', list: () => Z.allCombos() });
     if (coach().length) FAMS.push({ id: 'coach', name: 'Combos du coach', hint: 'Créés par l\'admin du site, mis à jour régulièrement.', list: coach });
   }

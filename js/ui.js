@@ -70,7 +70,7 @@
 
   const DESC = {
     accueil: 'Ton tableau de bord', quete: 'Objectifs du jour et combo du coach', gacha: 'Boîte mystère : tirage simple ou multiple', specialisation: 'Touche une zone du corps, on te montre ses exercices',
-    bibliotheque: 'Exercices, combos et cartes mythiques, animés',
+    bibliotheque: NEV.sex === 'f' ? 'Exercices, combos et programmes, animés' : 'Exercices, combos et cartes mythiques, animés',
     avatar: 'Peau, cheveux, yeux, tenue : crée ton avatar', alimentation: 'Repas, sommeil, eau et récupération', social: 'Profils, messages privés, contacts', clans: 'Rejoins un clan et cumule l\'XP', chat: 'Parle au coach et aux joueurs', amis: 'Ajoute des amis par code', coachs: 'Les coachs du site', apropos: 'Toi, le site, les infos légales', recompenses: 'Flammes, badges, parrainage', defis: 'Pompes, squats, gainage : bats ton record', classement: 'Public et entre amis', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'
   };
   I.menu = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 8h16M4 16h16"/></svg>';

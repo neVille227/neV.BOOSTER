@@ -25,9 +25,29 @@
   const byId = {};
   list.forEach((e) => { byId[e.id] = e; });
 
+  /* Qui voit quoi : la partie femme est un parcours à part (abdos, gainage, squats, fessiers, souplesse, buste et posture,
+     repos actif). Aucune pompe ni exercice de bras ou de prise de masse ; les tractions sont des cartes mythiques réservées aux hommes. */
+  const F_CARDIO = ['jumping-jacks', 'montees-genoux', 'talons-fesses', 'marche-genoux-hauts', 'pas-chasses', 'squat-pointes', 'saut-corde', 'skaters'];
+  const F_DOS = ['superman', 'bird-dog', 'anges-inverses', 'retraction-omoplates', 'swimmer', 'pullover-sac'];
+  const F_PECS = ['presse-paumes', 'developpe-bouteilles'];
+  const F_BAN = ['v-ups', 'pistol-assiste'];
+  function sexOk(e, sex) {
+    if (sex !== 'f') return e.for !== 'f';
+    if (e.for === 'm') return false;
+    if (e.for === 'f') return e.group !== 'bras';
+    const gp = e.group;
+    if (gp === 'jambes' || gp === 'abdos') return e.tier <= 4 && F_BAN.indexOf(e.id) < 0;
+    if (gp === 'mobilite') return !/^cou-|^menton|etirement-cou|rotations-epaules/.test(e.id);
+    if (gp === 'cardio') return F_CARDIO.indexOf(e.id) >= 0;
+    if (gp === 'pecs') return F_PECS.indexOf(e.id) >= 0;
+    if (gp === 'dos') return F_DOS.indexOf(e.id) >= 0;
+    return false;
+  }
+
   NEV.EXERCISES = list;
   NEV.Ex = {
     byId: (id) => byId[id] || null,
+    sexOk,
     list: () => list,
     inCat: (catId) => list.filter((e) => e.group === catId),
     TIER_NAMES,

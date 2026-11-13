@@ -98,15 +98,16 @@
   }
   const lvl = NEV.levelFromMax(p.maxPushups);
   const W = G.weights(lvl.n, false, p.pity || 0).pct;
-  $('gxLegend').innerHTML = G.RARITIES.map((r, i) => '<span style="--c:' + r.color + '"><i></i><b>' + r.code + '</b> ' + r.name + ' <em>' + (W[i] >= 10 ? Math.round(W[i]) : Math.round(W[i] * 10) / 10) + ' %</em></span>').join('');
+  const RAR = NEV.sex === 'f' ? G.RARITIES.slice(0, 4) : G.RARITIES;
+  $('gxLegend').innerHTML = RAR.map((r, i) => '<span style="--c:' + r.color + '"><i></i><b>' + r.code + '</b> ' + r.name + ' <em>' + (W[i] >= 10 ? Math.round(W[i]) : Math.round(W[i] * 10) / 10) + ' %</em></span>').join('');
   if (!GUEST) {
-    $('prob').innerHTML = G.RARITIES.map((r, i) => '<div style="--c:' + r.color + '"><b>' + (W[i] >= 10 ? Math.round(W[i]) : Math.round(W[i] * 10) / 10) + ' %</b>' + r.name + '</div>').join('');
+    $('prob').innerHTML = RAR.map((r, i) => '<div style="--c:' + r.color + '"><b>' + (W[i] >= 10 ? Math.round(W[i]) : Math.round(W[i] * 10) / 10) + ' %</b>' + r.name + '</div>').join('');
     const left = Math.max(0, G.PITY_HARD - (p.pity || 0));
     $('oddsTxt').textContent = 'Niveau ' + lvl.n + ' « ' + lvl.name + ' ». ' + (left === 0 ? 'Ton prochain tirage est garanti Épique ou mieux.' : 'Tirages sans Épique d\'affilée : ' + (p.pity || 0) + '. Garantie Épique+ dans ' + left + ' tirage' + (left > 1 ? 's' : '') + ' au plus tard.') + ' La catégorie choisie est toujours respectée : seule la rareté est tirée au sort.';
     const si = G.specialInfo(p, { mode: SPE ? 'spe' : 'daily' });
-    $('spTxt').innerHTML = 'Deux cartes <b>spéciales</b> très rares peuvent sortir au tirage simple « Au hasard » : <b>Repos</b>' + (si.tractionsOk ? ' et <b>Tractions</b>' : ' (et <b>Tractions</b> si tu coches une barre ou une table solide dans tes réglages)') + '. ' +
-      (si.unlocked ? 'Tu t\'es entraîné <b>' + si.days + ' jours sur les ' + si.window + ' derniers</b> : chance de carte spéciale <b>' + si.pct + ' %</b>.'
-        : 'Il faut au moins <b>' + si.need + ' jours d\'entraînement sur les ' + si.window + ' derniers</b> pour passer de 5 % à 40 %. Pour l\'instant : ' + si.days + ' jour' + (si.days > 1 ? 's' : '') + ', donc <b>' + si.pct + ' %</b>.');
+    $('spTxt').innerHTML = 'Une seule carte <b>spéciale</b> existe : <b>Repos</b> (une vraie journée de récupération guidée). Elle ne sort qu\'au tirage simple « Au hasard », au plus une fois tous les <b>' + G.SPECIAL_RULE.cooldown + ' jours</b>. ' +
+      (si.unlocked ? 'Tu t\'es entraîné <b>' + si.days + ' jours sur les ' + si.window + ' derniers</b> : chance de carte Repos <b>' + si.pct + ' %</b>.'
+        : 'Il faut <b>' + si.need + ' jours d\'entraînement sur les ' + si.window + ' derniers</b> pour avoir <b>40 %</b> de chance. Pour l\'instant : ' + si.days + ' jour' + (si.days > 1 ? 's' : '') + '.');
     const B = G.boxCfg(), pool = G.comboPool(p).length;
     $('boxTxt').innerHTML = 'Le tirage multiple donne <b>' + B.cards + ' cartes</b>, toutes différentes. ' + (pool ? 'Chance qu\'une carte <b>Combo</b> (un enchaînement) se glisse dans ta boîte : <b>' + Math.round(B.comboChance * 100) + ' %</b>, en « Au hasard » ou si tous ses exercices sont de la catégorie.' : 'Aucun combo ne correspond à ton matériel pour l\'instant.');
   }

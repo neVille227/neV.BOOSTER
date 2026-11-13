@@ -1,10 +1,10 @@
-/* Introduction féminine : carte à gratter neV.BOOSTER, 4 scènes d'histoire, puis Yuki. Se lance seule, « Passer » mène à l'accueil. */
+/* Introduction féminine : l'affiche neV.BOOSTER apparaît en fondu flottant (voile de fumée), puis l'introduction racontée sur fond clair. « Passer » mène à l'accueil. */
 (function () {
   'use strict';
   var IM = { i1: 'img/intro-i1.webp', i3: 'img/intro-i3.webp', i6: 'img/intro-i6.webp', i9: 'img/intro-i9.webp', i10: 'img/intro-i10.webp', i12: 'img/intro-i12.webp', i14: 'img/intro-i14.webp', i15: 'img/intro-i15.webp', i16: 'img/intro-i16.webp', i17: 'img/intro-i17.webp' };
   var SL = [[['i1', '3/4', '62% 50%'], ['i6', '3/4', '32% 50%']], [['i3', '3/4', '69% 50%'], ['i9', '3/4', '50% 50%']], [['i10', '1/1', '50% 50%', 'Squats'], ['i12', '1.6', '48% 50%', 'Mobilité'], ['i14', '4/3', '50% 50%', 'Cardio'], ['i15', '1/1', '50% 30%', 'À son rythme'], ['i16', '1.6', '79% 50%', 'Étirements']], [['i17', '4/5', '50% 50%']]];
   var D = [6.4, 9, 8, 11, 7, 0];
-  var scr = (window.NEVSCRATCH && document.getElementById('scr')) ? NEVSCRATCH.mount(document.getElementById('scr'), { light: true }) : null;
+  var scr = null;   // plus de carte à gratter côté femme : fondu sur l'affiche
   var sc = Array.prototype.slice.call(document.querySelectorAll('.scene')), bar = document.getElementById('bar'), T = [];
   var reduced = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   function mk(tag, cls) { var e = document.createElement(tag); if (cls) e.className = cls; return e; }

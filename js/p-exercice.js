@@ -46,7 +46,7 @@
     const c = NEV.Figure.mount(el, ex, {});
     if (ctlName === 'demo') demoCtl = c; else if (ctlName === 'mini') miniCtl = c; else nextCtl = c;
   };
-  const needsSolid = steps.some((s) => (s.ex.equip || []).some((k) => k === 'bar' || k === 'table') || s.ex.special === 'tractions');
+  const needsSolid = steps.some((s) => (s.ex.equip || []).some((k) => k === 'bar' || k === 'table') || /^tractions/.test(s.ex.id));
 
   /* ---------- 2. Écran « avant de commencer » ---------- */
   function renderBrief() {

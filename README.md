@@ -348,3 +348,12 @@ Tirage simple : la carte sort de la boîte, tourne 8 fois (2880°) avec lumière
 - Nouvelle page `avatar.html` (menu « Mon espace → Mon avatar », lien depuis l'accueil) : teint de peau, cheveux, yeux, tenue, couleur d'accent, aperçu en direct, curseur d'évolution.
 - Stockage : `p.avatar` dans le profil (synchronisé comme le reste). `null` = apparence d'origine, donc aucun changement de thème pour qui ne personnalise pas.
 - `NEV.Avatar` (js/core.js) : palettes, `get()`, `set()`, `reset()`. Lu par `js/avatar-illus.js` (avatar illustré partout) et par les mannequins 3D (`mannequin3d.js`, `mythic3d.js`).
+
+## V23 — Parcours femme séparé
+- Intro d'ouverture femme : plus de carte à gratter, l'affiche neV.BOOSTER apparaît en fondu flottant avec voile de fumée (`femme/intro.*`), adaptée mobile / tablette / PC. L'introduction racontée (`intro-nvb.html`) passe sur fond clair (blanc, rose pâle, rouge) pour les femmes.
+- Niveau de départ en SQUATS (fourchettes 1–15 / 16–40 / 41–80 / 81–120 / 121+), converti en interne par `NEV.squatsToPush`.
+- `NEV.Ex.sexOk` : le parcours femme ne propose que abdos, gainage, squats, fessiers, souplesse, buste/posture et repos actif (aucune pompe, aucun exercice de bras). Nouvelles fiches (presses de paumes, fente basse, pont doux, chat-vache lent).
+- Zones, combos (`js/zones.js`) et 25 programmes féminins (`js/programmes.js`) propres à elles ; plus de cartes mythiques ni d'onglet « mythiques » côté femme.
+- Gacha : seule carte spéciale = Repos (40 % après 7 jours d'entraînement, 1 fois / 7 jours). Les tractions deviennent des cartes mythiques (hommes).
+- Badges : « Squats 100 » (femme), « Pompes 50 » et « Mythique » masqués côté femme.
+- Fond d'écran de Yuki centré sur tous les formats (`css/shell.css`).

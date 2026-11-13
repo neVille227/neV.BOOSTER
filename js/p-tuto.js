@@ -21,7 +21,7 @@
   ];
   const STEPS = [
     ['1 · Crée ton compte', 'Entre ton pseudo, ton e-mail et un mot de passe. Toutes les cartes peuvent sortir pour tout le monde, selon ton niveau. Ton avatar et ton héros te suivent partout.'],
-    ['2 · Dis ton maximum de pompes', 'Fais de ton mieux, honnêtement : c\'est ton point de départ. Il détermine ton niveau (Éveil, Initié, Combattant, Guerrier, Légende) et le nombre de répétitions de chaque exercice. Tu peux aussi indiquer le matériel que tu as (chaise, mur, sac, marche, barre…).'],
+    [NEV.sex === 'f' ? '2 · Dis ton maximum de squats' : '2 · Dis ton maximum de pompes', 'Fais de ton mieux, honnêtement : c\'est ton point de départ. Il détermine ton niveau (Éveil, Initié, Combattant, Guerrier, Légende) et le nombre de répétitions de chaque exercice. Tu peux aussi indiquer le matériel que tu as (chaise, mur, sac, marche, barre…).'],
     ['3 · Tire ta carte du jour', 'Chaque jour, 5 cartes sont posées. Un doigt musclé en choisit une, elle tourne 8 fois sur elle-même, explose et se révèle : c\'est ton exercice. Une seule carte par jour, la même pour toute la journée.'],
     ['4 · Fais l\'exercice devant la caméra', 'Trois secondes après la carte, la séance démarre. La caméra suit ton corps, compte tes répétitions et confirme la bonne position : quand tout est vert, tu vois « OK ». Pas de caméra ? Tu peux continuer sans, mais tu gagnes moitié moins de points.'],
     ['5 · Gagne flammes, badges, XP', 'Chaque jour de connexion donne une flamme, chaque exercice terminé de l\'XP, et ton héros grandit. Des badges récompensent ta régularité. Tu peux inviter des amis avec ton code de parrainage.'],
@@ -54,9 +54,9 @@
 
   sec('regles', '📜', 'Les règles du jeu',
     '<div class="kpi"><div><b>1</b><span>carte par jour</span></div><div><b>3 s</b><span>avant le début de la séance</span></div><div><b>×2</b><span>séries après un jour manqué</span></div><div><b>7</b><span>tirages max. sans carte rare (pitié)</span></div></div>' +
-    '<ul><li><b>Une carte par jour</b> : tu ne peux pas retirer. Reviens demain.</li><li><b>Jour manqué</b> : le lendemain, le nombre de séries est <b>doublé</b>. C\'est la règle du jeu, pas une punition : le corps ne se rattrape pas, mais la discipline oui.</li><li><b>Raretés</b> : Commun (N), Rare (R), Épique (SR), Légendaire (UR), Mythique (MR). Plus ton niveau est élevé, plus les cartes fortes sortent. Les moins de 18 ans ne tirent ni Légendaire ni Mythique.</li><li><b>Pitié</b> : si tu enchaînes les cartes communes, une carte au moins Rare finit par sortir (douce à partir de 4 tirages, certaine au 7ᵉ).</li><li><b>Hasard</b> : le tirage utilise un générateur aléatoire sécurisé du navigateur, sans triche possible.</li><li><b>Cartes spéciales</b> : <b>Repos</b> (une vraie journée de récupération guidée) et <b>Tractions</b> (si tu as une barre ou une table solide). Elles sont très rares : environ 5 % si tu t\'es peu entraîné, jusqu\'à 40 % si tu as fait au moins 4 jours d\'entraînement sur les 7 derniers. Avec 10 pompes max, une carte Tractions te donne 5 tractions.</li></ul>' +
-    '<h3>Niveaux selon ton maximum de pompes</h3><div class="tablewrap"><table class="tbl"><thead><tr><th>Niveau</th><th>Nom</th><th>Maximum de pompes</th></tr></thead><tbody>' +
-    (NEV.LEVELS || []).map((l) => '<tr><td>' + l.n + '</td><td><b>' + esc(l.name) + '</b></td><td>' + esc(l.range) + '</td></tr>').join('') + '</tbody></table></div>');
+    '<ul><li><b>Une carte par jour</b> : tu ne peux pas retirer. Reviens demain.</li><li><b>Jour manqué</b> : le lendemain, le nombre de séries est <b>doublé</b>. C\'est la règle du jeu, pas une punition : le corps ne se rattrape pas, mais la discipline oui.</li><li><b>Raretés</b> : Commun (N), Rare (R), Épique (SR), Légendaire (UR)' + (NEV.sex === 'f' ? '.' : ', Mythique (MR).') + ' Plus ton niveau est élevé, plus les cartes fortes sortent. Les moins de 18 ans ne tirent ni Légendaire ni Mythique.</li><li><b>Pitié</b> : si tu enchaînes les cartes communes, une carte au moins Rare finit par sortir (douce à partir de 4 tirages, certaine au 7ᵉ).</li><li><b>Hasard</b> : le tirage utilise un générateur aléatoire sécurisé du navigateur, sans triche possible.</li><li><b>Carte spéciale</b> : <b>Repos</b> (une vraie journée de récupération guidée), 40 % de chance après 7 jours d\'entraînement, au plus une fois tous les 7 jours.</li></ul>' +
+    '<h3>Niveaux selon ton maximum de ' + (NEV.sex === 'f' ? 'squats' : 'pompes') + '</h3><div class="tablewrap"><table class="tbl"><thead><tr><th>Niveau</th><th>Nom</th><th>Maximum de ' + (NEV.sex === 'f' ? 'squats' : 'pompes') + '</th></tr></thead><tbody>' +
+    (NEV.LEVELS || []).map((l) => '<tr><td>' + l.n + '</td><td><b>' + esc(l.name) + '</b></td><td>' + esc(NEV.levelRange(l)) + '</td></tr>').join('') + '</tbody></table></div>');
 
   sec('recompenses', '🔥', 'Flammes, XP et héros',
     '<div class="cards"><div class="cardx"><span class="tag">Flammes</span><h4>Connexion quotidienne</h4><p>+1 flamme par jour de connexion, +4 bonus tous les 7 jours d\'affilée, +10 bonus tous les 30 jours.</p></div>' +
@@ -77,7 +77,7 @@
     co('⚠️', 'warn', 'Arrête-toi en cas de <b>douleur vive</b>, d\'étourdissement, de nausée ou d\'essoufflement anormal. Prévois toujours une zone libre autour de toi, et demande à un adulte si tu as un doute sur ta santé.'));
 
   const GL = [
-    ['Gacha', 'Tirage au sort d\'une carte.'], ['Carte', 'Un exercice avec sa rareté et son nombre de séries.'], ['Rareté', 'Niveau de la carte : Commun, Rare, Épique, Légendaire, Mythique.'], ['Pitié', 'Garantie qu\'une carte au moins Rare finit par sortir.'],
+    ['Gacha', 'Tirage au sort d\'une carte.'], ['Carte', 'Un exercice avec sa rareté et son nombre de séries.'], ['Rareté', 'Niveau de la carte : Commun, Rare, Épique, Légendaire' + (NEV.sex === 'f' ? '.' : ', Mythique.') + ''], ['Pitié', 'Garantie qu\'une carte au moins Rare finit par sortir.'],
     ['Série', 'Un ensemble de répétitions suivi d\'un repos.'], ['Répétition', 'Un mouvement complet de l\'exercice.'], ['Combo', 'Une suite d\'exercices enchaînés, prête à lancer.'], ['Flamme', 'Monnaie gagnée par ta régularité.'],
     ['Badge', 'Récompense qui s\'affiche quand tu atteins un objectif.'], ['XP', 'Points d\'expérience qui font grandir ton héros.'], ['Aura', 'Effet visuel autour de ton héros, acheté avec des flammes.'], ['Parrainage', 'Invitation d\'un ami avec ton code.'],
     ['Streak', 'Nombre de jours d\'affilée où tu t\'es entraîné.'], ['Gainage', 'Tenir une position sans bouger pour renforcer le tronc.'], ['Isométrique', 'Effort où le muscle travaille sans bouger (planche).'], ['Repos actif', 'Journée légère : marche, étirements, respiration.'], ['Échauffement', 'Préparation du corps avant l\'effort.']
@@ -93,9 +93,9 @@
     acc('Ma caméra ne marche pas.', 'Vérifie que le navigateur a la permission d\'utiliser la caméra et que la page est en https ou localhost. Sinon, passe en mode manuel.') +
     acc('La caméra compte mal mes répétitions.', 'Recule un peu, améliore la lumière, mets tout ton corps dans l\'image et fais des mouvements complets et contrôlés.') +
     acc('Quelqu\'un voit-il ma vidéo ?', 'Non. L\'image est analysée sur ton appareil et n\'est ni envoyée ni enregistrée.') +
-    acc('Je n\'ai pas de barre pour les tractions.', 'La carte Tractions ne sort que si tu as indiqué une barre ou une table solide dans tes réglages.') +
+    acc('Je n\'ai pas de barre pour les tractions.', 'Les tractions sont des cartes mythiques : elles ne sortent que si tu as indiqué une barre ou une table solide dans tes réglages.') +
     acc('Comment gagner plus de flammes ?', 'Connecte-toi chaque jour, atteins les paliers de 7 et 30 jours d\'affilée, et parraine des amis.') +
-    acc('Puis-je changer mon maximum de pompes ?', 'Oui. Quand tu progresses, refais le test et mets-le à jour : tes cartes s\'adaptent à ton nouveau niveau.') +
+    acc(NEV.sex === 'f' ? 'Puis-je changer mon maximum de squats ?' : 'Puis-je changer mon maximum de pompes ?', 'Oui. Quand tu progresses, refais le test et mets-le à jour : tes cartes s\'adaptent à ton nouveau niveau.') +
     acc('À quelle heure change le jour ?', 'À minuit, selon l\'heure de ton appareil.') +
     acc('Où trouver des conseils sur le sommeil et la nourriture ?', 'Dans les pages <a href="alimentation.html" data-go>Alimentation et conseils</a>.'));
 

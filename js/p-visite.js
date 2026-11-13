@@ -14,7 +14,7 @@
   $('heroImg').src = SEX === 'f' ? 'img/avatar-f.webp' : 'img/avatar-m.webp';
   Array.prototype.forEach.call(document.querySelectorAll('.pc-c'), (b) => b.setAttribute('aria-pressed', b.dataset.sex === SEX ? 'true' : 'false'));
 
-  const ALL = NEV.Ex.list().filter((e) => !e.for || e.for === SEX);
+  const ALL = NEV.Ex.list().filter((e) => NEV.Ex.sexOk(e, SEX));
   const STEPS = [['accueil', 'Accueil'], ['plateforme', 'Plateforme'], ['exercices', 'Exercices'], ['gacha', 'Gacha'], ['parcours', 'Parcours'], ['niveaux', 'Niveaux'], ['inscription', 'Inscription']];
   $('vNav').innerHTML = STEPS.map((s, i) => '<a href="#' + s[0] + '" data-s="' + s[0] + '"><b>' + (i + 1) + '</b><span>' + s[1] + '</span></a>').join('');
 
@@ -112,9 +112,9 @@
   /* ---- 6. niveaux ---- */
   const TIERS = { easy: [1, 2], mid: [3], hard: [4, 5] };
   const LVTXT = {
-    easy: ['Éveil · Initié', 'Jusqu\'à 15 pompes d\'affilée', 'On pose les bases, en douceur : mouvements simples, séries courtes, récupération généreuse.'],
-    mid: ['Combattant', '16 à 30 pompes d\'affilée', 'Tu tiens le rythme : l\'intensité monte et les cartes rares deviennent plus fréquentes.'],
-    hard: ['Guerrier · Légende', 'Plus de 30 pompes d\'affilée', 'Du volume, de la technique, du caractère : exercices exigeants et cartes mythiques à portée de main.']
+    easy: ['Éveil · Initié', SEX === 'f' ? 'Jusqu\'à 40 squats d\'affilée' : 'Jusqu\'à 15 pompes d\'affilée', 'On pose les bases, en douceur : mouvements simples, séries courtes, récupération généreuse.'],
+    mid: ['Combattant', SEX === 'f' ? '41 à 80 squats d\'affilée' : '16 à 30 pompes d\'affilée', 'Tu tiens le rythme : l\'intensité monte et les cartes rares deviennent plus fréquentes.'],
+    hard: ['Guerrier · Légende', SEX === 'f' ? 'Plus de 80 squats d\'affilée' : 'Plus de 30 pompes d\'affilée', 'Du volume, de la technique, du caractère : exercices exigeants' + (SEX === 'f' ? ' et cartes plus rares.' : ' et cartes mythiques à portée de main.')]
   };
   function lvUi() {
     $('lvGrid').innerHTML = Object.keys(LV).map((k) => {

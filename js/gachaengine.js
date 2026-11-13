@@ -4,7 +4,7 @@
    - raretés pondérées selon le niveau du joueur,
    - garantie « Épique » si trop de jours sans carte forte,
    - aucune répétition des 3 derniers exercices,
-   - cartes SPÉCIALES « Repos » et « Tractions » (très rares),
+   - une seule carte SPÉCIALE : « Repos » (40 % après 7 jours d'entraînement, une fois par semaine) ; les tractions sont des cartes mythiques (hommes),
    - hasard du navigateur (crypto.getRandomValues), pas Math.random().
    Deux systèmes de tirage utilisent ce moteur :
    - le gacha du jour       : draw(p, user)
@@ -41,9 +41,9 @@
   };
   const PITY_SOFT = 4, PITY_HARD = 7, CARDS_ON_TABLE = 5, REST_SEC = { 1: 45, 2: 40, 3: 35, 4: 30, 5: 30 };
 
-  /* Cartes spéciales : il faut s'être entraîné au moins `minDays` jours sur les `window`
-     derniers jours pour passer de 5 % à 40 % de chance. Réglable depuis l'admin (NEV.cfg.special). */
-  const SPECIAL_RULE = { minDays: 4, window: 7, high: 0.4, low: 0.05, reposShare: 0.55, restSec: 90 };
+  /* Carte spéciale Repos : il faut s'être entraîné `minDays` jours sur les `window` derniers jours
+     pour passer de 0 % à 40 % de chance, et au plus une fois tous les `cooldown` jours. Réglable depuis l'admin (NEV.cfg.special). */
+  const SPECIAL_RULE = { minDays: 7, window: 7, high: 0.4, low: 0, reposShare: 1, restSec: 90, cooldown: 7 };
   const rule = () => Object.assign({}, SPECIAL_RULE, (NEV.cfg && NEV.cfg.special) || {});
   const ZONE_BIAS = 0.5; // part des tirages du jour qui visent tes zones prioritaires
 
@@ -51,6 +51,7 @@
     const w = (WEIGHTS[level] || WEIGHTS[1]).slice();
     const gm = NEV.cfg && NEV.cfg.gachaWeights;   // multiplicateurs réglés par l'admin (0 à 3 par rareté)
     if (gm && gm.length === 5) for (let i = 0; i < 5; i++) w[i] *= gm[i];
+    if (NEV.sex === 'f') w[4] = 0;   // parcours féminin : pas de cartes mythiques
     if (cautious) { w[3] = 0; w[4] = 0; }
     if (pity >= PITY_SOFT) {
       const boost = 1 + 0.6 * (pity - PITY_SOFT + 1);
@@ -85,10 +86,10 @@
   /* Un exercice peut-il sortir ? opts.zone : tirage de Spécialisation (mobilité autorisée). */
   function eligible(ex, setup, opts) {
     opts = opts || {};
-    if (ex.for && ex.for !== (NEV.sex || 'm')) return false; // exercices propres à une version
+    if (!NEV.Ex.sexOk(ex, NEV.sex || 'm')) return false; // chaque parcours (homme / femme) a ses propres exercices
     if (NEV.cfg && NEV.cfg.exStatus && NEV.cfg.exStatus[ex.id]) return false; // masqué par l'admin (brouillon ou désactivé)
     if (ex.special) return false; // Repos et Tractions ne sortent que par les cartes spéciales
-    const gachaOk = ex.gacha !== false || (opts.zone && ex.group === 'mobilite');
+    const gachaOk = ex.gacha !== false || (opts.zone && ex.group === 'mobilite') || (NEV.sex === 'f' && ex.group === 'mobilite');
     if (!gachaOk || !ex.cam) return false;
     if (ex.zoneOnly && !opts.zone && !((setup.zones || []).some((z) => NEV.Zones && NEV.Zones.get(z) && NEV.Zones.get(z).ex.indexOf(ex.id) >= 0))) return false;
     const eq = setup.equip || {};
@@ -147,8 +148,9 @@
     const prev = (p.history || [])[0];
     const lastCardRest = (p.daily && p.daily.card && p.daily.card.special === 'repos') || (opts.mode === 'spe' && p.spe && p.spe.card && p.spe.card.special === 'repos');
     // Repos : seulement si tu t'es entraîné hier ou aujourd'hui, jamais un jour doublé, jamais deux fois d'affilée.
-    const reposOk = !double && !!last && util.daysBetween(last, today) <= 1 && !(prev && prev.rest && util.daysBetween(prev.date, today) <= 1) && !lastCardRest && !(opts.mode === 'spe' && dailyDone);
-    const tractionsOk = hasBar(p);
+    const recentRest = (p.history || []).some((h) => h.rest && util.daysBetween(h.date, today) >= 0 && util.daysBetween(h.date, today) < R.cooldown);
+    const reposOk = !double && !!last && util.daysBetween(last, today) <= 1 && !recentRest && !lastCardRest && !(opts.mode === 'spe' && dailyDone);
+    const tractionsOk = false;   // les tractions sont désormais des cartes mythiques normales
     return { days, need: R.minDays, window: R.window, chance, pct: Math.round(chance * 100), unlocked: days >= R.minDays, reposOk, tractionsOk, double };
   }
 
@@ -169,7 +171,6 @@
     const R = rule();
     const kinds = [];
     if (info.reposOk) kinds.push(['repos', R.reposShare]);
-    if (info.tractionsOk) kinds.push(['tractions', 1 - R.reposShare]);
     if (!kinds.length) return null;
     return kinds[rng.weighted(kinds.map((k) => k[1]))][0];
   }
@@ -261,7 +262,7 @@
   function comboPool(p) {
     const eq = (p.setup && p.setup.equip) || {};
     return (NEV.Combos ? NEV.Combos.all() : []).filter((c) => NEV.Combos.valid(c) && !c.free && c.items.length >= 2 && c.items.length <= 4 &&
-      c.items.every((it) => { const ex = NEV.Ex.byId(it[0]); return ex && !ex.special && (ex.equip || []).every((k) => !!eq[k]); }));
+      c.items.every((it) => { const ex = NEV.Ex.byId(it[0]); return ex && !ex.special && NEV.Ex.sexOk(ex, NEV.sex || 'm') && (ex.equip || []).every((k) => !!eq[k]); }));
   }
 
   function boxPlan(pl, sets) {
