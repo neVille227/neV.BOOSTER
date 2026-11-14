@@ -1,0 +1,6 @@
+A SUPPRIMER de ton dépôt :
+js/p-gacha-box.js
+js/gacha-box3d.js
+js/gacha-box-cards.js
+css/gacha-box.css
+GACHA-BOX.md (remplacé par GACHA.md)
