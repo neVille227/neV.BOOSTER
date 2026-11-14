@@ -287,7 +287,7 @@
     login: { last: null, streak: 0, best: 0, days: [] },
     badges: {},
     ref: { count: 0, paid: 0, by: null, welcomed: false },
-    aura: 'none', auras: ['none'], avatar: null,
+    aura: 'none', auras: ['none'], avatar: null, weightKg: null,
     updated: 0
   });
   const P = (NEV.player = {

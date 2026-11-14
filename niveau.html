@@ -40,6 +40,16 @@
   .prob div{text-align:center;padding:10px 4px;border-radius:12px;background:#ffffff0a;border:1px solid var(--c,#fff3);font-size:.72rem;font-weight:700}
   .prob b{display:block;font-size:1.05rem;color:var(--c,#fff)}
   .nav{display:flex;gap:10px;margin-top:24px}.nav .btn{flex:1}
+  .wt{margin-top:22px;padding:18px 16px;border-radius:16px;border:1px solid #ffffff1f;background:#ffffff08}
+  .wt-h{font-size:1.15rem;font-weight:900;margin:0 0 4px}.wt-h em{font-style:normal;color:var(--gold)}
+  .wt-s{color:var(--muted);font-size:.84rem;margin:0 0 12px}
+  .wt-v{display:flex;align-items:center;justify-content:center;gap:16px}
+  .wt-v button{width:44px;height:44px;border-radius:50%;border:1px solid #ffffff2a;background:#ffffff0d;font-size:1.3rem;font-weight:800;color:inherit}
+  .wt-v output{min-width:130px;text-align:center;font-size:2.2rem;font-weight:900}
+  .wt-n{min-height:2.6em;font-size:.84rem;color:var(--muted);margin-top:4px}
+  .wt-skip{display:flex;gap:8px;align-items:center;font-size:.84rem;color:var(--muted);margin-top:8px;cursor:pointer}
+  html[data-theme=light] .wt{border-color:var(--line,#e6cfd5);background:#fff}
+  html[data-theme=light] .wt-v button{border-color:var(--line,#e6cfd5);background:#fff}
   @media(max-width:480px){.prob{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
@@ -59,6 +69,14 @@
         </div>
         <input type="range" id="maxRange" min="1" max="200" value="10" aria-label="Curseur du maximum de pompes">
         <div class="lvl"><div class="n" id="lvN">2</div><div><b id="lvName">Initié</b><span id="lvDesc"></span></div></div>
+        <div class="wt" id="wtBox">
+          <h2 class="wt-h">Ton <em>poids</em></h2>
+          <p class="wt-s">Pour adapter tes exercices à ton corps (genoux, dos, souffle). Tout le monde peut s'entraîner ici, quel que soit son poids.</p>
+          <div class="wt-v"><button type="button" id="wMinus" aria-label="Moins un kilo">−</button><output id="wOut" for="wRange">70 kg</output><button type="button" id="wPlus" aria-label="Plus un kilo">+</button></div>
+          <input type="range" id="wRange" min="30" max="250" value="70" aria-label="Ton poids en kilos">
+          <div class="wt-n" id="wNote" role="status"></div>
+          <label class="wt-skip"><input type="checkbox" id="wSkip"> Je préfère ne pas le dire</label>
+        </div>
         <div class="err" id="err1" role="alert" style="margin-top:12px"></div>
         <div class="nav"><button class="btn block" id="to2" type="button">Continuer</button></div>
       </section>

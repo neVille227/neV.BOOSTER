@@ -26,6 +26,21 @@
   $('maxIn').oninput = function () { var v = Number(this.value); if (this.value !== '' && v >= 1 && v <= MAXV) { val = Math.round(v); $('maxRange').value = val; var l = level(); $('lvN').textContent = l.n; $('lvName').textContent = l.name; $('lvDesc').textContent = NEV.levelRange(l, p.sex) + ' · ' + l.desc; } };
   $('maxIn').onchange = function () { setVal(this.value); };
 
+  /* Poids du joueur (kg) : sert à adapter les exercices (voir NEV.Ex.weightOk). */
+  var WMIN = 30, WMAX = 250, kg = Number(p.weightKg) || 70, skipW = p.weightKg === 0;
+  function renderW() {
+    $('wOut').textContent = skipW ? '— kg' : kg + ' kg'; $('wRange').value = kg; $('wRange').disabled = skipW; $('wMinus').disabled = $('wPlus').disabled = skipW; $('wSkip').checked = skipW;
+    var n = '';
+    if (!skipW && kg >= NEV.Ex.HEAVY_KG) n = 'Parcours adapté : aucun saut ni exercice à fort impact, pour ménager tes genoux, ton dos et tes articulations.' + (kg >= 130 ? ' Par prudence, demande l\'avis d\'un médecin avant de commencer et progresse doucement.' : '');
+    else if (!skipW) n = 'Parcours standard.';
+    $('wNote').textContent = n;
+  }
+  function setW(v) { kg = NEV.util.clamp(Math.round(Number(v) || 70), WMIN, WMAX); renderW(); }
+  $('wMinus').onclick = function () { setW(kg - 1); }; $('wPlus').onclick = function () { setW(kg + 1); };
+  $('wRange').oninput = function () { setW(this.value); };
+  $('wSkip').onchange = function () { skipW = this.checked; renderW(); };
+  renderW();
+
   function show(n) {
     $('s1').classList.toggle('on', n === 1); $('s2').classList.toggle('on', n === 2);
     $('d2').classList.toggle('on', n === 2);
@@ -63,7 +78,8 @@
     var cam = document.querySelector('[name=cam]:checked').value === '1';
     if (SQ) { p.maxSquats = val; p.maxPushups = NEV.squatsToPush(val); } else p.maxPushups = val;
     p.level = l.n;
-    p.setup = { focus: focus, sets: sets, camera: cam, equip: equip, zones: (p.setup && p.setup.zones) || [] };
+    p.weightKg = skipW ? 0 : kg;   // 0 = non communiqué
+    p.setup = { focus: focus, sets: sets, camera: cam, equip: equip, zones: (p.setup && p.setup.zones) || [], weightKg: p.weightKg };
     // Si le réglage change après un tirage non commencé, on garde la carte déjà tirée du jour.
     NEV.player.save(p);
     NEV.go('accueil.html');

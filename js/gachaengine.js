@@ -92,6 +92,7 @@
     const gachaOk = ex.gacha !== false || (opts.zone && ex.group === 'mobilite') || (NEV.sex === 'f' && ex.group === 'mobilite');
     if (!gachaOk || !ex.cam) return false;
     if (ex.zoneOnly && !opts.zone && !((setup.zones || []).some((z) => NEV.Zones && NEV.Zones.get(z) && NEV.Zones.get(z).ex.indexOf(ex.id) >= 0))) return false;
+    if (!NEV.Ex.weightOk(ex, setup.weightKg)) return false; // poids élevé : pas de sauts ni d'exercices à fort impact
     const eq = setup.equip || {};
     return (ex.equip || []).every((k) => !!eq[k]);
   }
@@ -262,7 +263,7 @@
   function comboPool(p) {
     const eq = (p.setup && p.setup.equip) || {};
     return (NEV.Combos ? NEV.Combos.all() : []).filter((c) => NEV.Combos.valid(c) && !c.free && c.items.length >= 2 && c.items.length <= 4 &&
-      c.items.every((it) => { const ex = NEV.Ex.byId(it[0]); return ex && !ex.special && NEV.Ex.sexOk(ex, NEV.sex || 'm') && (ex.equip || []).every((k) => !!eq[k]); }));
+      c.items.every((it) => { const ex = NEV.Ex.byId(it[0]); return ex && !ex.special && NEV.Ex.sexOk(ex, NEV.sex || 'm') && NEV.Ex.weightOk(ex, p.weightKg) && (ex.equip || []).every((k) => !!eq[k]); }));
   }
 
   function boxPlan(pl, sets) {

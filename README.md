@@ -360,3 +360,8 @@ Tirage simple : la carte sort de la boîte, tourne 8 fois (2880°) avec lumière
 
 ## V24 — Suppression du compte sans mot de passe
 - `account/delete` n'exige plus de mot de passe : un seul compte par e-mail, confirmation dans l'appli puis courriel « compte supprimé » (si le SMTP est réglé). Page `compte.html` mise à jour.
+
+## V25 — Poids et adaptation des exercices
+- Page niveau : curseur de poids (30–250 kg), boutons − / +, case « Je préfère ne pas le dire » (facultatif).
+- À partir de 100 kg : plus de sauts ni d'exercices à fort impact dans le gacha, les combos et les programmes (`NEV.Ex.weightOk`). Au-delà de 130 kg, conseil de demander l'avis d'un médecin.
+- Poids enregistré dans `p.weightKg` et `p.setup.weightKg`. Cache : `nev-v36`.

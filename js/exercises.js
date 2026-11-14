@@ -44,10 +44,16 @@
     return false;
   }
 
+  /* Poids du joueur : à partir de 100 kg, le tirage évite les sauts et les exercices à fort impact ou qui demandent de soulever tout le poids du corps
+     (tractions, pistol). Même niveau de cartes, mais des exercices qui ménagent les articulations. */
+  const HEAVY_KG = 100;
+  const HEAVY_BAN = /(^|-)(saut|saute|sauts|sautes)(-|$)|jumping|burpees|skaters|montees-genoux|talons-fesses|mountain|bear-crawl|pistol|claquees|v-ups|^tractions|saut-corde/;
+  function weightOk(e, kg) { return !(Number(kg) >= HEAVY_KG) || !HEAVY_BAN.test(e.id); }
+
   NEV.EXERCISES = list;
   NEV.Ex = {
     byId: (id) => byId[id] || null,
-    sexOk,
+    sexOk, weightOk, HEAVY_KG,
     list: () => list,
     inCat: (catId) => list.filter((e) => e.group === catId),
     TIER_NAMES,
