@@ -294,8 +294,8 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   r = await call(ADM2, 'POST', '/api/admin/reviews', { id: 'Pas Bon', status: 'ok' }); t('relecture : identifiant invalide refusé', r.s === 400);
   // export / suppression de compte
   r = await call(U4.J, 'GET', '/api/account/export'); t('export des données du joueur (JSON)', r.s === 200 && r.j && r.j.data && r.j.data.user.pseudo === 'Wen' && !/hash|salt/.test(JSON.stringify(r.j)), r.s);
-  r = await call(U4.J, 'POST', '/api/account/delete', { password: 'faux' }); t('suppression : mauvais mot de passe refusé', r.s === 401);
-  r = await call(U4.J, 'POST', '/api/account/delete', { password: 'motdepasse9' }); t('suppression du compte', r.s === 200);
+  r = await call(U4.J, 'POST', '/api/account/delete', {}); t('suppression : confirmation obligatoire', r.s === 400);
+  r = await call(U4.J, 'POST', '/api/account/delete', { confirm: true }); t('suppression du compte (sans mot de passe)', r.s === 200);
   r = await call(new Jar(), 'POST', '/api/login', { email: 'wen@test.fr', password: 'motdepasse9' }); t('compte supprimé : connexion impossible', r.s === 401);
   r = await call(ADM2, 'POST', '/api/admin/db/query', { sql: "SELECT COUNT(*) AS n FROM users WHERE pseudo='Wen'" }); t('compte supprimé : plus aucune trace en base', r.j.rows[0].n === 0);
   r = await call(ADM2, 'POST', '/api/admin/db/query', { sql: 'SELECT COUNT(*) AS n FROM pragma_table_info(\'users\') WHERE name=\'age\'' }); t('la colonne « age » n\'existe plus', r.s === 400 || (r.j && r.j.rows && r.j.rows[0].n === 0));

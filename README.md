@@ -357,3 +357,6 @@ Tirage simple : la carte sort de la boîte, tourne 8 fois (2880°) avec lumière
 - Gacha : seule carte spéciale = Repos (40 % après 7 jours d'entraînement, 1 fois / 7 jours). Les tractions deviennent des cartes mythiques (hommes).
 - Badges : « Squats 100 » (femme), « Pompes 50 » et « Mythique » masqués côté femme.
 - Fond d'écran de Yuki centré sur tous les formats (`css/shell.css`).
+
+## V24 — Suppression du compte sans mot de passe
+- `account/delete` n'exige plus de mot de passe : un seul compte par e-mail, confirmation dans l'appli puis courriel « compte supprimé » (si le SMTP est réglé). Page `compte.html` mise à jour.

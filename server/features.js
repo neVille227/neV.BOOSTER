@@ -270,10 +270,14 @@ module.exports = function features(ctx) {
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': b.length, 'Content-Disposition': 'attachment; filename="neVBOOSTER-mes-donnees.json"', 'Cache-Control': 'no-store' }); return res.end(b);
     }
     if (route === 'account/delete' && m === 'POST') {
+      /* Un seul compte par e-mail et aucun mot de passe : la joueuse ou le joueur confirme dans l'appli (session ouverte),
+         le compte est supprimé et un courriel de confirmation part à son adresse. */
       const w = limit('ad:' + user.id, 5, HOUR); if (w) return fail(res, 429, 'Trop d\'essais.');
-      const b = await readBody(req, 512), cred = S.credentials(user.id), h = await scrypt(String(b.password || '').slice(0, 200), cred.salt);
-      if (!safeEq(h, cred.hash)) return fail(res, 401, 'Mot de passe incorrect.', 'password');
-      S.audit('compte-supprimé', user.id, 'par le joueur'); S.deleteUser(user.id); setCookie(res, req, 'nev_s', '', 0); return send(res, 200, { ok: true });
+      const b = await readBody(req, 256); if (b.confirm !== true) return fail(res, 400, 'Confirmation manquante.');
+      const to = user.email, pseudo = user.pseudo;
+      S.audit('compte-supprimé', user.id, 'par le joueur'); S.deleteUser(user.id); setCookie(res, req, 'nev_s', '', 0);
+      if (mailer.configured()) mailer.send({ to, subject: 'Ton compte neV.BOOSTER a été supprimé', text: 'Bonjour ' + pseudo + ',\n\nTon compte neV.BOOSTER (' + to + ') et toutes tes données ont bien été supprimés.\nSi tu n\'es pas à l\'origine de cette suppression, réponds à ce message.\n\nTu peux créer un nouveau compte à tout moment avec la même adresse e-mail.\n\nL\'équipe neV.BOOSTER' }).catch((e) => console.error('[courriel]', e.message));
+      return send(res, 200, { ok: true, mail: mailer.configured() });
     }
     if (route === 'account/lang' && m === 'POST') { const b = await readBody(req, 128); S.setUser(user.id, { lang: okLang(b.lang) }); return send(res, 200, { ok: true }); }
     if (route === 'account/board' && m === 'POST') {
