@@ -19,7 +19,7 @@
     '<section><h2>Mode allégé</h2><p>Coupe la 3D et les animations lourdes : utile sur un téléphone modeste ou avec une connexion lente. Il s\'active tout seul sur ces appareils.</p><label class="check"><input type="checkbox" id="cLite"><span>Activer le mode allégé sur cet appareil</span></label> <span id="mLite" class="muted"></span></section>' +
     '<section><h2>Télécharger mes données</h2><p>Un fichier contenant tout ce que neV.BOOSTER conserve à ton sujet : compte, séances, badges, messages.</p><button type="button" class="btn ghost" id="bExp">Télécharger mes données</button></section>' +
     '<section><h2>Supprimer mon compte</h2><p>Cette action est <b>définitive</b> : ta progression, tes badges et tes messages sont effacés.</p>' +
-    (server ? '<div class="field" style="max-width:340px"><label for="dpw">Mot de passe</label><input id="dpw" type="password" autocomplete="current-password"></div>' : '') +
+    (server ? '<p class="muted">Un seul compte par e-mail : tu n\'as aucun mot de passe à saisir. Un e-mail de confirmation te sera envoyé.</p>' : '') +
     '<div class="err" id="eDel" role="alert"></div><button type="button" class="btn" id="bDel" style="background:linear-gradient(135deg,#7a0f26,#c0283f)">Supprimer mon compte</button></section>' +
     '<p class="muted">Voir aussi : <a href="confidentialite.html">Confidentialité</a> · <a href="conditions.html">Conditions d\'utilisation</a> · <a href="mentions-legales.html">Mentions légales</a>.</p>';
   (async function photo() {
@@ -82,7 +82,7 @@
     $('eDel').textContent = '';
     if (!window.confirm('Supprimer définitivement ton compte et toutes tes données ?')) return;
     if (server) {
-      const r = await NEV.cloud.api('account/delete', 'POST', { password: $('dpw').value });
+      const r = await NEV.cloud.api('account/delete', 'POST', { confirm: true });
       if (!r.ok) { $('eDel').textContent = r.data.error || 'Suppression impossible.'; return; }
       NEV.store.del('nev.session'); NEV.go('connexion.html'); return;
     }
