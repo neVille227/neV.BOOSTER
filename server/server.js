@@ -483,6 +483,7 @@ function stream(req, res, file, st) {
   if (!type) return notFound(res); // extension non autorisée
   const long = /\/(vendor|img|fonts)\//.test(file.split(path.sep).join('/'));
   const h = { 'Content-Type': type, 'Content-Length': st.size, 'Cache-Control': long ? 'public, max-age=604800' : 'no-cache', 'Last-Modified': st.mtime.toUTCString() };
+  if (/\/admin\//.test(file.split(path.sep).join('/'))) { h['Cache-Control'] = 'no-store'; h['X-Robots-Tag'] = 'noindex, nofollow'; } // panneau admin : jamais en cache ni dans Google
   const ims = req.headers['if-modified-since']; if (ims && new Date(ims) >= new Date(Math.floor(st.mtimeMs / 1000) * 1000)) { res.writeHead(304); return res.end(); }
   // Aperçu des liens (WhatsApp, Facebook…) : les pages d'entrée portent l'adresse par défaut, remplacée par NEV_BASE_URL si elle est définie.
   if (ext === '.html' && PUBLIC_BASE && PUBLIC_BASE !== DEFAULT_BASE && /(^|[\\/])(index|connexion)\.html$/.test(file)) {
@@ -511,7 +512,7 @@ function stream(req, res, file, st) {
 const server = http.createServer(async (req, res) => {
   counters.requests++;
   const ip = ipOf(req), sec = isSecure(req);
-  secHeaders(res, sec);
+  secHeaders(res, sec || !!process.env.RENDER); // Render est toujours en HTTPS : HSTS envoyé même si NEV_SECURE manque
   try {
     if (String(req.url).length > 2000) { res.writeHead(414); return res.end(); }
     const url = new URL(req.url, 'http://x');
