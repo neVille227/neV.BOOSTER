@@ -227,6 +227,7 @@ function open(dir) {
   addCol('users', 'lang', "TEXT NOT NULL DEFAULT 'fr'");
   addCol('users', 'created_ms', 'INTEGER NOT NULL DEFAULT 0');
   addCol('users', 'public_board', 'INTEGER NOT NULL DEFAULT 1');
+  addCol('users', 'minor', 'INTEGER NOT NULL DEFAULT 0'); // 1 = a déclaré avoir moins de 18 ans : protections renforcées
   addCol('users', 'is_admin', 'INTEGER NOT NULL DEFAULT 0');
   addCol('users', 'admin_role', 'TEXT');           // 'admin' | 'moderator' (le propriétaire n'est pas un joueur)
   addCol('admin_audit', 'actor', 'TEXT');          // qui a fait l'action (journal d'audit)
@@ -259,16 +260,17 @@ function open(dir) {
 
   /* ---------------- comptes ---------------- */
   const userOut = (r) => (r ? { id: r.id, email: r.email, pseudo: r.pseudo, created: r.created, createdMs: r.created_ms || 0, code: r.code, banned: !!r.banned, refBy: r.ref_by || null, refCount: r.refCount || 0,
-    verified: !!r.email_verified, termsAt: r.terms_at || null, termsVer: r.terms_ver || null, mutedUntil: r.muted_until || 0, lang: r.lang || 'fr', publicBoard: !!r.public_board, isAdmin: !!r.is_admin, adminRole: r.admin_role || (r.is_admin ? 'admin' : '') } : null);
+    verified: !!r.email_verified, termsAt: r.terms_at || null, termsVer: r.terms_ver || null, mutedUntil: r.muted_until || 0, lang: r.lang || 'fr', publicBoard: !!r.public_board, minor: !!r.minor, isAdmin: !!r.is_admin, adminRole: r.admin_role || (r.is_admin ? 'admin' : '') } : null);
   const USEL = 'SELECT u.*, (SELECT COUNT(*) FROM users f WHERE f.ref_by = u.id) AS refCount FROM users u';
   S.userById = (id) => userOut(D1(USEL + ' WHERE u.id = ?', String(id)));
   S.userByEmail = (e) => userOut(D1(USEL + ' WHERE u.email = ?', String(e)));
   S.userByCode = (c) => userOut(D1(USEL + ' WHERE u.code = ?', String(c)));
   S.codeTaken = (c) => !!D1('SELECT 1 AS x FROM users WHERE code = ?', c);
   S.createUser = (u, salt, hash) => tx(() => {
-    DR('INSERT INTO users(id,email,pseudo,code,ref_by,banned,created,last_login,created_ms,terms_at,terms_ver,lang,public_board) VALUES(?,?,?,?,?,0,?,?,?,?,?,?,1)', u.id, u.email, u.pseudo, u.code, nn(u.refBy), u.created, now(), now(), nn(u.termsAt), nn(u.termsVer), u.lang || 'fr');
+    DR('INSERT INTO users(id,email,pseudo,code,ref_by,banned,created,last_login,created_ms,terms_at,terms_ver,lang,public_board,minor) VALUES(?,?,?,?,?,0,?,?,?,?,?,?,?,?)', u.id, u.email, u.pseudo, u.code, nn(u.refBy), u.created, now(), now(), nn(u.termsAt), nn(u.termsVer), u.lang || 'fr', u.minor ? 0 : 1, u.minor ? 1 : 0);
     AR('INSERT OR REPLACE INTO credentials(uid,salt,hash) VALUES(?,?,?)', u.id, salt, hash);
     if (S.ensureProfile) S.ensureProfile(u.id, u.pseudo);
+    if (u.minor) DR("UPDATE profiles SET vis = 'private', dm = 'friends' WHERE uid = ?", u.id); // mineur : profil privé, messages de ses contacts seulement
   });
   S.credentials = (uid) => A1('SELECT salt, hash FROM credentials WHERE uid = ?', String(uid)) || null;
   S.touchLogin = (uid) => DR('UPDATE users SET last_login = ? WHERE id = ?', now(), uid);

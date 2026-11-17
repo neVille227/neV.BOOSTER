@@ -247,3 +247,26 @@ html[data-theme=light] .start{background:rgba(251,246,247,.9)}
 html[data-theme=light] .start .alt:hover{color:#c32d50}
 html[data-theme=light] .start .go svg{fill:#fff}
 html[data-theme=light] .orbits ellipse{filter:drop-shadow(0 0 4px rgba(195,45,80,.5))}
+
+/* dernière image : évolution du personnage jusqu'à 2600 XP */
+.evo{position:relative;width:min(94cqw,760px);display:flex;flex-direction:column;align-items:center;gap:.4cqmin}
+.evo .xpn{display:flex;align-items:baseline;gap:1.2cqmin;font-weight:900;line-height:1}
+.evo .xpn b{font-size:clamp(34px,8.5cqmin,84px);letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:#fff}
+.evo .xpn span{font-size:clamp(14px,2.8cqmin,26px);font-weight:800;color:var(--gold);letter-spacing:.2em}
+.evo.max .xpn b{color:var(--gold);text-shadow:0 0 3cqmin rgba(240,178,74,.7)}
+.evsvg{width:100%;height:auto;max-height:36cqmin;overflow:visible}
+.ev{opacity:.16;filter:grayscale(1);transition:opacity .7s,filter .7s}
+.ev.on{opacity:1;filter:none}
+.ev.cur{filter:drop-shadow(0 0 10px rgba(232,69,95,.8))}
+.ev.leg.on{filter:drop-shadow(0 0 14px rgba(240,178,74,.9))}
+.eaura{opacity:0;transition:opacity 1s}.eaura.on{opacity:.9;animation:evPulse 2.4s ease-in-out infinite}
+@keyframes evPulse{50%{opacity:.55}}
+.evl{fill:#fff;font:800 13px Montserrat,system-ui,sans-serif;opacity:.75}
+.evx{fill:var(--gold);font:700 11px Montserrat,system-ui,sans-serif;opacity:.8}
+.nv.narrow .evl{font-size:15px}.nv.narrow .evx{font-size:12.5px}
+html[data-theme=light] .evo .xpn b{color:#2b0f18}
+html[data-theme=light] .evl{fill:#2b0f18}
+html[data-theme=light] .evx{fill:#8a5a10}
+#mute.ask{animation:askPulse 1.4s ease-in-out infinite;box-shadow:0 0 0 0 rgba(232,69,95,.7)}
+@keyframes askPulse{70%{box-shadow:0 0 0 12px rgba(232,69,95,0)}100%{box-shadow:0 0 0 0 rgba(232,69,95,0)}}
+@media (prefers-reduced-motion:reduce){.eaura.on,#mute.ask{animation:none}}

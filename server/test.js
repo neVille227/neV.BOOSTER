@@ -4,7 +4,7 @@ const { spawn } = require('child_process');
 const fs = require('fs'), os = require('os'), path = require('path');
 const PORT = 18000 + Math.floor(Math.random() * 1000), BASE = 'http://127.0.0.1:' + PORT;
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nevtest-'));
-const startSrv = (d, port) => spawn(process.execPath, [path.join(__dirname, 'server.js')], { env: Object.assign({}, process.env, { PORT: port || PORT, HOST: '127.0.0.1', NEV_DATA: d || dir, NEV_ADMIN_PASSWORD: 'admin-test-12345', NEV_CHAT_NEW_MINUTES: '0', NEV_CHAT_SLOW_HOURS: '0' }), stdio: ['ignore', 'pipe', 'pipe'] });
+const startSrv = (d, port) => spawn(process.execPath, [path.join(__dirname, 'server.js')], { env: Object.assign({}, process.env, { PORT: port || PORT, HOST: '127.0.0.1', NEV_DATA: d || dir, NEV_ADMIN_PASSWORD: 'admin-test-12345', NEV_CHAT_NEW_MINUTES: '0', NEV_SIGNUP_MAX: '200', NEV_CHAT_SLOW_HOURS: '0', NEV_ANDROID_PACKAGE_NAME: 'com.nevbooster.test', NEV_ANDROID_SHA256_CERT_FINGERPRINTS: Array(32).fill('AA').join(':') }), stdio: ['ignore', 'pipe', 'pipe'] });
 let srv = startSrv();
 const up = async (base) => { for (let i = 0; i < 60; i++) { try { const r = await fetch(base + '/api/health'); if (r.ok) return true; } catch (e) { /* attente */ } await new Promise((r) => setTimeout(r, 150)); } return false; };
 const stop = (p) => new Promise((res) => { p.once('exit', res); p.kill('SIGTERM'); });
@@ -65,7 +65,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   console.log('Appli installable');
   r = await fetch(BASE + '/manifest.webmanifest'); { const mj = await r.json().catch(() => null); t('manifeste : nom, icônes 192/512, démarrage, mode appli', !!mj && mj.display === 'standalone' && mj.icons.some((i) => i.sizes === '512x512') && mj.icons.some((i) => i.sizes === '192x192') && !!mj.start_url && !!mj.name, mj); }
   r = await fetch(BASE + '/sw.js'); t('service worker servi', r.status === 200);
-  r = await fetch(BASE + '/.well-known/assetlinks.json'); t('assetlinks.json servi (lien appli Android)', r.status === 200);
+  r = await fetch(BASE + '/.well-known/assetlinks.json'); const al = await r.json().catch(() => null); t('assetlinks.json généré avec les valeurs Android configurées', r.status === 200 && Array.isArray(al) && al[0].target.package_name === 'com.nevbooster.test' && al[0].target.sha256_cert_fingerprints.length === 1 && al[0].relation.includes('delegate_permission/common.handle_all_urls'), al);
   r = await fetch(BASE + '/.well-known/autre'); t('autres fichiers cachés toujours refusés', r.status === 404);
   console.log('Admin');
   r = await call(A, 'GET', '/api/admin/users'); t('joueur ordinaire → admin refusé', r.s === 401);
@@ -312,6 +312,21 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   t('statistiques SQL : séance et joueur importés', r.j.players === 1 && r.j.sessionsTotal === 1 && r.j.topExercises[0].id === 'dips', r.j);
   t('ancien db.json mis de côté', fs.readdirSync(dir2).some((f) => /^db\.json\.migre-/.test(f)) && !fs.existsSync(path.join(dir2, 'db.json')));
   await stop(srv2); fs.rmSync(dir2, { recursive: true, force: true });
+
+  console.log('Mineurs : protections par défaut');
+  { const MJ = new Jar(), AD = new Jar(), AD2 = new Jar();
+    const mk = (n, e, x) => Object.assign({ pseudo: n, email: e, password: 'motdepasse1', consent: true, sex: 'm', terms: true }, x || {});
+    r = await call(new Jar(), 'POST', '/api/signup', mk('Lea', 'lea@test.fr', { minor: true })); t('mineur sans accord parental → refusé', r.s === 400 && r.j.field === 'parent', r.j);
+    r = await call(MJ, 'POST', '/api/signup', mk('Lea', 'lea@test.fr', { minor: true, parent: true })); t('mineur avec accord parental → inscrit', r.s === 200 && r.j.user.minor === true, r.j);
+    await call(AD, 'POST', '/api/signup', mk('Adulte', 'adulte@test.fr')); await call(AD2, 'POST', '/api/signup', mk('Adulte2', 'adulte2@test.fr'));
+    r = await call(MJ, 'GET', '/api/social/me'); t('mineur : profil privé et messages de ses contacts par défaut', r.j.profile.vis === 'private' && r.j.profile.dm === 'friends', r.j.profile);
+    r = await call(MJ, 'PUT', '/api/social/me', { vis: 'public' }); t('mineur : profil public refusé', r.s === 403, r.j);
+    r = await call(MJ, 'PUT', '/api/social/me', { dm: 'all' }); t('mineur : messages de tous refusés', r.s === 403, r.j);
+    r = await call(MJ, 'POST', '/api/account/board', { public: true }); r = await call(MJ, 'GET', '/api/me'); t('mineur : jamais dans le classement public', r.j.user.publicBoard === false, r.j.user);
+    r = await call(AD, 'POST', '/api/social/send', { to: '@lea', text: 'salut' }); t('mineur : un inconnu ne peut pas lui écrire', r.s === 403, r.j);
+    r = await call(AD, 'POST', '/api/social/send', { to: '@adulte2', text: 'écris-moi sur whatsapp +229 97 00 00 00' }); t('messages entre adultes : numéros tolérés', r.s === 200, r.j);
+    r = await call(AD, 'POST', '/api/social/send', { to: '@adulte2', text: 'espèce de connard' }); t('messages privés : insultes filtrées', r.s === 400, r.j);
+  }
 
   console.log('Social : profils, recherche, messages privés');
   { const C = new Jar(), E = new Jar(), VV = new Jar();

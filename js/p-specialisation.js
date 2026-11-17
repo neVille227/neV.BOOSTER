@@ -51,19 +51,28 @@
     window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
   }
 
-  /* ---------- le corps : sans noms, on touche la zone ---------- */
-  const map = NEV.BodyMap.mount($('bmap'), { selected: '', onPick: (zid) => go(zid) });
+  /* ---------- la fiche anatomie : on touche le nom du muscle ---------- */
   const zones = {}; Z.list().forEach((z) => { zones[z.id] = z; });
-  $('bmap').querySelectorAll('.bz').forEach((n) => {
-    const z = zones[n.dataset.z]; if (!z) return;
-    n.setAttribute('role', 'link'); n.setAttribute('tabindex', '0'); n.setAttribute('aria-label', z.name);
-    n.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(n.dataset.z); } });
+  const fem = NEV.sex === 'f';
+  $('ficheImg').src = fem ? 'img/anatomie-femme.webp' : 'img/anatomie-homme.webp';
+  /* nom affiché → zone ; x, y = centre de la pastille dans l'image 1440 x 960 */
+  const SPOTS = [
+    ['Pectoraux', 'poitrine', 101, 299], ['Biceps', 'bras', 101, 369], ['Abdominaux', 'abdos', 101, 441], ['Quadriceps', 'cuisses', 101, 589], ['Mollets', 'mollets', 101, 739],
+    ['Tête / cou', 'cou', 504, 201], ['Épaules', 'epaules', 504, 271], ['Obliques', 'obliques', 504, 405], ['Avant-bras', 'avantbras', 504, 509],
+    ['Trapèzes', 'dos', 642, 259], ['Dos (haut)', 'dorsaux', 642, 349], ['Lombaires', 'lombaires', 642, 469], ['Fessiers', 'fessiers', 642, 559],
+    ['Tête / cou', 'cou', 1046, 201], ['Épaules', 'epaules', 1046, 271], ['Triceps', 'bras', 1046, 369], ['Avant-bras', 'avantbras', 1046, 509], ['Ischio-jambiers', 'cuisses', 1046, 619], ['Mollets', 'mollets', 1046, 739]
+  ];
+  SPOTS.forEach((p) => {
+    const z = zones[p[1]]; if (!z) return; // zone absente de cette version (ex. biceps chez la femme) : pas de lien
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'fspot';
+    b.style.left = (p[2] / 14.4) + '%'; b.style.top = (p[3] / 9.6) + '%';
+    b.setAttribute('aria-label', p[0] + ' : voir les exercices'); b.addEventListener('click', () => go(p[1]));
+    $('fiche').appendChild(b);
   });
   let leaving = false;
   function go(zid) {
     if (leaving || !zones[zid]) return; leaving = true;
-    map.select(zid);
-    setTimeout(() => NEV.go('bibliotheque.html?zone=' + encodeURIComponent(zid)), reduced ? 0 : 260);
+    setTimeout(() => NEV.go('bibliotheque.html?zone=' + encodeURIComponent(zid)), reduced ? 0 : 200);
   }
 
   $('visSkip').addEventListener('click', () => { if (running && !skip) { skip = true; } else showBody(); });

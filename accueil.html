@@ -34,6 +34,18 @@
   .heroBox .name{font-weight:900;font-size:1.35rem;margin-top:6px}
   .heroBox .bar{width:86%;margin:12px auto 6px}
   .heroBox small{color:var(--muted)}
+  /* avatar grandeur nature, posé directement sur le fond (sans cadre), qui tourne lentement sur 360° */
+  .heroBox.life{background:none!important;border:0!important;box-shadow:none!important;overflow:visible;min-height:min(86vh,900px);justify-content:flex-end;padding-bottom:6px}
+  .heroBox.life .stage{max-width:none;width:100%;margin:0}
+  .heroBox.life .hi{height:min(70vh,740px);max-width:none;width:100%}
+  .heroBox.life .hi-fig{bottom:0;height:100%;perspective:1500px}
+  .heroBox.life .hi-fig svg{transform-origin:50% 50%;animation:nvTurn 22s linear infinite;will-change:transform}
+  .heroBox.life .hi-plat{opacity:.55}
+  .heroBox.life .name,.heroBox.life small,.heroBox.life .eyebrow{text-shadow:0 2px 14px #000a}
+  html[data-theme=light] .heroBox.life .name,html[data-theme=light] .heroBox.life small,html[data-theme=light] .heroBox.life .eyebrow{text-shadow:0 1px 8px #fffa}
+  @keyframes nvTurn{0%{transform:translateX(-50%) rotateY(0);filter:brightness(1)}22%{filter:brightness(.92)}50%{transform:translateX(-50%) rotateY(180deg);filter:brightness(.62)}78%{filter:brightness(.92)}100%{transform:translateX(-50%) rotateY(360deg);filter:brightness(1)}}
+  @media(max-width:760px){.heroBox.life{min-height:78vh}.heroBox.life .hi{height:62vh}}
+  @media(prefers-reduced-motion:reduce){.heroBox.life .hi-fig svg{animation:none}}
   .heroEdit{margin-top:12px;padding:9px 16px;border-radius:99px;border:1px solid #ffffff2a;font-weight:800;font-size:.82rem;text-decoration:none;color:inherit}
   html[data-theme=light] .heroEdit{border-color:var(--line)}
   .coachC{border-radius:20px;padding:20px;background:linear-gradient(135deg,#a62445,#ff7043);color:#fff}

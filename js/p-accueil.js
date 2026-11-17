@@ -68,6 +68,7 @@
   $('heroBar').style.width = Math.round(h.pct * 100) + '%';
   $('heroXp').textContent = h.next ? p.progress.xp + ' / ' + h.next.xp + ' XP avant « ' + h.next.name + ' »' : p.progress.xp + ' XP · palier maximum';
   if (NEV.Hero) NEV.Hero.mount($('hero'), { stage: h.stage.n, aura: p.aura });
+  document.getElementById('heroBox').classList.add('life');
 
   // messages récents (serveur seulement)
   (async function () {

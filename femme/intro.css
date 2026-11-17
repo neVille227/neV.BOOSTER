@@ -62,3 +62,4 @@ html,body{height:100%;background:#FBF6F7;color:#2B0F18;font-family:Montserrat,sy
 @keyframes smokeA{0%{opacity:.95;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(-8%,-22%) scale(1.5)}}
 @keyframes smokeB{0%{opacity:.9;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(10%,-26%) scale(1.55)}}
 @media (prefers-reduced-motion:reduce){.poster img{opacity:1!important;filter:none!important;transform:none!important}.smoke{display:none}}
+.rvf{display:flex;align-items:center;justify-content:center;width:100%}

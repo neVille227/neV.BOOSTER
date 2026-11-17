@@ -7,9 +7,9 @@
   var $=function(id){return document.getElementById(id)};
   var reduced=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
   var ember=$('ember'), skip=$('skip'), bg=NEVBG.mount({trace:true});
-  var scr=(window.NEVSCRATCH&&$('scr'))?NEVSCRATCH.mount($('scr'),{light:false}):null;
+  var scr=(window.NEVREVEAL&&$('scr'))?NEVREVEAL.mount($('scr'),{light:false}):null;
   var prog=$('prog'), stepEl=$('step'), LAB=['Le tracé','Le logo','Son histoire'];
-  var T={trace:reduced?400:5800, logo:reduced?2000:6200};
+  var T={trace:reduced?400:5800, logo:reduced?2000:6600};
   var timers=[], phase='trace', leaving=false;
   function later(fn,ms){var t=setTimeout(fn,ms); timers.push(t); return t}
   function clear(){timers.forEach(clearTimeout); timers=[]}
@@ -19,7 +19,7 @@
 
   function toLogo(){
     clear(); phase='logo'; mark(1); NEVBG.finish(); flash(); on('logo',true);
-    if(scr) scr.play();                                   // la carte à gratter : neV.BOOSTER se révèle
+    if(scr) scr.play();                                   // ouverture : le logo se révèle (trait de lumière, logo, nom, slogan)
     later(NEVBG.showCards, reduced?0:3700);               // les cartes 3D surgissent avec le logo
     later(toStory,T.logo);
   }

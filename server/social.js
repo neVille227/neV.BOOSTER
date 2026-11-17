@@ -10,6 +10,7 @@
    ========================================================== */
 'use strict';
 const crypto = require('node:crypto');
+const POLICY = require('../js/policy.js');
 
 module.exports = function (ctx) {
   const { S, send, fail, readBody, limit, clean, now, counters, logEvent, baseUrl } = ctx;
@@ -94,6 +95,8 @@ module.exports = function (ctx) {
   }
   function canDm(me, p) {
     if (!me || me === p.uid || S.isBlocked(me, p.uid)) return false;
+    const pu = S.userById(p.uid);
+    if (pu && pu.minor) return p.dm !== 'none' && mutual(me, p.uid); // un mineur ne reçoit des messages que de ses contacts
     return p.dm === 'all' || (p.dm === 'friends' && mutual(me, p.uid));
   }
   const cleanInfo = (i) => {
@@ -186,8 +189,8 @@ module.exports = function (ctx) {
       if (b.bio != null) f.bio = clean(b.bio, 160);
       if (b.avatar != null) { const a = String(b.avatar); if (!avatarOk(a)) return fail(res, 400, 'Photo non acceptée (JPEG, PNG ou WebP, petite taille).', 'avatar'); f.avatar = a; }
       if (b.info != null) f.info = cleanInfo(b.info);
-      if (b.vis != null) { if (['public', 'friends', 'private'].indexOf(b.vis) < 0) return fail(res, 400, 'Réglage invalide.', 'vis'); f.vis = b.vis; }
-      if (b.dm != null) { if (['all', 'friends', 'none'].indexOf(b.dm) < 0) return fail(res, 400, 'Réglage invalide.', 'dm'); f.dm = b.dm; }
+      if (b.vis != null) { if (['public', 'friends', 'private'].indexOf(b.vis) < 0) return fail(res, 400, 'Réglage invalide.', 'vis'); if (user.minor && b.vis === 'public') return fail(res, 403, 'Pour ta sécurité, un profil de moins de 18 ans reste privé ou réservé à ses contacts.', 'vis'); f.vis = b.vis; }
+      if (b.dm != null) { if (['all', 'friends', 'none'].indexOf(b.dm) < 0) return fail(res, 400, 'Réglage invalide.', 'dm'); if (user.minor && b.dm === 'all') return fail(res, 403, 'Pour ta sécurité, seuls tes contacts peuvent t\'écrire.', 'dm'); f.dm = b.dm; }
       if (b.preview != null) f.preview = !!b.preview;
       if (b.receipts != null) f.receipts = !!b.receipts;
       if (b.sex != null) {
@@ -249,7 +252,12 @@ module.exports = function (ctx) {
       if (!p || !u || u.banned || p.uid === me) return fail(res, 404, 'Destinataire introuvable.', 'to');
       if (S.iBlocked(me, p.uid)) return fail(res, 403, 'Tu as bloqué ce joueur : débloque-le pour lui écrire.', 'to');
       if (!canDm(me, p)) return fail(res, 403, p.dm === 'friends' ? 'Ce joueur n\'accepte les messages que de ses amis.' : 'Ce joueur n\'accepte pas de messages.', 'to');
-      const text = clean(b.text, 1000); let img = null;
+      let text = clean(b.text, 1000); let img = null;
+      if (text) { /* modération : filtre complet si un mineur est concerné (coordonnées, liens, insultes), sinon insultes et spam */
+        const mod = POLICY.moderate(text);
+        if (!mod.ok && (user.minor || u.minor || mod.reason === 'bad' || mod.reason === 'spam')) return fail(res, 400, mod.error, 'text');
+        if (mod.ok) text = mod.text;
+      }
       if (b.img) {
         if (!IMAGES()) return fail(res, 403, 'L\'envoi d\'images n\'est pas activé.', 'img');
         const s = String(b.img); if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(s) || s.length > 200000) return fail(res, 400, 'Image refusée (JPEG, PNG ou WebP, 150 Ko max).', 'img');

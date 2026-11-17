@@ -73,7 +73,7 @@ module.exports = function features(ctx) {
   /* ---------------- pub : ce que le navigateur a le droit de voir ---------------- */
   const pubUser = (u) => ({
     id: u.id, email: u.email, pseudo: u.pseudo, created: u.created, code: u.code, refCount: u.refCount || 0,
-    verified: !!u.verified, lang: okLang(u.lang), publicBoard: !!u.publicBoard, mailOn: mailer.configured(), isAdmin: !!u.isAdmin
+    verified: !!u.verified, lang: okLang(u.lang), publicBoard: !!u.publicBoard, minor: !!u.minor, mailOn: mailer.configured(), isAdmin: !!u.isAdmin
   });
 
   /* ====================================================================
@@ -282,7 +282,7 @@ module.exports = function features(ctx) {
     if (route === 'account/lang' && m === 'POST') { const b = await readBody(req, 128); S.setUser(user.id, { lang: okLang(b.lang) }); return send(res, 200, { ok: true }); }
     if (route === 'account/board' && m === 'POST') {
       const b = await readBody(req, 128);
-      S.setUser(user.id, { public_board: b.public ? 1 : 0 }); return send(res, 200, { ok: true });
+      S.setUser(user.id, { public_board: b.public && !user.minor ? 1 : 0 }); /* un mineur n'apparaît jamais dans le classement public */ return send(res, 200, { ok: true });
     }
     if (route === 'verify/resend' && m === 'POST') {
       const w = limit('vr:' + user.id, 3, HOUR); if (w) return fail(res, 429, 'Trop de demandes. Réessaie plus tard.');

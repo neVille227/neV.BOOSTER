@@ -1,0 +1,33 @@
+/* Ouverture neV.BOOSTER : révélation cinématique du logo (trait de lumière → logo → nom → slogan) */
+.rv{--ink:#fff;--glow:#e0455f;--gold:#f0b24a;--sub:#ffd9de;position:relative;width:min(92vw,560px);margin:0 auto;display:flex;flex-direction:column;align-items:center;text-align:center;font-family:Montserrat,system-ui,sans-serif}
+.rv.light{--ink:#4a0f22;--glow:#c32d50;--gold:#b8862b;--sub:#7a1f33}
+.rv-stage{position:relative;width:min(56vw,250px);aspect-ratio:1;display:grid;place-items:center}
+.rv-line{position:absolute;left:-60%;right:-60%;top:50%;height:2px;margin-top:-1px;background:linear-gradient(90deg,transparent,var(--glow) 18%,#fff 50%,var(--glow) 82%,transparent);box-shadow:0 0 22px 5px var(--glow);transform:scaleX(0);opacity:0;border-radius:2px}
+.rv.light .rv-line{background:linear-gradient(90deg,transparent,var(--glow) 18%,var(--gold) 50%,var(--glow) 82%,transparent)}
+.rv-logo{width:100%;height:100%;object-fit:contain;border-radius:18%;display:block;clip-path:inset(50% 0 50% 0);opacity:0;filter:drop-shadow(0 8px 28px color-mix(in srgb,var(--glow) 55%,transparent))}
+.rv-ring{position:absolute;inset:0;border-radius:50%;border:2px solid var(--glow);opacity:0;transform:scale(.4)}
+.rv-ring.r2{border-color:var(--gold)}
+.rv-word{margin:22px 0 0;font-weight:800;font-size:clamp(1.9rem,8.6vw,3.4rem);letter-spacing:.02em;line-height:1;color:var(--ink);white-space:nowrap;position:relative;overflow:hidden;padding:.08em .1em}
+.rv-word span{display:inline-block;opacity:0;transform:translateY(70%);filter:blur(8px)}
+.rv-word b{font-weight:900}
+.rv-word b span{color:var(--glow);text-shadow:0 0 .5em color-mix(in srgb,var(--glow) 45%,transparent)}
+.rv.light .rv-word b span{text-shadow:none}
+.rv-word::after{content:"";position:absolute;top:0;bottom:0;width:30%;left:-40%;background:linear-gradient(100deg,transparent,#ffffffaa,transparent);mix-blend-mode:overlay;transform:skewX(-18deg)}
+.rv-tag{margin:14px 0 0;font-weight:600;font-size:clamp(.72rem,2.6vw,.95rem);letter-spacing:.5em;text-transform:uppercase;color:var(--sub);opacity:0}
+.rv-bar{margin-top:18px;height:2px;width:0;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.rv.play .rv-line{animation:rvLine 1.5s cubic-bezier(.2,.8,.2,1) .15s forwards}
+.rv.play .rv-logo{animation:rvLogo 1.3s cubic-bezier(.2,.9,.25,1) 1.05s forwards}
+.rv.play .rv-ring{animation:rvRing 1.6s cubic-bezier(.1,.7,.3,1) 1.5s forwards}
+.rv.play .rv-ring.r2{animation-delay:1.8s}
+.rv.play .rv-word span{animation:rvLet .8s cubic-bezier(.2,.9,.25,1) forwards;animation-delay:calc(2.3s + var(--i)*.055s)}
+.rv.play .rv-word::after{animation:rvSweep 1.1s ease-in-out 3.5s forwards}
+.rv.play .rv-tag{animation:rvTag 1.3s ease-out 3.7s forwards}
+.rv.play .rv-bar{animation:rvBar 1.2s ease-out 4.1s forwards}
+@keyframes rvLine{0%{transform:scaleX(0);opacity:0}25%{opacity:1}70%{transform:scaleX(1);opacity:1}100%{transform:scaleX(1);opacity:0}}
+@keyframes rvLogo{0%{clip-path:inset(50% 0 50% 0);opacity:0;transform:scale(1.12)}100%{clip-path:inset(0 0 0 0);opacity:1;transform:scale(1)}}
+@keyframes rvRing{0%{opacity:.9;transform:scale(.45)}100%{opacity:0;transform:scale(1.9)}}
+@keyframes rvLet{to{opacity:1;transform:none;filter:none}}
+@keyframes rvSweep{from{left:-40%}to{left:130%}}
+@keyframes rvTag{from{opacity:0;letter-spacing:.9em}to{opacity:.95;letter-spacing:.5em}}
+@keyframes rvBar{to{width:min(60%,260px)}}
+@media (prefers-reduced-motion:reduce){.rv.play .rv-line{animation:none}.rv.play .rv-logo,.rv.play .rv-word span,.rv.play .rv-tag{animation-duration:.01ms;animation-delay:0s}.rv.play .rv-ring,.rv.play .rv-word::after{animation:none}.rv.play .rv-bar{animation-duration:.01ms;animation-delay:0s}}

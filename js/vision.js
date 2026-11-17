@@ -93,7 +93,7 @@
     hipx(lm) { const h = hipMid(lm), t = torsoLen(lm); return h && t ? h.x / t : null; }
   };
 
-  function present(lm) { return KEY.filter((i) => lm[i] && lm[i].v >= 0.5).length >= 6; }
+  function present(lm) { return KEY.filter((i) => lm[i] && lm[i].v >= 0.4).length >= 6; }
   function energy(lm, prev, t) { // déplacement moyen des articulations, en longueurs de buste par image
     if (!prev || !t) return 0;
     let s = 0, n = 0;
@@ -222,7 +222,7 @@
     if (!(g.navigator.mediaDevices && g.navigator.mediaDevices.getUserMedia)) { h.onError('nocam'); return false; }
     try {
       h.onStatus('Autorisation de la caméra…');
-      stream = await g.navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+      stream = await g.navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30, min: 15 } }, audio: false });
     } catch (e) { h.onError(e && (e.name === 'NotAllowedError' || e.name === 'SecurityError') ? 'denied' : 'nocam'); return false; }
     h.video.srcObject = stream; h.video.muted = true; h.video.playsInline = true;
     try { await h.video.play(); } catch (e) { /* lecture auto bloquée : l'utilisateur a déjà cliqué */ }
@@ -230,7 +230,7 @@
       h.onStatus('Chargement du détecteur de pose (3 Mo)…');
       await loadScript(ROOT + 'vendor/mediapipe/pose.js');
       pose = new g.Pose({ locateFile: function (f) { return ROOT + 'vendor/mediapipe/' + f; } });
-      pose.setOptions({ modelComplexity: 0, smoothLandmarks: true, enableSegmentation: false, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+      pose.setOptions({ modelComplexity: 0, smoothLandmarks: true, enableSegmentation: false, minDetectionConfidence: 0.35, minTrackingConfidence: 0.35 });
       pose.onResults(function (r) {
         const lm = r.poseLandmarks || null;
         h.canvas.width = h.video.videoWidth || 640; h.canvas.height = h.video.videoHeight || 480;
@@ -271,5 +271,14 @@
     if (pose) { try { pose.close(); } catch (e) { /* ignoré */ } pose = null; }
   }
 
-  NEV.Vision = { start, startSim, stop, ROOT };
+  /* plein écran de l'appareil (si le navigateur le permet) ; sinon la vue couvre déjà tout l'écran */
+  function fullscreen(on) {
+    const d = g.document, el = d.documentElement;
+    const cur = d.fullscreenElement || d.webkitFullscreenElement;
+    try {
+      if (on === false || (on === undefined && cur)) { (d.exitFullscreen || d.webkitExitFullscreen || function () {}).call(d); return; }
+      if (!cur) { const r = (el.requestFullscreen || el.webkitRequestFullscreen); if (r) { const p = r.call(el); if (p && p.catch) p.catch(function () {}); } }
+    } catch (e) { /* non pris en charge */ }
+  }
+  NEV.Vision = { start, startSim, stop, fullscreen, ROOT };
 })(typeof window !== 'undefined' ? window : globalThis);

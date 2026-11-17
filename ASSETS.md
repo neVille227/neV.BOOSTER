@@ -17,5 +17,13 @@ Statuts : `ORIGINAL` (créé par toi ou par une personne qui t'a cédé les droi
 | `fonts/montserrat-*`, `fonts/inter-*` | Polices | Montserrat et Inter | SIL Open Font License 1.1 | LICENCE |
 | `vendor/three/three.min.js` | Moteur 3D | three.js | MIT (`vendor/three/LICENSE-three.txt`) | LICENCE |
 | `js/avatar-illus.js`, `js/mythic3d.js` | Avatars illustrés et cartes mythiques | Dessinés par code, sans image tierce | Création du projet | ORIGINAL |
+| `img/anatomie-homme.webp`, `img/anatomie-femme.webp` | Fiches anatomie (page Spécialisation) | Fournies par le propriétaire | À documenter (outil utilisé, conditions d'usage) | À VÉRIFIER |
+| `vendor/mediapipe/*` | Détection de mouvement (caméra) | Google MediaPipe | Apache License 2.0 (conserver le fichier de licence) | LICENCE |
 
 Règle : une ressource « À VÉRIFIER » doit être remplacée ou documentée **avant** toute ouverture publique ou commerciale. Personnages connus (animés, jeux, films) : ne pas utiliser sans autorisation écrite.
+
+## Procédure de régularisation (à faire par le propriétaire)
+1. Pour chaque ligne « À VÉRIFIER » : noter l'auteur ou l'outil de création, la date, et enregistrer une preuve (capture des conditions d'utilisation, reçu, accord écrit).
+2. Si aucune preuve n'existe : remplacer le fichier par une création originale (ou une ressource à licence libre) avant l'ouverture publique.
+3. Les personnages inspirés d'œuvres existantes (manga, jeux, films) ne doivent pas être utilisés tels quels ; garder uniquement des personnages originaux.
+4. Passer le statut à ORIGINAL, GÉNÉRÉ ou LICENCE seulement une fois la preuve rangée.

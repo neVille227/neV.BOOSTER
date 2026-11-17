@@ -2,7 +2,7 @@
    Source : intro de l'équipe, fusionnée avec la voix de la vidéo « voix grave » (timeline recalée sur la voix). */
 (() => {
   /* Minutage (s) de chaque séquence, aligné sur la voix off. Dernier = fin. Ajustable. */
-  const T = [0, 13.3, 25.5, 37.9, 49.9, 60.7, 73.1, 80];
+  const T = [0, 13.3, 25.5, 37.9, 49.9, 60.7, 73.1, 84];
   /* Fenêtres de parole réelles (s) de chaque séquence : les sous-titres s'allument mot à mot dans cette fenêtre. */
   const SPEECH = [[1.4,12.5],[14.0,24.6],[26.4,37.5],[38.4,49.3],[50.6,60.0],[61.3,72.5],[73.8,78.2]];
   const SCRIPT = [
@@ -14,7 +14,7 @@
     "neV.BOOSTER, ce n’est pas simplement un site d’exercices. C’est une invitation à bouger, à découvrir, à développer sa régularité et à faire de chaque journée une nouvelle opportunité.",
     "À toi de tirer ta carte."
   ];
-  const LEVELS = ["Maigrichon","Éveillé","Athlète","Costaud","Colosse","Légende"], XP_MAX = 2600;
+  const LEVELS = ["Maigrichon","Éveillé","Athlète","Costaud","Colosse","Légende"], LEVELS_F = ["Débutante","Éveillée","Athlète","Tonique","Sculptée","Légende"], XPS = [0,100,300,700,1400,2600], XP_MAX = 2600;
   const DAYS = "LMMJVSD";
 
   const $ = id => document.getElementById(id), nv = $('nv'), audio = $('voice');
@@ -90,6 +90,15 @@
   });
   $('dots').innerHTML = Array.from({length:30},()=>`<i style="left:${Math.random()*100}%;top:${25+Math.random()*70}%;animation-duration:${6+Math.random()*8}s;animation-delay:-${Math.random()*10}s"></i>`).join('');
   $('row').innerHTML = [...DAYS].map(d=>`<div class="fl"><i><svg viewBox="0 0 24 24"><path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-6 1-10z"/></svg></i>${d}</div>`).join('');
+  /* Dernière image : le personnage évolue de 0 à 2600 XP (6 paliers, du Maigrichon à la Légende). */
+  (function(){
+    const fem = (new URLSearchParams(location.search).get('sex')==='f') || (()=>{try{return localStorage.getItem('nev.sex')==='f'}catch(e){return false}})();
+    const names = fem?LEVELS_F:LEVELS, sc2=i=>.22+.075*i;
+    $('evo').innerHTML = `<div class="xpn"><b id="xpv">0</b><span>XP</span></div>
+      <svg class="evsvg" viewBox="0 0 720 345" preserveAspectRatio="xMidYMax meet" aria-hidden="true"><circle class="eaura" id="eaura" cx="640" cy="170" r="150" fill="url(#haloG)"/>
+      ${[0,1,2,3,4,5].map(i=>{const s=sc2(i), x=70+i*116;return `<g class="ev${i===5?' leg':''}" data-i="${i}" transform="translate(${(x-100*s).toFixed(1)} ${(290-394*s).toFixed(1)}) scale(${s.toFixed(3)})">${fig(i/5,{gold:i===5})}</g><text class="evl" x="${x}" y="314" text-anchor="middle">${names[i]}</text><text class="evx" x="${x}" y="333" text-anchor="middle">${XPS[i]} XP</text>`;}).join('')}
+      <rect x="20" y="292" width="680" height="2" fill="#ffffff22"/><rect class="evbar" id="evbar" x="20" y="292" width="0" height="2" fill="#f0b24a"/></svg>`;
+  })();
   $('list').innerHTML = LEVELS.map((l,i)=>`<div class="it${i===5?' leg':''}"><small>NIV ${i+1}</small>${l}${i===5?`<em>${XP_MAX} XP</em>`:''}<span></span></div>`).join('');
   const segs = sc.map((_,i)=>{const b=document.createElement('button');b.className='seg';b.setAttribute('aria-label',i===N-1?'Final':'Séquence '+(i+1));b.innerHTML='<b></b>';b.onclick=()=>seek(T[i]+.01);$('bar').appendChild(b);return b.firstChild;});
 
@@ -139,6 +148,13 @@
       $('aura').classList.toggle('on', lt>1 && a===5);
     }
     if(i===5) showImg(pic,0);
+    if(i===6){
+      const TS=[.5,1.7,2.9,4.1,5.3,6.6]; let a=-1; TS.forEach((x,k)=>{ if(lt>=x) a=k; });
+      document.querySelectorAll('#evo .ev').forEach((g,k)=>{ g.classList.toggle('on',k<=a); g.classList.toggle('cur',k===a); });
+      const from=a>0?XPS[a-1]:0, p=a<0?0:Math.min(1,(lt-TS[a])/1.0), xp=a<0?0:Math.round(from+(XPS[a]-from)*(p*p*(3-2*p)));
+      $('xpv').textContent=xp.toLocaleString('fr-FR'); $('evbar').setAttribute('width',(680*xp/XP_MAX).toFixed(1));
+      $('eaura').classList.toggle('on',a>=5); $('evo').classList.toggle('max',a>=5&&p>=1);
+    }
   }
   function paint(){
     const i=idxAt(t), lt=t-T[i];
@@ -172,11 +188,23 @@
   }
   function begin(withSound){ $('start').classList.add('hide'); voice=false; setVoice(withSound); t=0; cur=-1; seek(0); }
   function finish(){
+    done=true;
     nv.dispatchEvent(new CustomEvent('nvb:intro-end',{bubbles:true}));
     try{ parent!==window && parent.postMessage({type:'nvb:intro-end'},'*'); }catch(e){}
     location.href=NEXT;
   }
   $('play').onclick=()=>begin(true); $('nosound').onclick=()=>begin(false);
+  /* Lancement automatique : la vidéo démarre seule. Si le navigateur bloque le son, elle joue sous-titrée et le son s'active au premier toucher. */
+  let wantSound=true;
+  function autostart(){
+    begin(true);
+    setTimeout(()=>{
+      if(audio.paused && !done){ wantSound=true; voice=false; setVoice(false); $('mute').classList.add('ask'); }
+    },500);
+    const unlock=()=>{ if(wantSound && !voice && !done){ $('mute').classList.remove('ask'); setVoice(true); } wantSound=false; };
+    ['pointerdown','keydown','touchstart'].forEach(ev=>window.addEventListener(ev,unlock,{once:true,passive:true}));
+  }
+  let done=false;
   $('pp').onclick=()=>{ if(t>=END-.1) seek(0); else setPlay(!playing); };
   $('mute').onclick=()=>setVoice(!voice);
   $('cc').onclick=()=>{ const on=$('cc').getAttribute('aria-pressed')!=='true'; $('cc').setAttribute('aria-pressed',on); cap.classList.toggle('off',!on); };
@@ -186,4 +214,5 @@
   new ResizeObserver(([e])=>nv.classList.toggle('narrow', e.contentRect.width<700 || e.contentRect.width<e.contentRect.height)).observe(nv);
   document.addEventListener('visibilitychange',()=>{ if(document.hidden&&playing) setPlay(false); });
   paint();
+  autostart();
 })();

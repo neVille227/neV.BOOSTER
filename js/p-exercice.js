@@ -40,6 +40,7 @@
   let demoCtl = null, miniCtl = null, nextCtl = null, heroCtl = null;
 
   const planText = (pl) => pl.sets + ' série' + (pl.sets > 1 ? 's' : '') + ' de ' + NEV.Ex.amountText(pl.unit, pl.perSet) + (pl.doubled ? ' (doublé)' : '') + (pl.rest ? ' · repos ' + pl.rest + ' s' : '');
+  if ($('rFull')) $('rFull').addEventListener('click', () => NEV.Vision.fullscreen());
   const setPhase = (id) => { ['phBrief', 'phRun', 'phRest', 'phOk', 'phDone'].forEach((x) => { $(x).hidden = x !== id; }); S.phase = id; };
   const mountDemo = (el, ex, ctlName) => {
     const old = { demo: demoCtl, mini: miniCtl, next: nextCtl }[ctlName]; if (old) old.destroy();
@@ -120,6 +121,7 @@
     NEV.track && NEV.track('start', { src: SRC, id: SRC === 'combo' ? combo.id : (card && card.id), mode });
     if (SRC === 'box' && NEV.BoxAudio) { NEV.BoxAudio.unlock(); NEV.BoxAudio.sfx('go'); NEV.BoxAudio.say('go'); }
     beginSet(true);
+    if (mode === 'cam') NEV.Vision.fullscreen(true); // plein écran de l'appareil, tant que le geste de l'utilisateur est valide
     if (mode === 'cam') {
       const ok = await NEV.Vision.start({
         video: $('rVideo'), canvas: $('rCanvas'),

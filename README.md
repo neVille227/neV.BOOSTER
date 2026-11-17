@@ -365,3 +365,12 @@ Tirage simple : la carte sort de la boîte, tourne 8 fois (2880°) avec lumière
 - Page niveau : curseur de poids (30–250 kg), boutons − / +, case « Je préfère ne pas le dire » (facultatif).
 - À partir de 100 kg : plus de sauts ni d'exercices à fort impact dans le gacha, les combos et les programmes (`NEV.Ex.weightOk`). Au-delà de 130 kg, conseil de demander l'avis d'un médecin.
 - Poids enregistré dans `p.weightKg` et `p.setup.weightKg`. Cache : `nev-v36`.
+
+## V26 — Mineurs, caméra plein écran, ouverture, évolution
+- Mineurs (case « moins de 18 ans » + accord parental à l'inscription) : profil privé, messages de leurs contacts seulement, jamais dans le classement public ; messages privés modérés (filtre complet si un mineur est concerné). Gacha identique pour tous.
+- `assetlinks.json` généré depuis `NEV_ANDROID_PACKAGE_NAME` et `NEV_ANDROID_SHA256_CERT_FINGERPRINTS` (404 sinon) — voir `ANDROID-LINKS.md`.
+- Spécialisation : fiches anatomie homme/femme cliquables (`img/anatomie-*.webp`).
+- Caméra : plein écran sur tous les formats, résolution 1280×720, détection plus sensible.
+- Ouverture : nouvelle révélation du logo (`js/logo-reveal.js`), vidéo d'intro lancée automatiquement, dernière image = évolution 0 → 2 600 XP.
+- Accueil : avatar grandeur nature, sans cadre, rotation lente à 360°.
+- Tests : 302 réussis. Cache : `nev-v37`.

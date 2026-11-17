@@ -191,13 +191,15 @@ async function signup(req, res, ip) {
   if (!b.consent) return fail(res, 400, 'Coche la case pour confirmer que tu as lu le conseil de sécurité.', 'consent');
   const chk = F.checkSignup(b); if (chk.error) return fail(res, 400, chk.error, chk.field);
   if (b.sex !== 'm' && b.sex !== 'f') return fail(res, 400, 'Choisis ton sexe : masculin ou féminin.', 'sex');
+  const minor = !!b.minor;
+  if (minor && !b.parent) return fail(res, 400, 'Coche la case pour confirmer l\'accord d\'un parent ou tuteur.', 'parent');
   if (S.userByEmail(email)) return fail(res, 409, 'Un compte existe déjà avec cet email. Connecte-toi.', 'email');
   const ref = clean(b.ref, 12).toUpperCase().replace(/[^A-Z0-9]/g, '');
   let refUser = null;
   if (ref) { refUser = S.userByCode(ref); if (!refUser) return fail(res, 400, 'Ce code de parrainage n\'existe pas (tu peux laisser la case vide).', 'ref'); }
   const id = 'u' + rid(8), salt = crypto.randomBytes(16).toString('hex');
   const hash = await scrypt(pw, salt);
-  const user = { id, email, pseudo, created: today(), code: codeOf(id), refCount: 0, banned: false, refBy: refUser ? refUser.id : null, termsAt: now(), termsVer: F.policy.TERMS_VERSION, lang: chk.extra.lang };
+  const user = { id, email, pseudo, created: today(), code: codeOf(id), refCount: 0, banned: false, refBy: refUser ? refUser.id : null, termsAt: now(), termsVer: F.policy.TERMS_VERSION, lang: chk.extra.lang, minor };
   for (let n = 0; S.codeTaken(user.code); n++) user.code = n < 300 ? codeOf() : 'NEV' + rid(4).toUpperCase().replace(/[^A-Z0-9]/g, 'X').slice(0, 5); // 4 chiffres tant qu'il en reste
   if (S.userByEmail(email)) return fail(res, 409, 'Un compte existe déjà avec cet email. Connecte-toi.', 'email'); // course entre deux inscriptions
   S.createUser(user, salt, hash);
@@ -242,7 +244,7 @@ async function api(req, res, url, ip) {
   if (route.indexOf('admin/') === 0 || route === 'admin') return adminApi(req, res, route.slice(6), ip);
 
   { const r = await F.publicRoute(route, m, req, res, ip); if (r !== false) return r; }
-  if (route === 'signup' && m === 'POST') { const mt = S.meta('maintenance'); if (mt && mt.on) return fail(res, 503, mt.msg || 'Maintenance en cours : les inscriptions reviennent bientôt.'); const w = limit('su:' + ip, 8, 3600000); if (w) { counters.blocked++; return fail(res, 429, 'Trop d\'inscriptions depuis cette connexion. Réessaie plus tard.'); } return signup(req, res, ip); }
+  if (route === 'signup' && m === 'POST') { const mt = S.meta('maintenance'); if (mt && mt.on) return fail(res, 503, mt.msg || 'Maintenance en cours : les inscriptions reviennent bientôt.'); const w = limit('su:' + ip, Number(process.env.NEV_SIGNUP_MAX) || 8, 3600000); if (w) { counters.blocked++; return fail(res, 429, 'Trop d\'inscriptions depuis cette connexion. Réessaie plus tard.'); } return signup(req, res, ip); }
   if (route === 'login' && m === 'POST') { const w = limit('li:' + ip, 20, 10 * 60000); if (w) { counters.blocked++; return fail(res, 429, 'Trop d\'essais. Réessaie dans quelques minutes.', 'password'); } return login(req, res, ip); }
   if (route === 'logout' && m === 'POST') { const t = cookies(req).nev_s; if (t) S.delSession(t); setCookie(res, req, 'nev_s', '', 0); return send(res, 200, { ok: true }); }
   if (route === 'config' && m === 'GET') {
@@ -468,7 +470,19 @@ function serveStatic(req, res, url) {
   if (rel.endsWith('/')) rel += 'index.html';
   const parts = rel.split('/').filter(Boolean);
   const wk = parts.length === 2 && parts[0] === '.well-known' && parts[1] === 'assetlinks.json'; // seul fichier caché autorisé : lien appli Android (Play Store)
-  if (!wk && parts.some((p) => p === '..' || p.charAt(0) === '.' || HIDDEN.test(p))) { res.writeHead(404); return res.end('Introuvable'); }
+  // Génération du Digital Asset Links uniquement avec les vraies valeurs fournies par l'exploitant.
+  // Aucune empreinte de certificat fictive n'est publiée si l'application Android n'est pas configurée.
+  if (wk) {
+    const packageName = String(process.env.NEV_ANDROID_PACKAGE_NAME || '').trim();
+    const fingerprints = String(process.env.NEV_ANDROID_SHA256_CERT_FINGERPRINTS || '').split(',').map((x) => x.trim().toUpperCase()).filter(Boolean);
+    const packageOK = /^[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+$/.test(packageName);
+    const fingerprintsOK = fingerprints.length > 0 && fingerprints.every((x) => /^(?:[0-9A-F]{2}:){31}[0-9A-F]{2}$/.test(x));
+    if (!packageOK || !fingerprintsOK) { res.writeHead(404, { 'Cache-Control': 'no-store' }); return res.end('Liaison Android non configurée.'); }
+    const body = Buffer.from(JSON.stringify([{ relation: ['delegate_permission/common.handle_all_urls'], target: { namespace: 'android_app', package_name: packageName, sha256_cert_fingerprints: fingerprints } }]));
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': body.length, 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff' });
+    return res.end(req.method === 'HEAD' ? undefined : body);
+  }
+  if (parts.some((p) => p === '..' || p.charAt(0) === '.' || HIDDEN.test(p))) { res.writeHead(404); return res.end('Introuvable'); }
   let file = path.join(ROOT, ...parts);
   if (file.indexOf(ROOT + path.sep) !== 0 && file !== ROOT) { res.writeHead(404); return res.end('Introuvable'); }
   fs.stat(file, (e, st) => {

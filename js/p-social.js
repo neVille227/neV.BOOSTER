@@ -374,8 +374,8 @@
       '<label>Zone d\'entraînement<select id="fzn">' + sel(i.zone || '', [['', 'Non précisée'], ['haut', 'Haut du corps'], ['jambes', 'Jambes'], ['abdos', 'Abdos'], ['cardio', 'Cardio']]) + '</select></label>' +
       '<label>Objectif<input type="text" id="fg" maxlength="80" value="' + esc(i.goal || '') + '" placeholder="Ex. : 50 pompes d\'affilée"></label>' +
       '<h3>Confidentialité</h3>' +
-      '<label>Qui peut voir mon profil<select id="fv">' + sel(me.vis, [['public', 'Tout le monde'], ['friends', 'Mes contacts seulement'], ['private', 'Personne (profil privé, introuvable)']]) + '</select></label>' +
-      '<label>Qui peut m\'écrire<select id="fd">' + sel(me.dm, [['all', 'Tout le monde'], ['friends', 'Mes contacts seulement'], ['none', 'Personne']]) + '</select></label>' +
+      '<label>Qui peut voir mon profil<select id="fv">' + sel(me.vis, (NEV.auth.current() || {}).minor ? [['friends', 'Mes contacts seulement'], ['private', 'Personne (profil privé, introuvable)']] : [['public', 'Tout le monde'], ['friends', 'Mes contacts seulement'], ['private', 'Personne (profil privé, introuvable)']]) + '</select></label>' +
+      '<label>Qui peut m\'écrire<select id="fd">' + sel(me.dm, (NEV.auth.current() || {}).minor ? [['friends', 'Mes contacts seulement'], ['none', 'Personne']] : [['all', 'Tout le monde'], ['friends', 'Mes contacts seulement'], ['none', 'Personne']]) + '</select></label>' +
       '<div class="sw"><span>Aperçu du message dans les notifications<small>Sinon : « Nouveau message » seulement.</small></span><input type="checkbox" id="fp"' + (me.preview ? ' checked' : '') + '></div>' +
       '<div class="sw"><span>Accusés de lecture<small>Les autres voient quand tu as lu leur message.</small></span><input type="checkbox" id="fr"' + (me.receipts ? ' checked' : '') + '></div>' +
       '<p class="err" id="ferr"></p><div class="acts"><button type="submit" class="b" id="fsave">Enregistrer</button><a class="b g" href="#/profile">Voir mon profil</a></div></form>' +

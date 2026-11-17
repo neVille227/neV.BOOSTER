@@ -2,6 +2,7 @@
 (async function () {
   'use strict';
   const $ = (id) => document.getElementById(id);
+  document.addEventListener('DOMContentLoaded', () => { if ($('rFull')) $('rFull').addEventListener('click', () => NEV.Vision.fullscreen()); });
   const esc = NEV.util.esc, P = NEV.Policy, V = NEV.VisionCore;
   const ctx = await NEV.boot('defis'); if (!ctx) return;
   const p = ctx.p, user = ctx.user, server = NEV.cloud.mode === 'server';
@@ -128,6 +129,7 @@
     NEV.track && NEV.track('defi-start', { id: D.id, mode: mode });
     if (demo) { try { demo.destroy(); } catch (e) { /* ignoré */ } demo = null; }
     show('dfRun'); setupRun();
+    if (mode === 'cam') NEV.Vision.fullscreen(true);
     if (mode === 'manual') { beginCount(); return; }
     $('rStatus').textContent = 'Place-toi en entier dans le cadre : le compte à rebours part tout seul.';
     if (mode === 'sim') { NEV.Vision.startSim(exOf(D), { video: $('rVideo'), canvas: $('rCanvas'), onPose }, SPEED); return; }
