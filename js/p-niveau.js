@@ -67,6 +67,7 @@
   document.querySelectorAll('[name=focus]').forEach(function (i) { i.checked = i.value === p.setup.focus; });
   document.querySelectorAll('[data-eq]').forEach(function (i) { i.checked = !!p.setup.equip[i.getAttribute('data-eq')]; });
   document.querySelectorAll('[name=sets]').forEach(function (i) { i.checked = Number(i.value) === p.setup.sets; });
+  document.querySelectorAll('[name=rest]').forEach(function (i) { i.checked = String(i.value) === String(p.setup.rest || 'auto'); });
   document.querySelectorAll('[name=cam]').forEach(function (i) { i.checked = (i.value === '1') === !!p.setup.camera; });
 
   $('save').onclick = function () {
@@ -76,10 +77,11 @@
     var focus = document.querySelector('[name=focus]:checked').value;
     var sets = Number(document.querySelector('[name=sets]:checked').value);
     var cam = document.querySelector('[name=cam]:checked').value === '1';
+    var restEl = document.querySelector('[name=rest]:checked'), rest = restEl && restEl.value !== 'auto' ? Number(restEl.value) : 'auto';
     if (SQ) { p.maxSquats = val; p.maxPushups = NEV.squatsToPush(val); } else p.maxPushups = val;
     p.level = l.n;
     p.weightKg = skipW ? 0 : kg;   // 0 = non communiqué
-    p.setup = { focus: focus, sets: sets, camera: cam, equip: equip, zones: (p.setup && p.setup.zones) || [], weightKg: p.weightKg };
+    p.setup = { focus: focus, sets: sets, rest: rest, camera: cam, equip: equip, zones: (p.setup && p.setup.zones) || [], weightKg: p.weightKg };
     // Si le réglage change après un tirage non commencé, on garde la carte déjà tirée du jour.
     NEV.player.save(p);
     NEV.go('accueil.html');

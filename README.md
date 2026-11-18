@@ -374,3 +374,10 @@ Tirage simple : la carte sort de la boîte, tourne 8 fois (2880°) avec lumière
 - Ouverture : nouvelle révélation du logo (`js/logo-reveal.js`), vidéo d'intro lancée automatiquement, dernière image = évolution 0 → 2 600 XP.
 - Accueil : avatar grandeur nature, sans cadre, rotation lente à 360°.
 - Tests : 302 réussis. Cache : `nev-v37`.
+
+## V27 — 1000 exercices, tirage sans répétition, repos adaptés, présence et saisie dans le chat
+- `js/ex-variants.js` : 1000 fiches au total. Chaque fiche de base reçoit des variantes réelles (tempo lent, pause sous tension, demi-amplitude, descente contrôlée 5 s, version facilitée, série d'endurance, montée explosive, lesté sac à dos ou bouteilles, tenue plus longue, trois-quarts, rythme rapide). Même mouvement, caméra et animation que la fiche de base (`variantOf`), mais autre rareté, autres répétitions, autre consigne. Les variantes suivent les règles de leur base (poids, femmes, zones de Spécialisation).
+- Tirage : `p.seen` retient les 600 dernières cartes tirées ; un exercice ne ressort pas tant que 80 % du choix possible n'est pas passé. La rareté est tirée parmi celles qui ont encore du neuf. Un combo n'entre dans la boîte que s'il est entièrement neuf. Jamais deux fois le même exercice le même jour.
+- Repos : `NEV.Gacha.restFor` — cardio 30 à 45 s, abdos/bras 45 à 120 s, renforcement 60 à 120 s, exercices les plus durs 150 à 300 s. Choix du joueur dans la page Niveau (Adapté, 30 s, 1 min… 5 min). En mode « Adapté », le repos suit la série faite : plus long si très rapide ou objectif manqué, un peu plus court si lente et contrôlée.
+- Chat : pastille verte seulement quand la personne est en ligne (rien sinon) ; pour un mineur, seulement ses contacts la voient. Trois points animés « écrit… » dans la conversation et dans la liste (`POST api/social/typing`, signal jamais enregistré).
+- Tests : 319 réussis. Cache : `nev-v38`.

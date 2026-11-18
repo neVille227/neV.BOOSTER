@@ -39,7 +39,30 @@
     4: [28, 31, 25, 12.5, 3.5],
     5: [18, 28, 29, 18, 7]
   };
-  const PITY_SOFT = 4, PITY_HARD = 7, CARDS_ON_TABLE = 5, REST_SEC = { 1: 45, 2: 40, 3: 35, 4: 30, 5: 30 };
+  const PITY_SOFT = 4, PITY_HARD = 7, CARDS_ON_TABLE = 5;
+  const SEEN_MAX = 600;   // mémoire des cartes déjà tirées (pour ne pas les répéter)
+
+  /* Temps de repos entre deux séries, selon l'exercice (normes d'entraînement) :
+       cardio et tenues légères  : 20 à 45 s (garder le cœur haut)
+       isolation et gainage      : 45 à 75 s
+       renforcement classique    : 60 à 120 s (1 à 2 min)
+       exercices les plus durs   : 150 à 300 s (3 à 5 min) pour récupérer vraiment. */
+  const HARD_MODS = ['pause', 'controle', 'explosif', 'sac'];
+  function restFor(ex, p) {
+    const pref = p && p.setup && p.setup.rest;
+    if (pref && pref !== 'auto' && Number(pref) >= 10) return Math.min(600, Math.round(Number(pref)));   // choix de l'utilisateur
+    const t = ex.tier || 1, gp = ex.group;
+    let sec;
+    if (gp === 'cardio') sec = 25 + 5 * t;                                   // 30 à 45 s (50 pour un mythique)
+    else if (gp === 'mobilite') sec = 20;
+    else if (gp === 'abdos' || gp === 'bras') sec = t <= 2 ? 45 : t === 3 ? 60 : t === 4 ? 90 : 120;
+    else sec = t === 1 ? 60 : t === 2 ? 75 : t === 3 ? 90 : t === 4 ? 150 : 240;   // pecs, dos, jambes
+    if (HARD_MODS.indexOf(ex.variant) >= 0) sec += 15;
+    if (ex.variant === 'facile' || ex.variant === 'endurance' || ex.variant === 'rapide') sec -= 10;
+    if (gp === 'pecs' || gp === 'dos' || gp === 'jambes') sec = Math.max(sec, 60);   // le renforcement ne descend jamais sous 1 min
+    if (p && p.weightKg >= 100 && gp !== 'cardio') sec += 15;                 // les articulations et le souffle demandent un peu plus
+    return Math.max(20, Math.min(300, sec));
+  }
 
   /* Carte spéciale Repos : il faut s'être entraîné `minDays` jours sur les `window` derniers jours
      pour passer de 0 % à 40 % de chance, et au plus une fois tous les `cooldown` jours. Réglable depuis l'admin (NEV.cfg.special). */
@@ -106,7 +129,33 @@
     if (double) sets = cautious ? sets + Math.ceil(sets / 2) : sets * 2;
     const unit = ex.unit || 'rep';
     const mult = (unit === 'side' || unit === 'secside') ? 2 : 1;
-    return { unit, perSet: per, sets, rest: REST_SEC[L] || 40, total: per * sets * mult, doubled: !!double };
+    return { unit, perSet: per, sets, rest: restFor(ex, p), restAuto: !(p.setup && p.setup.rest && p.setup.rest !== 'auto'), total: per * sets * mult, doubled: !!double };
+  }
+
+  /* ---------- aucune répétition ----------
+     On retient les cartes tirées (done ou non). Un exercice ne ressort pas tant que 80 % du choix possible n'est pas passé :
+     avec 1000 exercices, tu ne retombes quasiment jamais deux fois sur le même. */
+  function recentIds(p, extra) {
+    const out = [], seen = {};
+    const add = (id) => { if (id && !seen[id] && String(id).indexOf('combo:') !== 0) { seen[id] = 1; out.push(id); } };
+    (extra || []).forEach(add);
+    (p.history || []).slice(0, 60).forEach((h) => add(h.id));
+    (p.seen || []).forEach(add);
+    return out;
+  }
+  function remember(p, ids) {
+    const fresh = ids.filter(Boolean);
+    p.seen = fresh.concat((p.seen || []).filter((x) => fresh.indexOf(x) < 0)).slice(0, SEEN_MAX);
+  }
+  /* Choisit au hasard parmi les exercices pas vus récemment ; si tout a été vu, prend l'un des plus anciens. */
+  function pickFresh(list, recent, poolSize) {
+    const k = Math.max(3, Math.floor(poolSize * 0.8)), avoid = {};
+    recent.slice(0, k).forEach((id) => { avoid[id] = 1; });
+    const fresh = list.filter((e) => !avoid[e.id]);
+    if (fresh.length) return rng.pick(fresh);
+    let best = [], bestPos = -1;
+    list.forEach((e) => { const pos = recent.indexOf(e.id); if (pos > bestPos) { bestPos = pos; best = [e]; } else if (pos === bestPos) best.push(e); });
+    return rng.pick(best.length ? best : list);
   }
 
   /* Exercices que ce joueur peut tirer dans une catégorie (selon son matériel et les réglages de l'admin). */
@@ -211,7 +260,7 @@
     }
 
     /* 2) tirage normal */
-    const hist = (p.history || []).slice(0, 3).map((h) => h.id);
+    const recent = recentIds(p, exclude);
     const W = weights(lvl, cautious, p.pity || 0);
     const zoneOpts = { zone: !!zoneId || mode === 'spe' };
     let zonePool = null;
@@ -222,12 +271,15 @@
     }
     let base0 = NEV.EXERCISES.filter((e) => eligible(e, p.setup, zoneOpts) && (!zonePool || zonePool.indexOf(e.id) >= 0) && (!cat || cat.match(e)));
     if (exclude.length) { const rest = base0.filter((e) => exclude.indexOf(e.id) < 0); if (rest.length) base0 = rest; }
+    /* exercices pas encore vus récemment : on tire d'abord la rareté parmi celles qui ont encore du neuf */
+    const avoidN = Math.max(3, Math.floor(base0.length * 0.8)), avoid = {};
+    recent.slice(0, avoidN).forEach((id) => { avoid[id] = 1; });
+    let useFresh = base0.some((e) => !avoid[e.id]);
     const pool = (t) => {
-      let list = base0.filter((e) => e.tier === t);
+      let list = base0.filter((e) => e.tier === t && (!useFresh || !avoid[e.id]));
       const grp = zonePool || cat ? null : FOCUS_GROUPS[p.setup.focus];
       if (grp) { const f = list.filter((e) => grp.indexOf(e.group) >= 0); if (f.length) list = f; }
-      const fresh = list.filter((e) => hist.indexOf(e.id) < 0);
-      return fresh.length ? fresh : list;
+      return list;
     };
     // raretés réellement disponibles : on ne tire que parmi elles
     const have = [1, 2, 3, 4, 5].map((t) => (pool(t).length ? 1 : 0));
@@ -236,12 +288,11 @@
     if (!wr.some((w) => w > 0) && cat) throw new Error('Aucun exercice disponible dans la catégorie « ' + cat.name + ' »');
     if (!wr.some((w) => w > 0) && zonePool) { // zone trop restreinte pour ton matériel : on ouvre à tout le corps
       const all = NEV.EXERCISES.filter((e) => eligible(e, p.setup, { zone: true }));
-      const ex0 = rng.pick(all);
-      return finish(ex0);
+      return finish(pickFresh(all, recent, all.length));
     }
     const tier = rng.weighted(wr) + 1;
     const list = pool(tier);
-    return finish(rng.pick(list));
+    return finish(pickFresh(list, recent, base0.length));
 
     function finish(ex) {
       const r = RARITIES[ex.tier - 1];
@@ -283,14 +334,15 @@
     const dbl = !!(p.daily && p.daily.double && p.daily.status !== 'done');
     const sets = Math.max(1, Math.min(4, B.sets | 0)) * (dbl ? 2 : 1);
     const pool = comboPool(p).filter((c) => !cat || c.items.every((it) => { const ex = NEV.Ex.byId(it[0]); return ex && cat.match(ex); }));
-    const comboAt = pool.length && n > 1 && rng.float() < B.comboChance ? rng.int(n) : -1;
     const fake = Object.assign({}, p, { history: (p.history || []).slice() });
+    /* un combo n'entre dans la boîte que s'il est entièrement NEUF pour ce joueur (aucun de ses exercices vu récemment) */
+    const seenRecent = recentIds(p, []).slice(0, Math.max(6, Math.floor(NEV.EXERCISES.length * 0.1)));
+    const freshPool = pool.filter((c) => !c.items.some((it) => seenRecent.indexOf(it[0]) >= 0));
+    const comboAt = freshPool.length && n > 1 && rng.float() < B.comboChance ? rng.int(n) : -1;
     const cards = [], used = [];
     for (let i = 0; i < n; i++) {
       if (i === comboAt) {
-        const hist = fake.history.slice(0, 4).map((h) => h.id);
-        const fresh = pool.filter((c) => !c.items.some((it) => hist.indexOf(it[0]) >= 0 || used.indexOf(it[0]) >= 0));
-        const c = rng.pick(fresh.length ? fresh : pool);
+        const c = rng.pick(freshPool);
         const steps = c.items.map((it) => { const ex = NEV.Ex.byId(it[0]); const pl = plan(ex, p, false, false); return { id: ex.id, name: ex.name, tier: ex.tier, group: ex.group, plan: boxPlan(pl, sets) }; });
         const tier = Math.max(1, Math.min(5, Math.round(steps.reduce((a, s) => a + s.tier, 0) / steps.length)));
         cards.push({ type: 'combo', id: c.id, name: c.name, lvl: c.lvl || '', tier, rarity: 'combo', steps });
@@ -310,6 +362,7 @@
     if (!p.box.cards) {
       const b = drawBox(p, user, opts);
       p.box = b;
+      remember(p, [].concat.apply([], b.cards.map((c) => (c.type === 'combo' ? c.steps.map((st) => st.id) : [c.id]))));
       p.pity = b.cards.some((c) => c.type === 'single' && c.tier >= 3) ? 0 : (p.pity || 0) + 1;
       NEV.player.save(p);
     }
@@ -327,6 +380,7 @@
       slot.card = c;
       slot.status = 'drawn';
       if (spe) slot.zone = opts.zone || 'all';
+      if (!c.special) remember(p, [c.id]);
       if (!c.special) p.pity = c.tier >= 3 ? 0 : (p.pity || 0) + 1;
       NEV.player.save(p);
     }
@@ -337,7 +391,7 @@
 
   NEV.Gacha = {
     amount: (pl) => NEV.Ex.amountText(pl.unit, pl.perSet),
-    RARITIES, SPECIALS, SPECIAL_RULE, WEIGHTS, weights, draw, ensureCard, plan, eligible, specialInfo, trainingDays,
+    RARITIES, SPECIALS, SPECIAL_RULE, WEIGHTS, weights, restFor, recentIds, remember, pickFresh, draw, ensureCard, plan, eligible, specialInfo, trainingDays,
     CATEGORIES, catById, categoryPool, categoryInfo,
     CARDS_ON_TABLE, PITY_HARD, rarity: rarityOf, BOX, drawBox, ensureBox, comboPool, boxCfg
   };

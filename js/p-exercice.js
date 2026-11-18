@@ -232,7 +232,7 @@
     await sleep(650);
     if (tok !== S.tok) return;
     go.hidden = true; $('rTrans').hidden = true;
-    S.counter.reset(); S.armed = true; S.arming = false;
+    S.counter.reset(); S.armed = true; S.arming = false; S.setT0 = performance.now();
     if (SRC === 'box' && NEV.BoxAudio) { NEV.BoxAudio.sfx('go'); if (!long) NEV.BoxAudio.say('allez'); }
     $('rOk').textContent = 'OK — série terminée';
     if (S.mode === 'manual' && S.counter.timed) startManualTimer();
@@ -298,6 +298,7 @@
     else if (S.mode === 'sim') { reps = reached ? target : Math.round(got); verified = false; }
     else { reps = reached ? target : Math.round(got); verified = (reached || auto) && (c.kind !== 'manual' || S.seen >= 20); if (!reached) verified = false; }
     S.totalReps += reps; S.setsDone++; S.verifiedAll = S.verifiedAll && verified;
+    S.lastSet = { got: reached ? target : got, target, secs: S.setT0 ? (performance.now() - S.setT0) / 1000 : 0, timed: !!c.timed };
     setCount(reached ? target : got);
     $('rCamBox').classList.add('good');
     const f = $('rOkFlash'); f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
@@ -306,12 +307,30 @@
     setTimeout(afterSet, 1050);
   }
 
+  /* Repos adapté à la série qui vient d'être faite : plus de repos si elle était très rapide ou si l'objectif n'a pas été atteint,
+     un peu moins si elle était lente et contrôlée. Si l'utilisateur a choisi son propre temps, on ne touche à rien. */
+  function adaptedRest(st) {
+    const base = st.plan.rest || 45, L = S.lastSet;
+    if (st.plan.restAuto === false || !L || !L.target) return { sec: base, why: '' };
+    let f = 1, why = '';
+    const ratio = L.got / L.target;
+    if (ratio < 0.8) { f *= 1.25; why = 'série difficile'; }
+    if (!L.timed && L.got >= 5 && L.secs > 0) {
+      const per = L.secs / L.got;
+      if (per < 1.6) { f *= 1.2; why = why || 'rythme très rapide'; }
+      else if (per > 4.5 && ratio >= 0.95) { f *= 0.9; why = why || 'rythme lent et contrôlé'; }
+    }
+    const sec = Math.round(Math.max(base * 0.8, Math.min(base * 1.5, base * f)) / 5) * 5;
+    return { sec: Math.max(15, Math.min(360, sec)), why: sec === base ? '' : why };
+  }
+
   function afterSet() {
     const st = cur();
     if (S.set + 1 < st.plan.sets) {
       S.set++;
       const nxt = NEV.Ex.amountText(st.plan.unit, st.plan.perSet);
-      restScreen({ sec: st.plan.rest, kick: 'Repos', title: 'Respire, secoue les bras', next: 'Série suivante : ' + (S.set + 1) + '/' + st.plan.sets + ' — ' + nxt, then: () => beginSet(false) });
+      const ar = adaptedRest(st);
+      restScreen({ sec: ar.sec, kick: 'Repos · ' + ar.sec + ' s' + (ar.why ? ' (' + ar.why + ')' : ''), title: 'Respire, secoue les bras', next: 'Série suivante : ' + (S.set + 1) + '/' + st.plan.sets + ' — ' + nxt, then: () => beginSet(false) });
     } else if (S.step + 1 < steps.length) {
       S.step++; S.set = 0;
       const ns = cur();

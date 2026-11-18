@@ -13,6 +13,7 @@
     body.innerHTML = '<div class="empty"><b>Le social est disponible en ligne</b>Cette version locale n\'a pas de serveur de messagerie.</div>'; return;
   }
   const SIGN = 'connexion.html?sex=' + (NEV.sex === 'f' ? 'f' : 'm');
+  const typingAt = {}, typingTimers = {};   /* « écrit… » : pseudo en minuscules -> heure du dernier signal */
   let me = null, unread = 0, requests = 0, stream = null, cur = { view: '', handle: '' }, convCache = null, imagesOn = false, pushKey = '', pushOn = false;
 
   /* ---------- utilitaires ---------- */
@@ -104,8 +105,15 @@
     stream.addEventListener('friend', (e) => { const d = JSON.parse(e.data); if (d.state === 'incoming') { requests++; setBadge(); toast('@' + d.handle + ' veut rejoindre tes contacts.'); } if (cur.view === 'home') viewHome(); if ($('m3')) loadFriends().then(drawList); });
     stream.addEventListener('read', (e) => { const d = JSON.parse(e.data); if (cur.view === 'chat' && cur.handle.toLowerCase() === d.handle.toLowerCase()) Array.prototype.forEach.call(document.querySelectorAll('.m.me .tick'), (t) => { t.textContent = '✓✓'; t.classList.add('r'); }); });
     stream.addEventListener('sent', (e) => { const m = JSON.parse(e.data); if (cur.view === 'chat' && cur.handle.toLowerCase() === m.handle.toLowerCase() && !document.querySelector('[data-id="' + m.id + '"]')) addMsg(m); });
+    stream.addEventListener('typing', (e) => {
+      const d = JSON.parse(e.data), key = String(d.handle || '').toLowerCase(); if (!key) return;
+      typingAt[key] = Date.now(); clearTimeout(typingTimers[key]);
+      typingTimers[key] = setTimeout(() => { delete typingAt[key]; showTyping(key); }, 4500);
+      showTyping(key);
+    });
     stream.addEventListener('message', (e) => {
       const m = JSON.parse(e.data), here = cur.view === 'chat' && cur.handle.toLowerCase() === m.handle.toLowerCase();
+      delete typingAt[String(m.handle).toLowerCase()]; clearTimeout(typingTimers[String(m.handle).toLowerCase()]); showTyping(String(m.handle).toLowerCase());
       if (here) { addMsg(m); if (!document.hidden) api('read', 'POST', { handle: m.handle }); return; }
       if (document.hidden && Notification && Notification.permission === 'granted') {
         navigator.serviceWorker.ready.then((reg) => api('notify-preview').then((r) => { if (r.ok) reg.showNotification(r.j.title, { body: r.j.body, tag: 'dm', renotify: true, icon: 'img/icon-192.png', data: { url: r.j.url } }); })).catch(() => {});
@@ -309,6 +317,24 @@
     const d = dayLabel(m.t), sep = d !== lastDay ? '<div class="day">' + esc(d) + '</div>' : ''; lastDay = d;
     return sep + '<div class="m' + (m.mine ? ' me' : '') + '" data-id="' + m.id + '">' + (m.img ? '<img src="' + String(m.img).replace(/"/g, '') + '" alt="Image envoyée">' : '') + (m.text ? esc(m.text) : '') + '<small>' + hm(m.t) + (m.mine ? '<span class="tick' + (m.read ? ' r' : '') + '" title="' + (m.read ? 'Lu' : 'Envoyé') + '">' + (m.read ? '✓✓' : '✓') + '</span>' : '') + '</small></div>';
   }
+  /* Trois points animés : dans la conversation ouverte et dans la liste des conversations. */
+  const DOTS = '<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>';
+  function showTyping(key) {
+    const on = !!typingAt[key];
+    if (cur.view === 'chat' && cur.handle.toLowerCase() === key) {
+      const box = $('msgs'); if (!box) return;
+      let t = box.querySelector('.typing');
+      const st = $('chSt'); if (st) st.innerHTML = on ? 'écrit ' + DOTS : (st.dataset.on ? '<i class="od on" aria-hidden="true"></i>En ligne' : '');
+      if (on && !t) { box.insertAdjacentHTML('beforeend', '<div class="m typing" role="status" aria-label="' + esc(cur.handle) + ' est en train d\'écrire">' + DOTS + '</div>'); box.scrollTop = box.scrollHeight; }
+      else if (!on && t) t.remove();
+    }
+    document.querySelectorAll('a.row[href]').forEach((a) => {
+      const h = decodeURIComponent((a.getAttribute('href') || '').replace('#/messages/', '')).toLowerCase(); if (h !== key) return;
+      const sp = a.querySelector('.t span'); if (!sp) return;
+      if (on) { if (!sp.dataset.old) sp.dataset.old = sp.innerHTML; sp.innerHTML = 'écrit ' + DOTS; }
+      else if (sp.dataset.old) { sp.innerHTML = sp.dataset.old; delete sp.dataset.old; }
+    });
+  }
   function addMsg(m) { const box = $('msgs'); if (!box) return; box.insertAdjacentHTML('beforeend', msgHtml(m)); box.scrollTop = box.scrollHeight; }
   function panel(p, w) {
     if (!p) return '<div class="empty">Fiche indisponible.</div>';
@@ -324,7 +350,7 @@
     const w = r.j.with; cur.handle = w.handle; lastDay = '';
     const pp = pr.ok ? pr.j.profile : null;
     $('rpane').innerHTML = panel(pp, w);
-    pane.innerHTML = '<div class="chat"><div class="chat-h"><a class="back mob" href="#/messages" aria-label="Retour aux conversations" style="margin:0;text-decoration:none;font-size:1.4rem;padding:0 6px">‹</a><a href="#/u/' + enc(w.handle) + '">' + avo(w.avatar, w.handle, w.sex, pp && pp.online) + '</a><div class="t"><b>@' + esc(w.handle) + '</b><small class="' + (pp && pp.online ? '' : 'off') + '">' + (pp && pp.online ? 'En ligne' : 'Hors ligne') + '</small></div><div class="acts"><a class="b out" href="defis.html" data-go>Défier</a></div></div>' +
+    pane.innerHTML = '<div class="chat"><div class="chat-h"><a class="back mob" href="#/messages" aria-label="Retour aux conversations" style="margin:0;text-decoration:none;font-size:1.4rem;padding:0 6px">‹</a><a href="#/u/' + enc(w.handle) + '">' + avo(w.avatar, w.handle, w.sex, pp && pp.online) + '</a><div class="t"><b>@' + esc(w.handle) + '</b><small id="chSt" data-on="' + (pp && pp.online ? '1' : '') + '">' + (pp && pp.online ? '<i class="od on" aria-hidden="true"></i>En ligne' : '') + '</small></div><div class="acts"><a class="b out" href="defis.html" data-go>Défier</a></div></div>' +
       '<div class="msgs" id="msgs" role="log" aria-label="Messages">' + (r.j.messages.length ? r.j.messages.map(msgHtml).join('') : '<div class="empty">Dis bonjour à @' + esc(w.handle) + ' 👋</div>') + '</div>' +
       (r.j.blocked ? '<div class="note">Tu as bloqué ce joueur. <button class="b g" data-bl="0" data-h="' + esc(w.handle) + '" type="button">Débloquer</button></div>' : r.j.canSend ?
         '<form class="comp" id="comp"><textarea id="txt" rows="1" maxlength="1000" placeholder="' + (wide() ? 'Écris un message à @' + esc(w.handle) : 'Écris un message') + '…" aria-label="Message"></textarea>' + (imagesOn ? '<label class="b g" style="cursor:pointer">📷<input type="file" id="imgIn" accept="image/jpeg,image/png,image/webp" hidden></label>' : '') + '<button class="b send" id="sendBtn" type="submit">Envoyer</button></form><p class="err" id="cerr"></p>' :
@@ -333,7 +359,12 @@
     api('unread').then((x) => { if (x.ok) { unread = x.j.messages; requests = x.j.requests; setBadge(); } }); refreshConvs();
     const f = $('comp'); if (!f) return;
     const t = $('txt'); let img = null;
-    t.addEventListener('input', () => { t.style.height = 'auto'; t.style.height = Math.min(120, t.scrollHeight) + 'px'; });
+    let lastTyping = 0;
+    t.addEventListener('input', () => {
+      t.style.height = 'auto'; t.style.height = Math.min(120, t.scrollHeight) + 'px';
+      const n = Date.now();
+      if (t.value.trim() && n - lastTyping > 2500) { lastTyping = n; api('typing', 'POST', { handle: w.handle }); }   // un signal toutes les 2,5 s au plus
+    });
     t.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); f.requestSubmit(); } });
     if ($('imgIn')) $('imgIn').addEventListener('change', async (e) => { const file = e.target.files[0]; if (!file) return; img = await shrink(file, 900, 0.78); $('cerr').textContent = img ? '📷 Image prête à envoyer.' : 'Image non lisible.'; });
     f.addEventListener('submit', async (e) => {

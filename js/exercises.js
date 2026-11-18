@@ -32,15 +32,16 @@
   const F_PECS = ['presse-paumes', 'developpe-bouteilles'];
   const F_BAN = ['v-ups', 'pistol-assiste'];
   function sexOk(e, sex) {
+    const bid = e.variantOf || e.id;   // une variante suit les règles de sa fiche de base
     if (sex !== 'f') return e.for !== 'f';
     if (e.for === 'm') return false;
     if (e.for === 'f') return e.group !== 'bras';
     const gp = e.group;
-    if (gp === 'jambes' || gp === 'abdos') return e.tier <= 4 && F_BAN.indexOf(e.id) < 0;
+    if (gp === 'jambes' || gp === 'abdos') return e.tier <= 4 && F_BAN.indexOf(bid) < 0;
     if (gp === 'mobilite') return !/^cou-|^menton|etirement-cou|rotations-epaules/.test(e.id);
-    if (gp === 'cardio') return F_CARDIO.indexOf(e.id) >= 0;
-    if (gp === 'pecs') return F_PECS.indexOf(e.id) >= 0;
-    if (gp === 'dos') return F_DOS.indexOf(e.id) >= 0;
+    if (gp === 'cardio') return F_CARDIO.indexOf(bid) >= 0;
+    if (gp === 'pecs') return F_PECS.indexOf(bid) >= 0;
+    if (gp === 'dos') return F_DOS.indexOf(bid) >= 0;
     return false;
   }
 

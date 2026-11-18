@@ -275,13 +275,14 @@
   const defaults = () => ({
     v: 1,
     maxPushups: null, level: null,
-    setup: { focus: 'equilibre', sets: 3, camera: true, zones: [], equip: { chair: true, wall: true, bag: false, step: false, bottle: false, towel: false, bar: false, table: false } },
+    setup: { focus: 'equilibre', sets: 3, rest: 'auto', camera: true, zones: [], equip: { chair: true, wall: true, bag: false, step: false, bottle: false, towel: false, bar: false, table: false } },
     progress: { streak: 0, best: 0, lastDone: null, total: 0, xp: 0 },
     daily: null,
     spe: null,
     box: null,
     pity: 0,
     history: [],
+    seen: [],   /* identifiants des cartes tirées récemment (les plus récentes d'abord) : le tirage évite de les répéter */
     collection: {},
     flames: 0, flamesTotal: 0, bonusDraws: 0, gifts: [],
     login: { last: null, streak: 0, best: 0, days: [] },

@@ -267,6 +267,12 @@
   }
   const FZ = () => F_ORDER.map(fview).filter(Boolean);
 
+  /* Les variantes d'un exercice (tempo lent, pause, lesté…) sont proposées dans les mêmes zones que leur fiche de base. */
+  (function () {
+    const vs = (NEV.EX_DATA || []).filter((e) => e.variantOf);
+    if (!vs.length) return;
+    Z.forEach((z) => { const add = vs.filter((e) => z.ex.indexOf(e.variantOf) >= 0 && z.ex.indexOf(e.id) < 0).map((e) => e.id); z.ex = z.ex.concat(add); });
+  })();
   NEV.ZONES = Z;
   NEV.Zones = {
     VISION,

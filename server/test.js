@@ -348,6 +348,8 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     r = await call(C, 'GET', '/api/social/unread'); t('pastille : 1 message non lu', r.j.messages === 1);
     r = await call(C, 'GET', '/api/social/messages?h=emma&mark=1'); t('lecture : message reçu', r.j.messages.length === 1 && !r.j.messages[0].mine);
     r = await call(E, 'GET', '/api/social/messages?h=chloe'); t('accusé de lecture visible par l\'expéditeur', r.j.messages[0].read === true);
+    r = await call(E, 'POST', '/api/social/typing', { handle: 'chloe' }); t('saisie (« écrit… ») : signal accepté', r.s === 200, r);
+    r = await call(VV, 'POST', '/api/social/typing', { handle: 'chloe' }); t('saisie : compte requis', r.s === 401, r);
     await call(C, 'PUT', '/api/social/me', { dm: 'none' }); r = await call(E, 'POST', '/api/social/send', { to: 'chloe', text: 'x' }); t('réglage « personne ne peut m\'écrire » respecté', r.s === 403);
     await call(C, 'PUT', '/api/social/me', { dm: 'all' });
     r = await call(C, 'POST', '/api/social/block', { handle: 'emma', on: true }); r = await call(E, 'POST', '/api/social/send', { to: 'chloe', text: 'x' }); t('joueur bloqué : plus de message', r.s === 403);
@@ -373,6 +375,54 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
       await call(K1, 'PUT', '/api/social/me', { info: { zone: 'jambes' } }); r = await call(KV, 'GET', '/api/social/search?q=chloe'); t('zone visible en recherche', r.j.results[0].zone === 'jambes' && 'online' in r.j.results[0], r.j);
     }
   }
+
+  /* ---------- 1000 exercices, tirage sans répétition, repos adaptés (code du navigateur chargé dans un bac à sable) ---------- */
+  {
+    console.log('Exercices, tirage et repos');
+    const vm = require('vm'), root = path.join(__dirname, '..');
+    const memo = {};
+    const sb = { console, Math, Date, JSON, Object, Array, String, Number, RegExp, Set, Map, Error, performance: { now: () => Date.now() }, setTimeout, clearTimeout, setInterval, clearInterval,
+      localStorage: { getItem: (k) => (k in memo ? memo[k] : null), setItem: (k, v) => { memo[k] = String(v); }, removeItem: (k) => { delete memo[k]; } }, crypto: require('crypto').webcrypto,
+      location: { search: '', href: '', hash: '' }, navigator: { userAgent: 'test' }, addEventListener() {}, removeEventListener() {}, matchMedia: () => ({ matches: false, addEventListener() {} }),
+      document: { documentElement: { dataset: {} }, addEventListener() {}, querySelector: () => null, querySelectorAll: () => [], getElementById: () => null } };
+    sb.window = sb; sb.NEV = {}; vm.createContext(sb);
+    let loadErr = null;
+    ['core', 'ex-data', 'ex-anim', 'ex-more', 'ex-extra', 'ex-variants', 'exercises', 'zones', 'combos', 'gachaengine'].forEach((f) => {
+      try { vm.runInContext(fs.readFileSync(path.join(root, 'js', f + '.js'), 'utf8'), sb, { filename: f }); } catch (e) { loadErr = loadErr || (f + ' : ' + e.message); }
+    });
+    const N = sb.NEV; t('exercices : scripts chargés sans erreur', !loadErr, loadErr);
+    const L = N.EXERCISES || [], ids = new Set(L.map((e) => e.id));
+    t('exercices : au moins 1000 fiches', L.length >= 1000, L.length);
+    t('exercices : identifiants uniques', ids.size === L.length, L.length - ids.size);
+    t('exercices : chaque fiche a son animation', L.every((e) => e.anim && e.anim.frames && e.anim.frames.length), L.filter((e) => !e.anim).slice(0, 3).map((e) => e.id));
+    t('exercices : 900 tirables au gacha', L.filter((e) => e.gacha !== false && e.cam && !e.zoneOnly && !e.special).length >= 900);
+    const heavyOk = L.filter((e) => N.Ex.weightOk(e, 130) && N.Ex.sexOk(e, 'm') && e.gacha !== false && e.cam && !e.equip.length).length;
+    t('poids élevé : plus de 300 exercices sans matériel restent possibles', heavyOk >= 300, heavyOk);
+    t('femmes : plus de 150 exercices disponibles', L.filter((e) => N.Ex.sexOk(e, 'f')).length >= 150);
+    t('femmes : aucune variante de pompes ni de tractions', !L.some((e) => N.Ex.sexOk(e, 'f') && /^pompes|^tractions/.test(e.variantOf || e.id)));
+    const P = N.player.blank(); P.level = 2; P.weightKg = 120; N.player.ensureDay = () => {}; N.player.save = () => {};
+    N.sex = 'm'; let dupDay = 0; const seenIds = {};
+    for (let d = 0; d < 20; d++) {
+      P.box = {}; P.daily = {};
+      const c = N.Gacha.ensureCard(P, {}, {}), b = N.Gacha.ensureBox(P, {}, { cat: 'jambes' });
+      const day = [c.id].concat([].concat.apply([], b.cards.map((x) => (x.type === 'combo' ? x.steps.map((s) => s.id) : [x.id]))));
+      if (new Set(day).size !== day.length) dupDay++;
+      day.forEach((i) => { seenIds[i] = (seenIds[i] || 0) + 1; });
+    }
+    t('tirage : jamais deux fois le même exercice le même jour', dupDay === 0, dupDay);
+    t('tirage : 20 jours de suite, aucun exercice sorti plus de 2 fois', Math.max.apply(null, Object.keys(seenIds).map((k) => seenIds[k])) <= 2, Math.max.apply(null, Object.keys(seenIds).map((k) => seenIds[k])));
+    t('tirage : mémoire des cartes déjà tirées enregistrée', Array.isArray(P.seen) && P.seen.length >= 60, P.seen && P.seen.length);
+    const R = (id, pl) => N.Gacha.restFor(N.Ex.byId(id), pl || P);
+    const P0 = N.player.blank();
+    t('repos : cardio 20 à 45 s', ['jumping-jacks', 'montees-genoux'].every((i) => R(i, P0) >= 20 && R(i, P0) <= 45), [R('jumping-jacks', P0), R('montees-genoux', P0)]);
+    const strength = L.filter((e) => ['pecs', 'jambes', 'dos'].indexOf(e.group) >= 0 && e.tier <= 3);
+    t('repos : renforcement courant entre 1 et 2 min', strength.every((e) => { const v = N.Gacha.restFor(e, P0); return v >= 60 && v <= 120; }));
+    const hard = L.filter((e) => ['pecs', 'jambes', 'dos'].indexOf(e.group) >= 0 && e.tier === 5);
+    t('repos : exercices les plus durs entre 3 et 5 min', hard.length > 0 && hard.every((e) => { const v = N.Gacha.restFor(e, P0); return v >= 150 && v <= 300; }), hard.length);
+    const PC = N.player.blank(); PC.setup.rest = 90;
+    t('repos : le temps choisi par le joueur est respecté', R('squats', PC) === 90, R('squats', PC));
+  }
+
 
   await stop(srv); fs.rmSync(dir, { recursive: true, force: true });
   console.log('\n' + ok + ' réussis, ' + ko + ' échoués'); process.exit(ko ? 1 : 0);

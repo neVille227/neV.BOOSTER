@@ -56,6 +56,13 @@ module.exports = function (ctx) {
   /* ---------------- temps réel (SSE) ---------------- */
   const streams = new Map(); // uid -> Set(res)
   const online = (uid) => !!(streams.get(uid) && streams.get(uid).size);
+  /* Pastille « en ligne » : visible de tous pour un adulte, mais seulement de ses contacts pour un mineur. */
+  const shownOnline = (me, uid) => {
+    if (!online(uid)) return false;
+    if (me === uid) return true;
+    const u = S.userById(uid);
+    return !(u && u.minor) || mutual(me, uid);
+  };
   function emit(uid, event, data) {
     const set = streams.get(uid); if (!set) return;
     const chunk = 'event: ' + event + '\ndata: ' + JSON.stringify(data) + '\n\n';
@@ -91,7 +98,7 @@ module.exports = function (ctx) {
     const base = { handle: p.handle, avatar: p.avatar, relation: rel, vis: p.vis, blockedByMe: me ? S.iBlocked(me, p.uid) : false, canMessage: !!me && !isMe && canDm(me, p) };
     if (!full) return Object.assign(base, { locked: true });
     const st = stats(p.uid);
-    return Object.assign(base, { locked: false, bio: p.bio, info: p.info, sex: st.sex, xp: st.xp, streak: st.streak, level: st.level, since: u ? u.created : null, contacts: S.mutualFriends(p.uid).length, sessions: st.sessions, online: online(p.uid), clan: clanName(p.uid) });
+    return Object.assign(base, { locked: false, bio: p.bio, info: p.info, sex: st.sex, xp: st.xp, streak: st.streak, level: st.level, since: u ? u.created : null, contacts: S.mutualFriends(p.uid).length, sessions: st.sessions, online: shownOnline(me, p.uid), clan: clanName(p.uid) });
   }
   function canDm(me, p) {
     if (!me || me === p.uid || S.isBlocked(me, p.uid)) return false;
@@ -123,7 +130,7 @@ module.exports = function (ctx) {
       const term = clean(q.get('q'), 30).replace(/^@+/, '').replace(/[^A-Za-z0-9_]/g, '');
       if (term.length < 2) return send(res, 200, { results: [] });
       const out = S.searchHandles(term, 20).filter((p) => !me || !S.isBlocked(me, p.uid)).map((p) => {
-        const v = view(me, p); return { handle: v.handle, avatar: v.avatar, relation: v.relation, locked: v.locked, bio: v.locked ? '' : String(p.bio || '').slice(0, 80), sex: v.sex || null, canMessage: v.canMessage, xp: v.locked ? null : v.xp, zone: v.locked || !v.info ? '' : (v.info.zone || ''), online: online(p.uid) };
+        const v = view(me, p); return { handle: v.handle, avatar: v.avatar, relation: v.relation, locked: v.locked, bio: v.locked ? '' : String(p.bio || '').slice(0, 80), sex: v.sex || null, canMessage: v.canMessage, xp: v.locked ? null : v.xp, zone: v.locked || !v.info ? '' : (v.info.zone || ''), online: shownOnline(me, p.uid) };
       });
       return send(res, 200, { results: out });
     }
@@ -203,7 +210,7 @@ module.exports = function (ctx) {
 
     /* --- amis et demandes --- */
     if (r === 'friends' && m === 'GET') {
-      const list = (ids) => ids.map((id) => { const p = S.profile(id), u = S.userById(id); return p && u && !u.banned ? { handle: p.handle, avatar: p.avatar, sex: stats(id).sex, xp: stats(id).xp, online: online(id) } : null; }).filter(Boolean);
+      const list = (ids) => ids.map((id) => { const p = S.profile(id), u = S.userById(id); return p && u && !u.banned ? { handle: p.handle, avatar: p.avatar, sex: stats(id).sex, xp: stats(id).xp, online: shownOnline(me, id) } : null; }).filter(Boolean);
       const mine = S.friendIds(me), mu = new Set(S.mutualFriends(me));
       return send(res, 200, { friends: list(Array.from(mu)), incoming: list(S.incomingRequests(me)), outgoing: list(mine.filter((id) => !mu.has(id))) });
     }
@@ -232,7 +239,7 @@ module.exports = function (ctx) {
     if (r === 'conversations' && m === 'GET') {
       const convs = S.dmConvs(me).map((c) => {
         const o = OTHER(c.other), u = S.userById(c.other);
-        return { handle: o.handle, avatar: o.avatar, sex: stats(c.other).sex, online: online(c.other), text: c.text || (c.img ? '📷 Image' : ''), fromMe: c.from === me, t: c.t, unread: c.unread, read: !!c.readAt, blocked: S.iBlocked(me, c.other), gone: !u || u.banned };
+        return { handle: o.handle, avatar: o.avatar, sex: stats(c.other).sex, online: shownOnline(me, c.other), text: c.text || (c.img ? '📷 Image' : ''), fromMe: c.from === me, t: c.t, unread: c.unread, read: !!c.readAt, blocked: S.iBlocked(me, c.other), gone: !u || u.banned };
       }).filter((c) => !c.gone);
       return send(res, 200, { conversations: convs, unread: S.dmUnread(me) });
     }
@@ -272,6 +279,14 @@ module.exports = function (ctx) {
       if (!online(p.uid)) pushLater(p.uid);
       logEvent('dm', 'social', me, user.pseudo, {});
       return send(res, 200, { ok: true, message: Object.assign({ mine: true, read: false }, msg) });
+    }
+    if (r === 'typing' && m === 'POST') {   /* « est en train d'écrire… » : un signal, jamais enregistré */
+      const w = limit('ty:' + me, 60, 60000); if (w) return send(res, 200, { ok: true });
+      const b = await readBody(req, 256), p = S.profileByHandle(String(b.handle || '').replace(/^@+/, '')), u = p ? S.userById(p.uid) : null;
+      if (!p || !u || u.banned || p.uid === me || S.isBlocked(me, p.uid) || S.iBlocked(me, p.uid) || !canDm(me, p) || !online(p.uid)) return send(res, 200, { ok: true });
+      if (user.mutedUntil && user.mutedUntil > now()) return send(res, 200, { ok: true });
+      emit(p.uid, 'typing', { handle: S.profile(me).handle });
+      return send(res, 200, { ok: true });
     }
     if (r === 'read' && m === 'POST') {
       const b = await readBody(req, 256), p = S.profileByHandle(String(b.handle || '').replace(/^@+/, ''));
