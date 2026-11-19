@@ -381,3 +381,12 @@ Tirage simple : la carte sort de la boîte, tourne 8 fois (2880°) avec lumière
 - Repos : `NEV.Gacha.restFor` — cardio 30 à 45 s, abdos/bras 45 à 120 s, renforcement 60 à 120 s, exercices les plus durs 150 à 300 s. Choix du joueur dans la page Niveau (Adapté, 30 s, 1 min… 5 min). En mode « Adapté », le repos suit la série faite : plus long si très rapide ou objectif manqué, un peu plus court si lente et contrôlée.
 - Chat : pastille verte seulement quand la personne est en ligne (rien sinon) ; pour un mineur, seulement ses contacts la voient. Trois points animés « écrit… » dans la conversation et dans la liste (`POST api/social/typing`, signal jamais enregistré).
 - Tests : 319 réussis. Cache : `nev-v38`.
+
+## V28 — Interface épurée, Mon évolution, photo de départ
+- `css/calm.css` (chargé après `shell.css`) : échelle d'espacement de 4 px, zones tactiles de 44 px, marges de 16 px, textes jamais sous 12 px, moins d'ombres et de lueurs, mouvement réduit respecté. Sur téléphone : plus de coach qui marche, plus de bouton « ? », plus de doublon flammes/XP, gros bouton de chat réduit. Palette inchangée.
+- Barre du bas sur téléphone : Accueil, Gacha, **Évolution**, Social, Profil (la Quête reste dans l'accueil et le menu).
+- `evolution.html` + `js/p-evolution.js` + `js/evolution.js` + `css/evolution.css` : jour N sur 90, paliers de l'avatar, activité sur 12 semaines, courbe de poids, parcours, comparaison avant / aujourd'hui.
+- Photo de départ facultative (question une seule fois sur l'accueil) : stockée dans IndexedDB sur l'appareil, jamais envoyée au serveur. Rappel au jour 90. Effaçable à tout moment.
+- `p.evo` (profil) : dates de départ, paliers, poids, dates des photos ; borné et validé par `cleanPlayer` côté serveur.
+- `APPLICATION-MOBILE.md` : chemins vers l'application mobile (PWA, Google Play, App Store).
+- Tests : 322 réussis. Cache : `nev-v39`.

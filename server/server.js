@@ -173,6 +173,14 @@ function cleanPlayer(p, uid) {
   const parent = u && u.refBy ? S.userById(u.refBy) : null; p.ref.by = parent ? parent.code : null;
   p.ref.paid = Math.min(Math.floor(num(p.ref.paid, 0, 1e5, 0)), p.ref.count);
   p.history = Array.isArray(p.history) ? p.history.slice(0, 160) : [];
+  // journal d'évolution : dates et poids seulement (les photos ne quittent jamais le téléphone)
+  { const e = p.evo && typeof p.evo === 'object' && !Array.isArray(p.evo) ? p.evo : {}, day = (x) => (/^\d{4}-\d{2}-\d{2}$/.test(String(x)) ? String(x) : null);
+    const out = { start: day(e.start) || null, asked: !!e.asked, stages: {}, weights: [], photos: [] };
+    if (e.stages && typeof e.stages === 'object') for (let n = 1; n <= 6; n++) { const d = day(e.stages[n]); if (d) out.stages[n] = d; }
+    if (Array.isArray(e.weights)) out.weights = e.weights.slice(-120).map((w) => ({ d: day(w && w.d), kg: num(w && w.kg, 30, 250, null) })).filter((w) => w.d && w.kg);
+    if (Array.isArray(e.photos)) out.photos = e.photos.slice(-60).map((x) => ({ d: day(x && x.d), kind: x && x.kind === 'start' ? 'start' : 'now' })).filter((x) => x.d);
+    if (!out.start) delete out.start;
+    p.evo = out; }
   p.updated = now();
   if (JSON.stringify(p).length > 180000) return null;
   return p;

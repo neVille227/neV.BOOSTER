@@ -1,0 +1,49 @@
+/* neV.BOOSTER — page « Mon évolution » (épurée : un chiffre, une idée, par bloc) */
+.ev-ring{display:flex;align-items:center;gap:var(--s5,24px);flex-wrap:wrap}
+.ring{position:relative;width:132px;height:132px;flex:none;display:grid;place-items:center}
+.ring svg{position:absolute;inset:0;width:100%;height:100%}
+.ring .rb{fill:none;stroke:var(--line);stroke-width:9}
+.ring .rf{fill:none;stroke:var(--red);stroke-width:9;stroke-linecap:round;transition:stroke-dasharray .8s ease}
+.ring b{font-size:1.9rem;font-weight:900;letter-spacing:-.03em}.ring b small{font-size:.9rem;opacity:.7}
+.ev-ring-t{flex:1;min-width:200px;display:flex;flex-direction:column;gap:4px}
+.ev-ring-t b{font-size:1.5rem;font-weight:900}
+.ev-ring-t span{color:var(--muted)}
+.ev-stage{margin-top:8px;color:var(--muted);font-size:.92rem}.ev-stage b{color:inherit;font-size:inherit;color:var(--text,#fff)}
+.ev-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-top:var(--s5,24px)}
+.ev-kpi .stat{display:flex;flex-direction:column;gap:2px;padding:16px;border-radius:16px;background:var(--panel);border:1px solid var(--line)}
+.ev-kpi .stat b{font-size:1.5rem;font-weight:900;letter-spacing:-.02em}
+.ev-kpi .stat span{color:var(--muted);font-size:.8rem}
+.weeks{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;height:150px;align-items:end}
+.weeks i{position:relative;display:flex;flex-direction:column;justify-content:flex-end;height:100%;align-items:center}
+.weeks u{display:block;width:100%;min-height:4px;border-radius:6px 6px 2px 2px;background:var(--red);opacity:.85;text-decoration:none}
+.weeks em{font-style:normal;font-size:.72rem;color:var(--muted);margin-top:4px}
+.wchart svg{width:100%;height:120px;display:block}
+.wchart polyline{fill:none;stroke:var(--red);stroke-width:2.4;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.wchart circle{fill:var(--red)}
+.wl{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:.78rem;margin-top:8px;flex-wrap:wrap}
+.tl{list-style:none;margin:0;padding:0 0 0 18px;border-left:2px solid var(--line);display:grid;gap:18px}
+.tl li{position:relative;display:flex;flex-direction:column;gap:2px}
+.tl li::before{content:"";position:absolute;left:-25px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--red);border:2px solid var(--panel)}
+.tl time{font-size:.78rem;color:var(--muted)}.tl b{font-weight:800}.tl span{color:var(--muted);font-size:.86rem}
+/* avant / aujourd'hui */
+.cmp{position:relative;width:100%;max-width:420px;aspect-ratio:3/4;margin:0 auto 12px;border-radius:16px;overflow:hidden;background:#000}
+.cmp img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cmpTop{position:absolute;inset:0 auto 0 0;width:50%;overflow:hidden}
+.cmpTop img{width:auto;min-width:0;max-width:none;height:100%;aspect-ratio:3/4;object-fit:cover}
+.cmpLine{position:absolute;top:0;bottom:0;left:50%;width:2px;background:#fff;box-shadow:0 0 0 1px #0006}
+.cmp span{position:absolute;bottom:10px;padding:5px 10px;border-radius:999px;background:#000a;color:#fff;font-size:.72rem;font-weight:700}
+.cmpA{left:10px}.cmpB{right:10px}
+.cmpR{display:block;width:100%;max-width:420px;margin:0 auto 12px;min-height:44px}
+.one{position:relative;max-width:300px;margin:0 auto 12px}.one img{width:100%;border-radius:16px;display:block}
+.one span{position:absolute;left:10px;bottom:10px;padding:5px 10px;border-radius:999px;background:#000a;color:#fff;font-size:.72rem;font-weight:700}
+.ph-act{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.ph-note{font-size:.8rem;margin:12px 0 0}
+/* fenêtre « Ton point de départ » (accueil) */
+.evAsk{position:fixed;inset:0;z-index:200;display:grid;place-items:end center;background:#050203b3;padding:0}
+.evAsk .box{width:min(480px,100%);background:var(--panel);border:1px solid var(--line);border-radius:24px 24px 0 0;padding:24px 20px calc(20px + env(safe-area-inset-bottom));display:grid;gap:12px}
+@media(min-width:640px){.evAsk{place-items:center;padding:16px}.evAsk .box{border-radius:24px}}
+.evAsk h3{margin:0;font-size:1.25rem}.evAsk p{margin:0;color:var(--muted);font-size:.92rem}
+.evAsk .row{display:grid;gap:8px;margin-top:6px}
+.evAsk .later{background:none;border:0;color:var(--muted);font:inherit;min-height:44px;cursor:pointer}
+.evBanner{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 16px;border-radius:16px;background:var(--panel);border:1px solid var(--line)}
+.evBanner b{display:block}.evBanner span{color:var(--muted);font-size:.86rem}

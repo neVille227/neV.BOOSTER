@@ -30,6 +30,16 @@
           "sizes": "192x192"
         }
       ]
+    },
+    {
+      "name": "Mon évolution",
+      "url": "evolution.html",
+      "icons": [
+        {
+          "src": "img/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ],
   "scope": "./",

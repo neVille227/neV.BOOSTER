@@ -81,4 +81,31 @@
       '<p style="margin:14px 0 0"><a href="social.html" data-go style="color:var(--red);font-weight:800;font-size:.85rem;text-decoration:none">Ouvrir la communauté</a></p>';
   })();
 
+  /* ---------- point de départ : photo facultative (elle reste sur le téléphone) + rappel des 90 jours ---------- */
+  (function () {
+    if (!NEV.Evo) return;
+    var E = NEV.Evo, evo = E.ensure(p); if (E.sync(p)) NEV.player.save(p);
+    var tourDone = false; try { tourDone = localStorage.getItem('nev.tour.v1') === '1'; } catch (e) { /* ignoré */ }
+    var host = document.querySelector('.page .wrap'); if (!host) return;
+    if (E.dueNow(p) && !document.getElementById('evBan')) {
+      var b = document.createElement('div'); b.className = 'evBanner'; b.id = 'evBan';
+      b.innerHTML = '<div><b>Jour ' + E.progress(p).day + ' : ton bilan des 90 jours</b><span>Prends ta photo d\'aujourd\'hui pour voir la différence.</span></div><a class="btn sm" href="evolution.html" data-go>Voir mon évolution</a>';
+      host.insertBefore(b, host.children[1] || null);
+    }
+    if (evo.asked || !tourDone || p.maxPushups == null && p.level == null) return;
+    evo.asked = true; NEV.player.save(p);   // on ne pose la question qu'une seule fois
+    var o = document.createElement('div'); o.className = 'evAsk'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-labelledby', 'evT');
+    o.innerHTML = '<div class="box"><h3 id="evT">Ton point de départ</h3><p>Veux-tu garder une photo de toi aujourd\'hui ? Dans 90 jours, tu verras ton évolution côte à côte.</p><p>Elle reste <b>sur ton téléphone</b> : jamais envoyée au site, jamais partagée. Une tenue de sport normale suffit.</p>' +
+      '<div class="row"><button type="button" class="btn" id="evYes">Ajouter une photo</button><button type="button" class="later" id="evNo">Plus tard</button></div><input type="file" id="evF" accept="image/*" hidden></div>';
+    document.body.appendChild(o);
+    var close = function () { o.remove(); };
+    document.getElementById('evNo').addEventListener('click', close);
+    document.getElementById('evYes').addEventListener('click', function () { document.getElementById('evF').click(); });
+    document.getElementById('evF').addEventListener('change', function (e) {
+      var file = e.target.files[0]; if (!file) return;
+      E.addPhoto(p, file, 'start').then(function () { close(); NEV.go('evolution.html'); }).catch(function (er) { alert(er.message || 'Photo impossible'); });
+    });
+    document.getElementById('evYes').focus();
+  })();
+
 })();

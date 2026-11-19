@@ -55,6 +55,11 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   r = await call(A, 'PUT', '/api/player', { player: { maxPushups: 9999, flames: 3, progress: { xp: 50, streak: 2 }, badges: {}, ref: { count: 99, by: 'FAKE' }, '__proto__': { x: 1 } } }); t('sauvegarde acceptée', r.s === 200);
   r = await call(A, 'GET', '/api/me'); t('valeurs bornées (pompes ≤ 200)', r.j.player.maxPushups === 200, r.j.player);
   t('parrainage non falsifiable', r.j.player.ref.count === 1 && r.j.player.ref.by !== 'FAKE', r.j.player.ref);
+  { const evo = { start: '2026-08-20', asked: true, stages: { 1: '2026-08-20', 2: 'pas une date', 9: '2026-09-01' }, weights: [{ d: '2026-08-20', kg: 80 }, { d: 'x', kg: 70 }, { d: '2026-09-01', kg: 9999 }], photos: [{ d: '2026-08-20', kind: 'start' }, { d: '2026-11-01', kind: 'autre' }], secret: 'x' };
+    r = await call(A, 'PUT', '/api/player', { player: { evo } }); r = await call(A, 'GET', '/api/me'); const E = r.j.player && r.j.player.evo || {};
+    t('évolution : dates et poids valides conservés', E.start === '2026-08-20' && E.stages['1'] === '2026-08-20' && E.weights.length === 2 && E.photos.length === 2, E);
+    t('évolution : données invalides et champs inconnus retirés', !E.stages['2'] && !E.stages['9'] && E.weights.every((w) => w.kg <= 250) && E.photos.every((x) => x.kind === 'start' || x.kind === 'now') && E.secret === undefined, E);
+    r = await fetch(BASE + '/evolution.html'); t('page Évolution servie', r.status === 200 && (await r.text()).indexOf('Mon') > 0); }
   r = await fetch(BASE + '/api/player', { method: 'PUT', headers: { 'X-NEV': '1', 'Content-Type': 'application/json', Cookie: A.h }, body: JSON.stringify({ player: { pad: 'x'.repeat(300000) } }) }); t('corps trop gros → 413', r.status === 413);
   console.log('Chat');
   r = await call(A, 'POST', '/api/chat', { room: 'global', text: '<img src=x onerror=alert(1)> salut' }); t('message envoyé', r.s === 200);

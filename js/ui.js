@@ -33,11 +33,13 @@
   I.info = svgi('M12 3a9 9 0 100 18 9 9 0 000-18zM12 11v5M12 8h.01');
   I.coach = svgi('M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.3 7.2 17.9l.9-5.4L4.2 8.7l5.4-.8z');
   I.target = svgi('M12 3a9 9 0 100 18 9 9 0 000-18zM12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9zM12 11a1 1 0 100 2 1 1 0 000-2');
+  I.evo = svgi('M3 17l5-6 4 4 8-9M15 6h5v5');
   I.out = svgi('M9 4H5v16h4M16 8l4 4-4 4M20 12H9');
   // [id, page, nom, icône, barre du haut (ordi), barre du bas (téléphone)]
   const LINKS = [
     ['accueil', 'accueil.html', 'Accueil', I.home, 1, 1],
-    ['quete', 'quete.html', 'Quête', I.quest, 1, 1],
+    ['quete', 'quete.html', 'Quête', I.quest, 1, 0],
+    ['evolution', 'evolution.html', 'Évolution', I.evo, 1, 1],
     ['gacha', 'gacha.html', 'Gacha', I.gacha, 1, 1],
     ['specialisation', 'specialisation.html', 'Spécialisation', I.body, 1, 1],
     ['bibliotheque', 'bibliotheque.html', 'Exercices', I.book, 1, 0],
@@ -57,7 +59,7 @@
   ];
   /* Barre latérale : tout le menu, rangé par thème. */
   const GROUPS = [
-    ['Principal', ['accueil', 'quete', 'gacha']],
+    ['Principal', ['accueil', 'quete', 'gacha', 'evolution']],
     ['Entraînement', ['specialisation', 'bibliotheque', 'alimentation']],
     ['Communauté', ['social', 'clans', 'defis', 'classement', 'recompenses', 'coachs']],
     ['Mon espace', ['avatar', 'apropos', 'tuto', 'compte']]
@@ -69,7 +71,7 @@
   const lk = (l, inner, active) => '<a href="' + l[1] + '" data-go' + (l[0] === active ? ' class="on" aria-current="page"' : '') + '>' + inner + '</a>';
 
   const DESC = {
-    accueil: 'Ton tableau de bord', quete: 'Objectifs du jour et combo du coach', gacha: 'Boîte mystère : tirage simple ou multiple', specialisation: 'Touche une zone du corps, on te montre ses exercices',
+    accueil: 'Ton tableau de bord', evolution: 'Depuis ton départ : jours, paliers, photos', quete: 'Objectifs du jour et combo du coach', gacha: 'Boîte mystère : tirage simple ou multiple', specialisation: 'Touche une zone du corps, on te montre ses exercices',
     bibliotheque: NEV.sex === 'f' ? 'Exercices, combos et programmes, animés' : 'Exercices, combos et cartes mythiques, animés',
     avatar: 'Peau, cheveux, yeux, tenue : crée ton avatar', alimentation: 'Repas, sommeil, eau et récupération', social: 'Profils, messages privés, contacts', clans: 'Rejoins un clan et cumule l\'XP', chat: 'Parle au coach et aux joueurs', amis: 'Ajoute des amis par code', coachs: 'Les coachs du site', apropos: 'Toi, le site, les infos légales', recompenses: 'Flammes, badges, parrainage', defis: 'Pompes, squats, gainage : bats ton record', classement: 'Public et entre amis', tuto: 'Le guide pas à pas', compte: 'Tes données, export, suppression'
   };
@@ -117,7 +119,7 @@
       loadCompanion(active);
     }
     if (user && !pub && active !== 'social' && active !== 'exercice') {
-      const MB = [['accueil', 'accueil.html', 'Accueil', I.home], ['quete', 'quete.html', 'Quête', I.quest], ['gacha', 'gacha.html', 'Gacha', I.gacha], ['social', 'social.html', 'Social', I.at], ['compte', 'compte.html', 'Profil', I.me]];
+      const MB = [['accueil', 'accueil.html', 'Accueil', I.home], ['gacha', 'gacha.html', 'Gacha', I.gacha], ['evolution', 'evolution.html', 'Évolution', I.evo], ['social', 'social.html', 'Social', I.at], ['compte', 'compte.html', 'Profil', I.me]];
       const mb = doc.createElement('nav'); mb.className = 'mbar'; mb.setAttribute('aria-label', 'Navigation rapide');
       mb.innerHTML = MB.map((l) => '<a href="' + l[1] + '" data-go' + (l[0] === active || (l[0] === 'social' && inCommu(active)) ? ' class="on" aria-current="page"' : '') + '><i>' + l[3] + '</i><span>' + l[2] + '</span></a>').join('');
       doc.body.appendChild(mb); doc.body.classList.add('has-mbar');

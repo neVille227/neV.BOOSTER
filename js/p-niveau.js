@@ -81,6 +81,7 @@
     if (SQ) { p.maxSquats = val; p.maxPushups = NEV.squatsToPush(val); } else p.maxPushups = val;
     p.level = l.n;
     p.weightKg = skipW ? 0 : kg;   // 0 = non communiqué
+    if (!skipW && NEV.Evo) NEV.Evo.logWeight(p, kg, true);
     p.setup = { focus: focus, sets: sets, rest: rest, camera: cam, equip: equip, zones: (p.setup && p.setup.zones) || [], weightKg: p.weightKg };
     // Si le réglage change après un tirage non commencé, on garde la carte déjà tirée du jour.
     NEV.player.save(p);

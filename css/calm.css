@@ -1,0 +1,72 @@
+/* ==========================================================
+   neV.BOOSTER — calm.css  (V28 : interface épurée, mobile d'abord)
+   Inspiré des Human Interface Guidelines d'Apple :
+   · Clarté      : une chose à faire par écran, hiérarchie nette, texte lisible (jamais sous 12 px).
+   · Déférence   : le contenu passe avant le décor ; moins d'ombres, de lueurs et d'éléments flottants.
+   · Profondeur  : seuls la navigation et les fenêtres superposées ont du relief.
+   · Gestes      : zones tactiles d'au moins 44 px, marges de 16 px, barre d'onglets en bas du téléphone.
+   La palette (rouge vin pour les hommes, clair pour les femmes) ne change pas : on l'utilise avec plus de retenue.
+   Chargé après shell.css.
+   ========================================================== */
+:root {
+  /* échelle d'espacement : multiples de 4 */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
+  --tap: 44px;               /* zone tactile minimale */
+  --gutter: 16px;            /* marge latérale sur téléphone */
+}
+
+/* ---------- Déférence : moins de relief et de lueurs ---------- */
+.panel, .pk, .stat, .tile, .mt, .qd li, .ap-links a { box-shadow: none; }
+.btn { box-shadow: none; }
+.btn:hover { box-shadow: none; filter: brightness(1.06); }
+.pk:hover { transform: none; box-shadow: none; }
+.chatFab { box-shadow: 0 6px 18px #0006; }
+
+/* ---------- Clarté : texte lisible ---------- */
+small, .muted, .sgt, dl.kv dt, .mbar a { font-size: max(.75rem, 12px); }
+.lead { line-height: 1.55; }
+
+/* ---------- Gestes : zones tactiles de 44 px ---------- */
+.btn, .si, .mt, .menuBtn, .sideX, .sideOut, .subtabs a, .mbar a, .chip.btnlike, .opts label span, .pillx { min-height: var(--tap); }
+.sideX, .sideOut { min-width: var(--tap); }
+.menuBtn { min-width: var(--tap); }
+input[type=text], input[type=email], input[type=password], input[type=number], select, textarea { min-height: var(--tap); font-size: 16px; } /* 16 px : évite le zoom automatique sur iPhone */
+
+/* ---------- Téléphone : un écran = une chose ---------- */
+@media (max-width: 760px) {
+  .wrap { width: calc(100% - 2 * var(--gutter)); }
+  .page { padding: var(--s5) 0 96px; }
+  .page > * + * { margin-top: var(--s5); }
+  .panel { padding: var(--s4) var(--s4); border-radius: 16px; }
+  h2.sec { margin: var(--s6) 0 var(--s4); }
+  h1.big { font-size: clamp(1.7rem, 7.4vw, 2.3rem); line-height: 1.1; }
+  .lead { font-size: .95rem; }
+
+  /* décor : on garde l'ambiance, on enlève le bruit */
+  body::before { opacity: .1; }
+  html[data-sex=f] body::before { opacity: .2; }
+  .yuki, .yuki.baki { display: none; }            /* le coach qui marche : bureau et tablette seulement */
+  .helpfab { display: none; }                      /* l'aide reste dans le menu et sur la page Tuto */
+  .chatFab { width: 52px; height: 52px; right: var(--s3); bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .chatFab svg { width: 24px; height: 24px; }
+  .chatPanel { right: var(--s3); bottom: calc(136px + env(safe-area-inset-bottom)); }
+
+  /* en-tête : les flammes et l'XP sont déjà en haut, on ne les répète pas dans la page */
+  .pillrow, .page .pillrow { display: none !important; }
+
+  /* barre d'onglets : relief léger, icône + mot, sans pavé coloré criard */
+  .mbar { padding-top: var(--s2); }
+  .mbar a { gap: 2px; }
+  .mbar a.on i { background: transparent; color: var(--red); box-shadow: none; }
+  .mbar a.on span { color: var(--red); }
+  .mbar a.on i::after { content: ""; display: block; position: absolute; top: -9px; width: 28px; height: 3px; border-radius: 0 0 3px 3px; background: var(--red); }
+  .mbar a { position: relative; }
+}
+
+/* ---------- Mouvement : respecter le réglage « réduire les animations » ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+
+/* ---------- Écrans tactiles : pas de survol collant ---------- */
+@media (hover: none) { .pk:hover, .btn:hover { filter: none; transform: none; } }
