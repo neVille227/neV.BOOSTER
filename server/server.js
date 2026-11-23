@@ -55,8 +55,16 @@ let shuttingDown = false;
 const finish = () => { if (shuttingDown) return; shuttingDown = true; S.close(); };
 process.on('SIGINT', () => { finish(); process.exit(0); });
 process.on('SIGTERM', () => { finish(); process.exit(0); });
-process.on('uncaughtException', (e) => { console.error('[erreur]', e && e.message); });
-process.on('unhandledRejection', (e) => { console.error('[erreur promesse]', e && e.message); });
+/* Erreur fatale : on journalise, on ferme proprement la base puis on s'arrête (code 1).
+   Render redémarre alors le service dans un état sain, au lieu de continuer dans un état incertain. */
+const fatal = (kind, e) => {
+  console.error('[erreur fatale] ' + kind + ':', e && (e.stack || e.message || e));
+  try { finish(); } catch (_) { /* arrêt quoi qu'il arrive */ }
+  setTimeout(() => process.exit(1), 200).unref();
+  process.exitCode = 1;
+};
+process.on('uncaughtException', (e) => fatal('exception non interceptée', e));
+process.on('unhandledRejection', (e) => fatal('promesse rejetée non gérée', e));
 
 /* ---------------- mot de passe admin ---------------- */
 async function initAdmin() {
