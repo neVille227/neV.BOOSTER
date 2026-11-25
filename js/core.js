@@ -215,6 +215,8 @@
       if (!NEV.cloud || NEV.cloud.mode !== 'server') return { ok: false, field: 'email', error: 'Le code par e-mail n\'existe qu\'en ligne.' };
       return NEV.cloud.serverCode(email);
     },
+    async device(email) { if (!NEV.cloud || NEV.cloud.mode !== 'server') return { ok: false, needCode: true }; return NEV.cloud.serverDevice(String(email || '').trim().toLowerCase()); },
+    async link(email, code) { return NEV.cloud.serverLink(String(email || '').trim().toLowerCase(), String(code || '')); },
     async verify(email, code) { return NEV.cloud.serverVerify(String(email || '').trim().toLowerCase(), String(code || '')); },
     current() {
       const s = NEV.store.get(SESSION, null);

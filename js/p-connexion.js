@@ -45,6 +45,7 @@ NEV.ready(function (mode) {
     Object.keys(map).forEach(function (k) { var el = $(map[k]); var f = el.closest('.field'); if (f) f.classList.toggle('bad', k === field); });
   }
   function done(u) {
+    try { if (u && u.email) localStorage.setItem('nev.lastEmail', String(u.email).toLowerCase()); } catch (er) { /* ignoré */ }
     var p = NEV.player.load(u.id);
     NEV.go(dest(p));
   }
@@ -64,11 +65,16 @@ NEV.ready(function (mode) {
   });
   var LF = { email: 'liEmail', password: 'liPw', code: 'liCode' };
   var server = mode === 'server', usePw = false, codeSent = false;
+  var linkMode = false;
   function loginUi() {
     $('pwBox').hidden = !usePw; $('codeBox').hidden = usePw || !codeSent;
-    $('usePw').textContent = usePw ? 'Recevoir un code par email' : 'J\'ai un mot de passe';
-    $('btnLogin').textContent = usePw ? 'Me connecter' : (codeSent ? 'Valider le code' : (server ? 'Recevoir mon code' : 'Me connecter'));
+    $('usePw').textContent = usePw ? 'Revenir à la connexion par e-mail' : 'J\'ai un mot de passe';
+    $('useLink').hidden = usePw;
+    $('liCode').maxLength = linkMode ? 8 : 8; $('liCode').placeholder = linkMode ? '8 chiffres' : '6 chiffres';
+    document.querySelector('label[for=liCode]').textContent = linkMode ? 'Code de ton autre appareil' : 'Code reçu par e-mail';
+    $('btnLogin').textContent = usePw ? 'Me connecter' : (codeSent ? 'Valider le code' : 'Me connecter');
   }
+  $('useLink').addEventListener('click', function (e) { e.preventDefault(); linkMode = true; codeSent = true; usePw = false; $('errLogin').textContent = ''; $('codeHint').textContent = 'Sur ton autre appareil déjà connecté : Mon compte, puis « Connecter un autre appareil ». Tape ici le code de 8 chiffres (valable 5 minutes).'; loginUi(); $('liCode').focus(); });
   $('usePw').addEventListener('click', function (e) { e.preventDefault(); usePw = !usePw; $('errLogin').textContent = ''; loginUi(); });
   loginUi();
   function fail(r) { $('btnLogin').disabled = false; $('errLogin').textContent = r.error; mark(LF, r.field); }
@@ -83,18 +89,23 @@ NEV.ready(function (mode) {
         $('btnLogin').disabled = false; mark(LF, null); done(r.user);
       });
     } else if (!codeSent) {
-      NEV.auth.code(email).then(function (r) {
-        if (!r.ok) return fail(r);
-        $('btnLogin').disabled = false; mark(LF, null); codeSent = true; loginUi();
-        $('codeHint').textContent = 'Si un compte existe avec cet email, un code à 6 chiffres vient d\'être envoyé (valable 10 min).';
-        $('liCode').focus();
+      /* 1) appareil déjà reconnu : l'e-mail suffit  2) sinon, un code par e-mail (ou celui d'un autre appareil) */
+      NEV.auth.device(email).then(function (d) {
+        if (d.ok) { try { localStorage.setItem('nev.lastEmail', String(email).trim().toLowerCase()); } catch (er) { /* ignoré */ } $('btnLogin').disabled = false; mark(LF, null); return done(d.user); }
+        NEV.auth.code(email).then(function (r) {
+          if (!r.ok) { $('btnLogin').disabled = false; $('errLogin').textContent = r.error + ' Tu peux aussi utiliser le code d\'un autre appareil déjà connecté.'; mark(LF, r.field); return; }
+          $('btnLogin').disabled = false; mark(LF, null); codeSent = true; linkMode = false; loginUi();
+          $('codeHint').textContent = 'Nouvel appareil : si un compte existe avec cet e-mail, un code à 6 chiffres vient d\'être envoyé (valable 10 min).';
+          $('liCode').focus();
+        });
       });
     } else {
-      NEV.auth.verify(email, $('liCode').value).then(function (r) {
+      (linkMode ? NEV.auth.link(email, $('liCode').value) : NEV.auth.verify(email, $('liCode').value)).then(function (r) {
         if (!r.ok) return fail(r);
         $('btnLogin').disabled = false; mark(LF, null); done(r.user);
       });
     }
   });
-  $('liEmail').addEventListener('input', function () { if (codeSent) { codeSent = false; $('liCode').value = ''; loginUi(); } });
+  try { var le = localStorage.getItem('nev.lastEmail'); if (le && !$('liEmail').value) $('liEmail').value = le; } catch (er) { /* ignoré */ }
+  $('liEmail').addEventListener('input', function () { if (codeSent && !linkMode) { codeSent = false; $('liCode').value = ''; loginUi(); } });
 });

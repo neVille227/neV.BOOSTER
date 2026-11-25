@@ -198,6 +198,8 @@ const AUTH_SCHEMA = `
 CREATE TABLE IF NOT EXISTS credentials(uid TEXT PRIMARY KEY, salt TEXT NOT NULL, hash TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS sessions(token_hash TEXT PRIMARY KEY, uid TEXT NOT NULL, kind TEXT NOT NULL, exp INTEGER NOT NULL);
 CREATE INDEX IF NOT EXISTS ix_sessions_uid ON sessions(uid);
+CREATE TABLE IF NOT EXISTS devices(token_hash TEXT PRIMARY KEY, uid TEXT NOT NULL, created INTEGER NOT NULL, last INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS ix_devices_uid ON devices(uid);
 CREATE TABLE IF NOT EXISTS admin(id INTEGER PRIMARY KEY CHECK(id = 1), salt TEXT NOT NULL, hash TEXT NOT NULL, from_env TEXT);
 CREATE TABLE IF NOT EXISTS tokens(token_hash TEXT PRIMARY KEY, uid TEXT NOT NULL, kind TEXT NOT NULL, exp INTEGER NOT NULL, used INTEGER NOT NULL DEFAULT 0, data TEXT);
 CREATE INDEX IF NOT EXISTS ix_tokens_uid ON tokens(uid, kind);
@@ -274,13 +276,18 @@ function open(dir) {
   });
   S.credentials = (uid) => A1('SELECT salt, hash FROM credentials WHERE uid = ?', String(uid)) || null;
   S.touchLogin = (uid) => DR('UPDATE users SET last_login = ? WHERE id = ?', now(), uid);
-  S.setBanned = (uid, flag) => { DR('UPDATE users SET banned = ? WHERE id = ?', b01(flag), uid); if (flag) AR("DELETE FROM sessions WHERE uid = ? AND kind = 'player'", uid); };
+  S.setBanned = (uid, flag) => { DR('UPDATE users SET banned = ? WHERE id = ?', b01(flag), uid); if (flag) { AR("DELETE FROM sessions WHERE uid = ? AND kind = 'player'", uid); AR('DELETE FROM devices WHERE uid = ?', uid); } };
   S.countUsers = () => D1('SELECT COUNT(*) AS n FROM users').n;
 
   /* ---------------- sessions (dans auth.db : elles survivent à un redémarrage) ---------------- */
   S.addSession = (tok, uid, kind, exp) => AR('INSERT OR REPLACE INTO sessions(token_hash,uid,kind,exp) VALUES(?,?,?,?)', sha(tok), uid, kind, exp);
   S.getSession = (tok, kind) => { const s = A1('SELECT uid, exp FROM sessions WHERE token_hash = ? AND kind = ?', sha(tok), kind); return s && s.exp > now() ? s : null; };
   S.delSession = (tok) => AR('DELETE FROM sessions WHERE token_hash = ?', sha(tok));
+  /* ---------------- appareils reconnus : se reconnecter avec son seul e-mail sur SON téléphone ou ordinateur ---------------- */
+  S.addDevice = (tok, uid) => { AR('INSERT OR REPLACE INTO devices(token_hash,uid,created,last) VALUES(?,?,?,?)', sha(tok), uid, now(), now()); AR('DELETE FROM devices WHERE uid = ? AND token_hash NOT IN (SELECT token_hash FROM devices WHERE uid = ? ORDER BY last DESC LIMIT 5)', uid, uid); };
+  S.getDevice = (tok) => { const d = A1('SELECT uid, last FROM devices WHERE token_hash = ?', sha(tok)); if (d && now() - d.last > 3600000) AR('UPDATE devices SET last = ? WHERE token_hash = ?', now(), sha(tok)); return d || null; };
+  S.delDevice = (tok) => AR('DELETE FROM devices WHERE token_hash = ?', sha(tok));
+  S.delDevicesOf = (uid) => AR('DELETE FROM devices WHERE uid = ?', uid);
   S.purgeSessions = () => AR('DELETE FROM sessions WHERE exp < ?', now());
   S.countSessions = () => A1("SELECT COUNT(*) AS n FROM sessions WHERE kind = 'player' AND exp > ?", now()).n;
 
@@ -511,7 +518,7 @@ function open(dir) {
     uid = String(uid); if (!D1('SELECT 1 AS x FROM users WHERE id = ?', uid)) return false;
     tx(() => { DR('DELETE FROM chat_messages WHERE uid = ? OR room = ?', uid, 'coach:' + uid); DR('DELETE FROM events WHERE uid = ?', uid); DR('DELETE FROM users WHERE id = ?', uid); });
     DR('DELETE FROM cheat_flags WHERE uid = ?', uid); DR('DELETE FROM outbox WHERE uid = ?', uid); DR('DELETE FROM chat_reports WHERE reporter = ?', uid);
-    AR('DELETE FROM credentials WHERE uid = ?', uid); AR('DELETE FROM sessions WHERE uid = ?', uid); AR('DELETE FROM tokens WHERE uid = ?', uid);
+    AR('DELETE FROM credentials WHERE uid = ?', uid); AR('DELETE FROM sessions WHERE uid = ?', uid); AR('DELETE FROM devices WHERE uid = ?', uid); AR('DELETE FROM tokens WHERE uid = ?', uid);
     return true;
   };
 

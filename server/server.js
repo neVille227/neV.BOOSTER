@@ -128,7 +128,16 @@ function readBody(req, max, strMax) { // strMax : longueur maximale d'un texte (
 }
 
 /* ---------------- sessions (stockées dans auth.db : elles survivent à un redémarrage) ---------------- */
-function startSession(res, req, uid) { const tok = crypto.randomBytes(32).toString('base64url'); S.addSession(tok, uid, 'player', now() + SESSION_MS); setCookie(res, req, 'nev_s', tok, SESSION_MS / 1000); }
+const DEVICE_S = 400 * 86400;   // un appareil reconnu le reste 400 jours (maximum accepté par les navigateurs)
+/* Appareil reconnu : cookie HttpOnly propre à CE navigateur. Il survit à la déconnexion : sur cet appareil, l'e-mail suffit pour revenir.
+   Sur un nouvel appareil, il faut un code (reçu par e-mail ou donné par un autre appareil déjà connecté). */
+function rememberDevice(res, req, uid) {
+  const cur = cookies(req).nev_d, d = cur ? S.getDevice(cur) : null;
+  if (d && d.uid === uid) { setCookie(res, req, 'nev_d', cur, DEVICE_S); return; }
+  const tok = crypto.randomBytes(32).toString('base64url'); S.addDevice(tok, uid); setCookie(res, req, 'nev_d', tok, DEVICE_S);
+}
+function startSession(res, req, uid) { const tok = crypto.randomBytes(32).toString('base64url'); S.addSession(tok, uid, 'player', now() + SESSION_MS); setCookie(res, req, 'nev_s', tok, SESSION_MS / 1000); rememberDevice(res, req, uid); }
+const LINKS = new Map();   // code de connexion d'un autre appareil : 8 chiffres, 5 minutes, une seule utilisation
 function sessionUser(req) {
   const tok = cookies(req).nev_s; if (!tok) return null;
   const s = S.getSession(tok, 'player'); if (!s) return null;
@@ -254,6 +263,36 @@ async function api(req, res, url, ip) {
   { const r = await F.publicRoute(route, m, req, res, ip); if (r !== false) return r; }
   if (route === 'signup' && m === 'POST') { const mt = S.meta('maintenance'); if (mt && mt.on) return fail(res, 503, mt.msg || 'Maintenance en cours : les inscriptions reviennent bientôt.'); const w = limit('su:' + ip, Number(process.env.NEV_SIGNUP_MAX) || 8, 3600000); if (w) { counters.blocked++; return fail(res, 429, 'Trop d\'inscriptions depuis cette connexion. Réessaie plus tard.'); } return signup(req, res, ip); }
   if (route === 'login' && m === 'POST') { const w = limit('li:' + ip, 20, 10 * 60000); if (w) { counters.blocked++; return fail(res, 429, 'Trop d\'essais. Réessaie dans quelques minutes.', 'password'); } return login(req, res, ip); }
+  if (route === 'login/device' && m === 'POST') {   // reconnexion directe : l'e-mail + l'appareil déjà reconnu
+    const w = limit('ld:' + ip, 30, 10 * 60000); if (w) { counters.blocked++; return fail(res, 429, 'Trop d\'essais. Réessaie dans quelques minutes.', 'email'); }
+    const b = await readBody(req, 1024), email = clean(b.email, 254).toLowerCase(), tok = cookies(req).nev_d;
+    const d = tok ? S.getDevice(tok) : null, u = d ? S.userByEmail(email) : null;
+    if (!u || u.banned || d.uid !== u.id) return send(res, 200, { ok: false, needCode: true });   // appareil inconnu : on passe au code
+    S.touchLogin(u.id); startSession(res, req, u.id); logEvent('login', 'connexion', u.id, u.pseudo, { device: true });
+    return send(res, 200, { ok: true, user: pub(u), player: S.getPlayer(u.id) });
+  }
+  if (route === 'device/forget' && m === 'POST') {   // « oublier cet appareil » (ordinateur partagé)
+    const tok = cookies(req).nev_d; if (tok) S.delDevice(tok); setCookie(res, req, 'nev_d', '', 0);
+    const t = cookies(req).nev_s; if (t) S.delSession(t); setCookie(res, req, 'nev_s', '', 0);
+    return send(res, 200, { ok: true });
+  }
+  if (route === 'device/link' && m === 'POST') {    // depuis un appareil connecté : un code pour connecter un autre appareil
+    const u = sessionUser(req); if (!u) return fail(res, 401, 'Connecte-toi.');
+    const w = limit('dl:' + u.id, 6, 10 * 60000); if (w) return fail(res, 429, 'Trop de codes demandés. Réessaie dans quelques minutes.');
+    for (const [k, v] of LINKS) if (v.exp < now() || v.uid === u.id) LINKS.delete(k);
+    const code = String(crypto.randomInt(0, 100000000)).padStart(8, '0');
+    LINKS.set(crypto.createHash('sha256').update(code).digest('hex'), { uid: u.id, exp: now() + 5 * 60000, tries: 0 });
+    return send(res, 200, { code, minutes: 5 });
+  }
+  if (route === 'login/link' && m === 'POST') {     // sur le nouvel appareil : e-mail + code de l'autre appareil
+    const w = limit('ll:' + ip, 15, 10 * 60000); if (w) { counters.blocked++; return fail(res, 429, 'Trop d\'essais. Réessaie dans quelques minutes.', 'code'); }
+    const b = await readBody(req, 1024), email = clean(b.email, 254).toLowerCase(), code = String(b.code || '').replace(/\D/g, '').slice(0, 8);
+    const we = limit('lle:' + email, 8, 10 * 60000); if (we) return fail(res, 429, 'Trop d\'essais. Réessaie dans quelques minutes.', 'code');
+    const k = crypto.createHash('sha256').update(code).digest('hex'), l = LINKS.get(k), u = S.userByEmail(email);
+    if (code.length !== 8 || !l || !u || u.banned || l.uid !== u.id || l.exp < now()) return fail(res, 401, 'Code incorrect ou expiré. Génère-en un nouveau depuis ton autre appareil.', 'code');
+    LINKS.delete(k); S.touchLogin(u.id); startSession(res, req, u.id); logEvent('login', 'connexion', u.id, u.pseudo, { link: true });
+    return send(res, 200, { user: pub(u), player: S.getPlayer(u.id) });
+  }
   if (route === 'logout' && m === 'POST') { const t = cookies(req).nev_s; if (t) S.delSession(t); setCookie(res, req, 'nev_s', '', 0); return send(res, 200, { ok: true }); }
   if (route === 'config' && m === 'GET') {
     if (!sessionUser(req)) return fail(res, 401, 'Connecte-toi.');
@@ -272,7 +311,7 @@ async function api(req, res, url, ip) {
   { const r = await SO(route, m, req, res, ip, url, sessionUser(req)); if (r !== false) return r; }
   const user = sessionUser(req);
   if (!user) return fail(res, 401, 'Connecte-toi.');
-  if (route === 'me' && m === 'GET') return send(res, 200, { user: pub(user), player: S.getPlayer(user.id) });
+  if (route === 'me' && m === 'GET') { rememberDevice(res, req, user.id); return send(res, 200, { user: pub(user), player: S.getPlayer(user.id) }); }
   if (route === 'player' && m === 'PUT') {
     const w = limit('pl:' + user.id, 60, 60000); if (w) return fail(res, 429, 'Trop de sauvegardes.');
     const b = await readBody(req, 200000); const p = cleanPlayer(b.player, user.id);

@@ -390,3 +390,12 @@ Tirage simple : la carte sort de la boîte, tourne 8 fois (2880°) avec lumière
 - `p.evo` (profil) : dates de départ, paliers, poids, dates des photos ; borné et validé par `cleanPlayer` côté serveur.
 - `APPLICATION-MOBILE.md` : chemins vers l'application mobile (PWA, Google Play, App Store).
 - Tests : 322 réussis. Cache : `nev-v39`.
+
+## V29 — Reconnexion simple, financeur
+- **Appareil reconnu** : à l'inscription et à chaque connexion, le serveur pose un cookie `nev_d` (HttpOnly, 400 jours). Après une déconnexion, l'e-mail seul suffit sur cet appareil (`POST /api/login/device`), sans code ni mot de passe. Maximum 5 appareils par compte.
+- **Nouvel appareil** : depuis « Mon compte → Mes appareils », un appareil connecté génère un code à 8 chiffres (5 minutes, usage unique) à saisir avec l'e-mail sur le nouvel appareil (`device/link`, `login/link`).
+- **Oublier cet appareil** : `device/forget`. Un compte banni ou supprimé perd ses appareils.
+- Pourquoi pas l'e-mail seul sans aucune preuve : n'importe qui connaissant l'adresse pourrait prendre le compte (et lire les messages des mineurs).
+- Le code envoyé par e-mail fonctionnera dès que le SMTP sera configuré sur Render.
+- Mentions légales : ajout du financeur (Ibrahim Kamal).
+- 336 tests réussis.

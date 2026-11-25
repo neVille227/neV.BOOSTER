@@ -80,11 +80,11 @@
 
       <form id="formLogin" novalidate hidden autocomplete="on">
         <div class="field"><label for="liEmail">Email</label><input id="liEmail" name="email" type="email" autocomplete="email" placeholder="toi@mail.com"></div>
-        <div class="field" id="codeBox" hidden><label for="liCode">Code reçu par email</label><input id="liCode" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6 chiffres"><span class="hint" id="codeHint"></span></div>
+        <div class="field" id="codeBox" hidden><label for="liCode">Code reçu par email</label><input id="liCode" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="6 chiffres"><span class="hint" id="codeHint"></span></div>
         <div class="field" id="pwBox" hidden><label for="liPw">Mot de passe</label><input id="liPw" name="password" type="password" autocomplete="current-password"></div>
         <div class="err" id="errLogin" role="alert"></div>
-        <button class="btn block" type="submit" id="btnLogin">Recevoir mon code</button>
-        <p class="note"><a href="#" id="usePw">J'ai un mot de passe</a> · <a href="mot-de-passe.html">Mot de passe oublié ?</a></p>
+        <button class="btn block" type="submit" id="btnLogin">Me connecter</button>
+        <p class="note"><a href="#" id="useLink">J'ai un code d'un autre appareil</a> · <a href="#" id="usePw">J'ai un mot de passe</a> · <a href="mot-de-passe.html">Mot de passe oublié ?</a></p>
       </form>
       <div class="visit" id="visit">
         <p>Envie de découvrir avant de t'inscrire ?</p>

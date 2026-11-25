@@ -96,6 +96,21 @@
     cacheServerUser(r.data.user, r.data.player);
     return { ok: true, user: NEV.auth.current() };
   };
+  /* Reconnexion directe : l'e-mail suffit sur un appareil déjà reconnu (cookie propre à cet appareil). */
+  C.serverDevice = async function (email) {
+    const r = await api('login/device', 'POST', { email: email });
+    if (!r.ok || !r.data.ok) return { ok: false, needCode: true };
+    cacheServerUser(r.data.user, r.data.player);
+    return { ok: true, user: NEV.auth.current() };
+  };
+  C.serverLink = async function (email, code) {
+    const r = await api('login/link', 'POST', { email: email, code: code });
+    if (!r.ok) return { ok: false, field: 'code', error: r.data.error || 'Code refusé.' };
+    cacheServerUser(r.data.user, r.data.player);
+    return { ok: true, user: NEV.auth.current() };
+  };
+  C.linkCreate = async function () { const r = await api('device/link', 'POST', {}); return r.ok ? { ok: true, code: r.data.code, minutes: r.data.minutes } : { ok: false, error: r.data.error || 'Code impossible pour le moment.' }; };
+  C.forgetDevice = function () { return api('device/forget', 'POST', {}); };
   C.serverLogout = function () { api('logout', 'POST', {}); };
 
   // Au chargement d'une page : on vérifie la session et on récupère la progression du serveur.

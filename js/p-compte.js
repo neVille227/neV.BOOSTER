@@ -17,11 +17,23 @@
     '<section><h2>Appli et rappel</h2><p>Installe neV.BOOSTER sur l\'écran d\'accueil : il s\'ouvre en plein écran et les pages déjà vues restent consultables sans réseau.</p><button type="button" class="btn ghost" id="bInst" hidden>Installer l\'appli</button><p class="muted" id="mInst"></p>' +
     '<div id="rem" hidden><label class="check"><input type="checkbox" id="cRem"><span>Me rappeler ma séance du jour</span></label><div class="field" style="max-width:220px;margin-top:12px"><label for="rHour">À partir de</label><select id="rHour">' + [6,8,10,12,14,16,17,18,19,20,21].map((h) => '<option value="' + h + '">' + h + ' h</option>').join('') + '</select></div><p class="muted">Honnêtement : le rappel s\'affiche quand tu ouvres l\'appli après cette heure et que ta séance n\'est pas faite. Un navigateur ne peut pas réveiller ton téléphone tout seul sans service d\'envoi dédié.</p></div></section>' +
     '<section><h2>Mode allégé</h2><p>Coupe la 3D et les animations lourdes : utile sur un téléphone modeste ou avec une connexion lente. Il s\'active tout seul sur ces appareils.</p><label class="check"><input type="checkbox" id="cLite"><span>Activer le mode allégé sur cet appareil</span></label> <span id="mLite" class="muted"></span></section>' +
+    (server ? '<section><h2>Mes appareils</h2><p>Sur cet appareil, tu te reconnectes avec ton seul e-mail, sans code. Pour ouvrir ton compte sur un <b>autre</b> appareil, génère un code ici.</p><div class="err" id="eLink" role="alert"></div><div id="linkOut" class="muted" aria-live="polite"></div><button type="button" class="btn ghost" id="bLink">Connecter un autre appareil</button> <button type="button" class="btn ghost" id="bForget">Oublier cet appareil</button><p class="muted">« Oublier cet appareil » te déconnecte et supprime la reconnaissance : à utiliser sur un ordinateur partagé.</p></section>' : '') +
     '<section><h2>Télécharger mes données</h2><p>Un fichier contenant tout ce que neV.BOOSTER conserve à ton sujet : compte, séances, badges, messages.</p><button type="button" class="btn ghost" id="bExp">Télécharger mes données</button></section>' +
     '<section><h2>Supprimer mon compte</h2><p>Cette action est <b>définitive</b> : ta progression, tes badges et tes messages sont effacés.</p>' +
     (server ? '<p class="muted">Un seul compte par e-mail : tu n\'as aucun mot de passe à saisir. Un e-mail de confirmation te sera envoyé.</p>' : '') +
     '<div class="err" id="eDel" role="alert"></div><button type="button" class="btn" id="bDel" style="background:linear-gradient(135deg,#7a0f26,#c0283f)">Supprimer mon compte</button></section>' +
     '<p class="muted">Voir aussi : <a href="confidentialite.html">Confidentialité</a> · <a href="conditions.html">Conditions d\'utilisation</a> · <a href="mentions-legales.html">Mentions légales</a>.</p>';
+  if (server && $('bLink')) {
+    $('bLink').addEventListener('click', async function () {
+      $('eLink').textContent = ''; const r = await NEV.cloud.linkCreate();
+      if (!r.ok) { $('eLink').textContent = r.error; return; }
+      $('linkOut').innerHTML = 'Ton code : <b style="font-size:1.6rem;letter-spacing:.12em;color:var(--text,#fff)">' + esc(r.code.slice(0, 4) + ' ' + r.code.slice(4)) + '</b><br>Valable ' + r.minutes + ' minutes, une seule utilisation. Sur l\'autre appareil : page de connexion, « J\'ai un code d\'un autre appareil ». Ne le donne à personne.';
+    });
+    $('bForget').addEventListener('click', async function () {
+      if (!confirm('Oublier cet appareil ? Tu seras déconnecté et il te faudra un code pour revenir sur cet appareil.')) return;
+      await NEV.cloud.forgetDevice(); NEV.store.del('nev.session'); try { NEV.auth.logout(); } catch (e) { /* ignoré */ } NEV.go('connexion.html');
+    });
+  }
   (async function photo() {
     const ph = $('apPh'); if (!ph || !NEV.AvatarUpload) return;
     const AU = NEV.AvatarUpload, msg = (t, k) => { const m = $('apMsg'); m.textContent = t || ''; m.className = 'avpick-m' + (k ? ' ' + k : ''); };
