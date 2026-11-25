@@ -399,3 +399,9 @@ Tirage simple : la carte sort de la boîte, tourne 8 fois (2880°) avec lumière
 - Le code envoyé par e-mail fonctionnera dès que le SMTP sera configuré sur Render.
 - Mentions légales : ajout du financeur (Ibrahim Kamal).
 - 336 tests réussis.
+
+## V30 — Fessiers (parcours féminin)
+- La zone « Fessiers » passe de 15 à 31 exercices de base (hors variantes) et de 3 à 9 enchaînements.
+- Nouvelles fiches, réservées aux femmes : levée de jambe latérale (et avec pause), bonjour sans charge, soulevé une jambe, pont grenouille, pont tenu, pont pieds écartés, pont une jambe avec pause, hip thrust avec sac, kickback debout avec pause, donkey kick jambe tendue, squat pulsé, squat profond avec pause, fente arrière pulsée et avec pause. Les montées sur marche rejoignent aussi la zone.
+- Chaque fiche a son animation, ses étapes, ses erreurs fréquentes et une version plus facile / plus dure.
+- 342 tests réussis.

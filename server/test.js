@@ -414,6 +414,14 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
       try { vm.runInContext(fs.readFileSync(path.join(root, 'js', f + '.js'), 'utf8'), sb, { filename: f }); } catch (e) { loadErr = loadErr || (f + ' : ' + e.message); }
     });
     const N = sb.NEV; t('exercices : scripts chargés sans erreur', !loadErr, loadErr);
+    N.sex = 'f';
+    { const zf = N.Zones.get('fessiers'), bf = zf.ex.filter((x) => !N.Ex.byId(x).variantOf);
+      t('femme : zone Fessiers avec au moins 28 exercices de base', bf.length >= 28, bf.length);
+      t('femme : zone Fessiers avec au moins 8 enchaînements', zf.combos.length >= 8, zf.combos.length);
+      t('femme : exercices fessiers tous visibles pour elle', zf.ex.every((x) => N.Ex.sexOk(N.Ex.byId(x), 'f')));
+      t('femme : levée latérale et soulevé une jambe présents', zf.ex.indexOf('abduction-debout') >= 0 && zf.ex.indexOf('souleve-une-jambe') >= 0);
+      t('femme : enchaînements fessiers sans exercice inconnu', zf.combos.every((c) => c.items.every((it) => N.Ex.byId(it[0]))));
+      N.sex = 'm'; t('homme : ne voit pas les fiches fessiers réservées aux femmes', !N.Ex.sexOk(N.Ex.byId('abduction-debout'), 'm')); N.sex = 'f'; N.sex = undefined; }
     const L = N.EXERCISES || [], ids = new Set(L.map((e) => e.id));
     t('exercices : au moins 1000 fiches', L.length >= 1000, L.length);
     t('exercices : identifiants uniques', ids.size === L.length, L.length - ids.size);

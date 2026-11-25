@@ -251,5 +251,120 @@
     cam: S('side', 'manual', 0, 'manual')
   });
   V('chat-vache', 'souplesse-chat-vache-lent', { k: 2.0, hold: 900 });
+  /* =============== V30 — FESSIERS (version femme) : fiches spécifiques =============== */
+  const NOCAM = S('side', 'manual', 0, 'manual');
+  E('abduction-debout', 'Levée de jambe latérale debout', 3, 1, [], 'side', [8, 10, 12, 15, 18], 'f', {
+    works: 'Fessier moyen (le côté de la hanche), hanches stables', dose: '3 séries de 10 à 15 par jambe',
+    exec: 'Debout, une main sur un mur ou une chaise : lève une jambe tendue sur le côté, sans pencher le buste, puis redescends lentement.',
+    steps: ['Debout, droite, une main posée pour l\'équilibre.', 'Pointe du pied vers l\'avant, jambe tendue.', 'Lève la jambe sur le côté jusqu\'à environ 45°.', 'Redescends en 2 secondes, sans poser le pied.'],
+    mistakes: ['Pencher le buste du côté opposé.', 'Faire tourner la pointe du pied vers le plafond.'], easy: 'Lève la jambe moins haut.', hard: 'Garde la jambe en haut 2 secondes.', view: 'front', cam: NOCAM
+  });
+  E('abduction-debout-pause', 'Levée latérale avec pause', 3, 2, [], 'side', [6, 8, 10, 12, 14], 'f', {
+    works: 'Fessier moyen, hanches', dose: '3 séries de 8 à 12 par jambe',
+    exec: 'Même mouvement que la levée latérale, mais tiens la jambe en haut 3 secondes en serrant le côté de la fesse.',
+    steps: ['Debout, une main sur un appui.', 'Lève la jambe tendue sur le côté.', 'Tiens 3 secondes, hanches de face.', 'Redescends très lentement.'],
+    mistakes: ['Balancer la jambe.', 'Cambrer le bas du dos.'], easy: 'Pause de 1 seconde.', hard: 'Pause de 5 secondes.', view: 'front', cam: NOCAM
+  });
+  E('bonjour-sans-charge', 'Bonjour (good morning) sans charge', 3, 2, [], 'rep', [8, 10, 12, 15, 18], 'f', {
+    works: 'Fessiers, arrière des cuisses, bas du dos', dose: '3 séries de 10 à 15',
+    exec: 'Debout, mains derrière la tête : recule les fesses en gardant le dos plat, jusqu\'à sentir l\'arrière des cuisses, puis reviens debout en serrant les fessiers.',
+    steps: ['Pieds largeur de hanches, genoux légèrement fléchis.', 'Mains derrière la tête, coudes ouverts.', 'Envoie les fesses vers l\'arrière, dos plat.', 'Reviens debout en poussant les hanches vers l\'avant.'],
+    mistakes: ['Arrondir le dos.', 'Plier les genoux comme pour un squat.'], easy: 'Mains croisées sur la poitrine, amplitude réduite.', hard: 'Ajoute un sac à dos sur la poitrine.', cam: NOCAM
+  });
+  E('souleve-une-jambe', 'Soulevé une jambe (équilibre)', 3, 3, [], 'side', [5, 6, 8, 10, 12], 'f', {
+    works: 'Fessiers, arrière des cuisses, équilibre', dose: '2 à 3 séries de 6 à 10 par jambe',
+    exec: 'Debout sur une jambe, penche le buste en envoyant l\'autre jambe tendue vers l\'arrière, dos plat, puis reviens debout.',
+    steps: ['Debout sur une jambe, genou légèrement fléchi.', 'Penche le buste, jambe libre tendue vers l\'arrière.', 'Garde le dos plat et les hanches de face.', 'Reviens debout en serrant le fessier.'],
+    mistakes: ['Arrondir le dos.', 'Ouvrir le bassin sur le côté.'], easy: 'Pose légèrement une main sur un mur.', hard: 'Pause de 2 secondes en bas.', cam: NOCAM
+  });
+  E('pont-grenouille', 'Pont grenouille', 3, 2, [], 'rep', [10, 12, 15, 18, 22], 'f', {
+    works: 'Fessiers (isole bien), intérieur des cuisses', dose: '3 séries de 12 à 20',
+    exec: 'Allongée sur le dos, plantes des pieds l\'une contre l\'autre et genoux ouverts : monte le bassin en serrant les fessiers.',
+    steps: ['Sur le dos, plantes des pieds collées, genoux ouverts.', 'Pieds proches des fesses.', 'Monte le bassin sans cambrer.', 'Serre les fessiers 1 seconde et redescends.'],
+    mistakes: ['Cambrer le bas du dos.', 'Pousser avec les mains.'], easy: 'Monte moins haut.', hard: 'Pause de 3 secondes en haut.', cam: NOCAM
+  });
+  E('pont-fessier-tenu', 'Pont fessier tenu', 3, 2, [], 'sec', [15, 20, 30, 40, 50], 'f', {
+    works: 'Fessiers, arrière des cuisses (endurance)', dose: '2 à 3 tenues de 20 à 40 secondes',
+    exec: 'Monte le bassin en pont fessier et tiens la position en serrant fort les fessiers, en respirant calmement.',
+    steps: ['Sur le dos, genoux pliés, pieds à plat.', 'Monte le bassin : épaules, hanches et genoux alignés.', 'Serre les fessiers et tiens.', 'Respire, redescends en douceur.'],
+    mistakes: ['Laisser le bassin descendre.', 'Retenir sa respiration.'], easy: 'Tenues de 10 secondes.', hard: 'Tiens sur une jambe 10 secondes de chaque côté.', cam: NOCAM
+  });
+  E('pont-fessier-ecarte', 'Pont fessier pieds écartés', 3, 2, [], 'rep', [10, 12, 15, 18, 22], 'f', {
+    works: 'Fessiers, côté de la hanche', dose: '3 séries de 12 à 18',
+    exec: 'Pont fessier avec les pieds écartés et les pointes légèrement ouvertes : le travail se déplace vers le côté des fessiers.',
+    steps: ['Sur le dos, pieds écartés plus que les hanches.', 'Pointes légèrement ouvertes.', 'Monte le bassin en poussant dans les talons.', 'Redescends sans poser complètement.'],
+    mistakes: ['Laisser les genoux rentrer.', 'Cambrer le dos.'], easy: 'Pieds à largeur de hanches.', hard: 'Ajoute une pause de 2 secondes en haut.', cam: NOCAM
+  });
+  E('pont-une-jambe-pause', 'Pont une jambe avec pause', 3, 4, [], 'side', [4, 5, 6, 8, 10], 'f', {
+    works: 'Fessiers, arrière des cuisses, tronc', dose: '2 à 3 séries de 5 à 8 par jambe',
+    exec: 'Pont fessier avec une jambe tendue : monte le bassin avec l\'autre jambe et tiens 3 secondes en haut.',
+    steps: ['Sur le dos, une jambe tendue vers le plafond.', 'Monte le bassin sur la jambe d\'appui.', 'Tiens 3 secondes, bassin à l\'horizontale.', 'Redescends lentement.'],
+    mistakes: ['Bassin qui penche d\'un côté.', 'Pousser sur la pointe du pied.'], easy: 'Pause de 1 seconde.', hard: 'Pause de 5 secondes.', cam: NOCAM
+  });
+  E('hip-thrust-sac', 'Hip thrust sur chaise avec sac', 3, 3, ['chair', 'bag'], 'rep', [8, 10, 12, 15, 18], 'f', {
+    works: 'Fessiers, arrière des cuisses', dose: '3 séries de 8 à 12',
+    exec: 'Dos appuyé sur une chaise stable, sac à dos posé sur le bassin : monte les hanches en serrant les fessiers, puis redescends sans toucher le sol.',
+    steps: ['Haut du dos contre le bord de la chaise.', 'Sac tenu à deux mains sur le bassin.', 'Monte les hanches jusqu\'à aligner épaules, hanches et genoux.', 'Serre les fessiers 1 seconde, redescends.'],
+    mistakes: ['Cambrer le bas du dos.', 'Pousser sur la pointe des pieds.'], easy: 'Sans sac.', hard: 'Pause de 3 secondes en haut.', cam: NOCAM
+  });
+  E('kickback-debout-pause', 'Kickback debout avec pause', 3, 2, [], 'side', [8, 10, 12, 15, 18], 'f', {
+    works: 'Fessiers, arrière des cuisses', dose: '3 séries de 8 à 12 par jambe',
+    exec: 'Debout face à un mur, envoie une jambe tendue vers l\'arrière et tiens 2 secondes en serrant la fesse.',
+    steps: ['Debout, mains sur un mur ou une chaise.', 'Envoie la jambe tendue vers l\'arrière.', 'Tiens 2 secondes, buste droit.', 'Reviens sans poser le pied.'],
+    mistakes: ['Cambrer le bas du dos.', 'Balancer la jambe avec élan.'], easy: 'Genou fléchi.', hard: 'Pause de 4 secondes.', cam: NOCAM
+  });
+  E('donkey-kick-tenu', 'Donkey kick jambe tendue', 3, 3, [], 'side', [8, 10, 12, 15, 18], 'f', {
+    works: 'Fessiers, arrière des cuisses', dose: '3 séries de 10 à 15 par jambe',
+    exec: 'À quatre pattes, envoie la jambe tendue vers l\'arrière et le haut, tiens 2 secondes, puis reviens sans poser le genou.',
+    steps: ['À quatre pattes, dos plat.', 'Jambe tendue vers l\'arrière, talon haut.', 'Tiens 2 secondes en serrant la fesse.', 'Reviens sans poser le genou.'],
+    mistakes: ['Cambrer le dos.', 'Tourner le bassin.'], easy: 'Genou fléchi.', hard: 'Pause de 4 secondes.', cam: NOCAM
+  });
+  E('squat-pulse-bas', 'Squat pulsé en position basse', 3, 2, [], 'rep', [10, 12, 15, 20, 25], 'f', {
+    works: 'Fessiers, cuisses', dose: '3 séries de 12 à 20 pulsations',
+    exec: 'Descends en squat, reste en bas et fais de petites pulsations sans te redresser, en poussant dans les talons.',
+    steps: ['Pieds largeur d\'épaules, pointes légèrement ouvertes.', 'Descends cuisses parallèles au sol.', 'Fais de petites pulsations de quelques centimètres.', 'Remonte en serrant les fessiers.'],
+    mistakes: ['Genoux qui rentrent.', 'Talons qui décollent.'], easy: 'Descends moins bas.', hard: 'Pause de 5 secondes en bas.', cam: NOCAM
+  });
+  E('squat-pause-fessiers', 'Squat profond avec pause', 3, 3, [], 'rep', [6, 8, 10, 12, 15], 'f', {
+    works: 'Fessiers, cuisses, hanches', dose: '3 séries de 8 à 12',
+    exec: 'Descends le plus bas possible en gardant le dos droit, tiens 3 secondes, puis remonte en poussant dans le sol.',
+    steps: ['Pieds un peu plus larges que les hanches.', 'Descends fesses vers les talons, dos droit.', 'Tiens 3 secondes en bas.', 'Remonte en serrant les fessiers.'],
+    mistakes: ['Arrondir le bas du dos.', 'Rebondir en bas.'], easy: 'Descends à la chaise.', hard: 'Pause de 5 secondes.', cam: NOCAM
+  });
+  E('fente-arriere-pulsee', 'Fente arrière pulsée', 3, 3, [], 'side', [6, 8, 10, 12, 15], 'f', {
+    works: 'Fessiers, cuisses', dose: '3 séries de 8 à 12 par jambe',
+    exec: 'Fais un grand pas en arrière, descends et fais de petites pulsations en bas avant de revenir debout.',
+    steps: ['Debout, un grand pas en arrière.', 'Descends : genou avant à 90°, buste droit.', 'Fais 3 petites pulsations.', 'Pousse sur la jambe avant pour revenir.'],
+    mistakes: ['Genou avant qui dépasse trop les orteils.', 'Buste penché.'], easy: 'Descends moins bas.', hard: 'Pause de 2 secondes en bas.', cam: NOCAM
+  });
+  E('fente-arriere-pause', 'Fente arrière avec pause', 3, 3, [], 'side', [5, 6, 8, 10, 12], 'f', {
+    works: 'Fessiers, cuisses, équilibre', dose: '3 séries de 6 à 10 par jambe',
+    exec: 'Grand pas en arrière, descends et tiens 3 secondes en bas avant de remonter en poussant sur la jambe avant.',
+    steps: ['Debout, un grand pas en arrière.', 'Descends jusqu\'à 90° aux deux genoux.', 'Tiens 3 secondes.', 'Remonte en poussant sur le talon avant.'],
+    mistakes: ['Pencher le buste.', 'Poser le genou arrière au sol.'], easy: 'Pause de 1 seconde.', hard: 'Pause de 5 secondes.', cam: NOCAM
+  });
+
+  /* animations : mouvements réels, vus de côté ou de face */
+  V('pont-fessier', 'pont-grenouille', { k: 1.1 });
+  V('pont-fessier', 'pont-fessier-tenu', { k: 1.0, hold: 5000 });
+  V('pont-fessier', 'pont-fessier-ecarte', { k: 1.1, hold: 700 });
+  V('pont-une-jambe', 'pont-une-jambe-pause', { k: 1.2, hold: 2800 });
+  V('hip-thrust-chaise', 'hip-thrust-sac', { k: 1.2, hold: 800 });
+  V('extension-hanche-debout', 'kickback-debout-pause', { k: 1.3, hold: 1800 });
+  V('donkey-kick', 'donkey-kick-tenu', { k: 1.3, hold: 1800 });
+  V('squats', 'squat-pulse-bas', { k: 0.5, hold: 100 });
+  V('squats', 'squat-pause-fessiers', { k: 1.3, hold: 2800 });
+  V('fentes-arriere', 'fente-arriere-pulsee', { k: 0.5, hold: 120 });
+  V('fentes-arriere', 'fente-arriere-pause', { k: 1.2, hold: 2800 });
+  {
+    const arm = [{ r: [8, 50] }, { r: [-8, 50] }];
+    const ab = (x, y) => FRONT({ hip: [200, 118], arm, leg: [{ t: [192, AK] }, { t: [x, y] }] });
+    A['abduction-debout'] = { view: 'front', loop: 'pingpong', hold: 300, muscles: ['glutes', 'quads'], frames: [F(ab(214, AK), 900), F(ab(271, 188), 900)] };
+    V('abduction-debout', 'abduction-debout-pause', { k: 1.3, hold: 2800 });
+    const gm = (hipx, hipy, tor) => P({ hip: [hipx, hipy], torso: tor, head: tor, arm: [{ a: [tor + 150, tor + 150] }, { a: [tor + 154, tor + 154] }], leg: [{ t: [200, AK] }, { t: [206, AK] }] });
+    A['bonjour-sans-charge'] = { view: 'side', loop: 'pingpong', hold: 400, muscles: ['glutes', 'hamstrings', 'lowback'], frames: [F(gm(200, 118, -90), 1100), F(gm(178, 124, -30), 1300)] };
+    const rd = (tor, back) => P({ hip: [200, 118], torso: tor, head: tor, arm: [{ r: [10, 62] }, { r: [14, 62] }], leg: [{ t: [200, AK] }, back], kb: [1, 1] });
+    A['souleve-une-jambe'] = { view: 'side', loop: 'pingpong', hold: 500, muscles: ['glutes', 'hamstrings', 'core'], frames: [F(rd(-90, { t: [200, AK - 6] }), 1100), F(rd(-8, { t: [118, 120] }), 1400)] };
+  }
   /* les étirements existants sont tirables dans la version femme (souplesse) : voir gachaengine.eligible */
 })(window);
